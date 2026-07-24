@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Improver - AI Resume Studio{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto; text-align: center;">
+    <h2><i class="fas fa-wand-magic-sparkles" style="color: #a855f7;"></i> AI Resume Improver</h2>
+    <p style="color: #94a3b8; margin-bottom: 3rem;">Let our Gemini AI rewrite your project descriptions and career summary to sound extremely professional.</p>
+
+    <div class="glass-card" style="padding: 3rem 2rem;">
+        <div style="text-align: left;">
+            <label style="color: #94a3b8; margin-bottom: 0.5rem; display: block;">Original Text (e.g. "I made a website using python")</label>
+            <textarea id="originalText" class="form-control" rows="4" style="background: rgba(255,255,255,0.1); color: white; border: none; padding: 1rem; border-radius: 10px; width: 100%; margin-bottom: 2rem; resize: none;"></textarea>
+            
+            <button id="improveBtn" class="btn-primary" style="width: 100%; margin-bottom: 2rem;" onclick="performImprovement()"><i class="fas fa-magic"></i> Improve with AI</button>
+            
+            <label style="color: #a855f7; margin-bottom: 0.5rem; display: block;">AI Improved Version</label>
+            <div id="aiResult" style="background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); padding: 1rem; border-radius: 10px; min-height: 100px; color: #fff; transition: all 0.3s ease;">
+                <em style="color:#94a3b8;" id="placeholderText">AI suggestion will appear here...</em>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    async function performImprovement() {
+        const text = document.getElementById('originalText').value.trim();
+        if (!text) {
+            alert('Please enter some text to improve.');
+            return;
+        }
+
+        const btn = document.getElementById('improveBtn');
+        const result = document.getElementById('aiResult');
+        
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+        btn.disabled = true;
+        
+        try {
+            const response = await fetch('', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    text: text
+                })
+            });
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                result.innerHTML = `<span style="color:#22c55e;"><i class="fas fa-check-circle"></i> "${data.improved_text}"</span>`;
+            } else {
+                alert(data.error || 'Error improving text.');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Something went wrong during improvement.');
+        } finally {
+            btn.innerHTML = '<i class="fas fa-magic"></i> Improve with AI';
+            btn.disabled = false;
+        }
+    }
+</script>
+{% endblock %}
+

@@ -1,0 +1,552 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load socialaccount %}
+
+{% block title %}AI Interview Pro - Next Gen Interview Prep{% endblock %}
+
+{% block extra_head %}
+<style>
+    .hero-section {
+        display: flex;
+        align-items: stretch;
+        justify-content: space-between;
+        gap: 4rem;
+        padding: 4rem 0 6rem 0;
+        max-width: 1400px;
+        margin: 0 auto;
+        min-height: 75vh;
+    }
+
+    .hero-content {
+        flex: 1;
+        max-width: 650px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .hero-visual {
+        flex: 1;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.5rem;
+        background: rgba(139, 92, 246, 0.15);
+        border: 1px solid rgba(139, 92, 246, 0.4);
+        color: #c4b5fd;
+        border-radius: 50px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin-bottom: 2rem;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+    }
+
+    .hero-badge i {
+        color: #a78bfa;
+    }
+
+    .hero-title {
+        font-size: clamp(2.5rem, 4vw + 1rem, 4.5rem);
+        font-weight: 900;
+        line-height: 1.1;
+        margin-bottom: 1.5rem;
+        letter-spacing: -1.5px;
+    }
+
+    .hero-title span {
+        background: linear-gradient(135deg, #a78bfa, #ec4899, #06b6d4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: inline-block;
+        animation: gradientShift 5s ease infinite;
+        background-size: 200% 200%;
+    }
+
+    @keyframes gradientShift {
+        0% {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+
+    .hero-subtitle {
+        font-size: 1.25rem;
+        color: #94a3b8;
+        line-height: 1.7;
+        margin-bottom: 3rem;
+    }
+
+    .hero-visual-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 550px;
+        animation: float 6s ease-in-out infinite;
+    }
+
+    /* Mock Interview Visual */
+    .mock-interview-container {
+        position: relative;
+        width: 100%;
+        max-width: 550px;
+        aspect-ratio: 4/5;
+        border-radius: 30px;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(25px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(139, 92, 246, 0.1);
+        overflow: hidden;
+    }
+
+    @keyframes float {
+        0% {
+            transform: translateY(0px);
+        }
+
+        50% {
+            transform: translateY(-20px);
+        }
+
+        100% {
+            transform: translateY(0px);
+        }
+    }
+
+    .mock-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .mock-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #10b981;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .pulse-dot {
+        width: 8px;
+        height: 8px;
+        background: #10b981;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        }
+
+        70% {
+            box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        }
+    }
+
+    .mock-body {
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        height: calc(100% - 70px);
+    }
+
+    .ai-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2));
+        border: 2px solid rgba(139, 92, 246, 0.5);
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .ai-avatar i {
+        font-size: 3rem;
+        color: #a78bfa;
+        filter: drop-shadow(0 0 10px rgba(167, 139, 250, 0.5));
+    }
+
+    .voice-waves {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        margin-top: 1rem;
+    }
+
+    .wave {
+        width: 4px;
+        height: 15px;
+        background: #a78bfa;
+        border-radius: 5px;
+        animation: soundWave 1.2s ease-in-out infinite alternate;
+    }
+
+    .wave:nth-child(2) {
+        animation-delay: 0.2s;
+        height: 30px;
+    }
+
+    .wave:nth-child(3) {
+        animation-delay: 0.4s;
+        height: 45px;
+    }
+
+    .wave:nth-child(4) {
+        animation-delay: 0.2s;
+        height: 30px;
+    }
+
+    .wave:nth-child(5) {
+        animation-delay: 0.6s;
+        height: 15px;
+    }
+
+    @keyframes soundWave {
+        0% {
+            transform: scaleY(0.5);
+            opacity: 0.5;
+        }
+
+        100% {
+            transform: scaleY(1);
+            opacity: 1;
+        }
+    }
+
+    .transcript-box {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 15px;
+        padding: 1.5rem;
+        flex: 1;
+        position: relative;
+    }
+
+    .transcript-text {
+        color: #e2e8f0;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        border-right: 2px solid #a78bfa;
+        white-space: nowrap;
+        overflow: hidden;
+        animation: typing 4s steps(40, end) infinite;
+    }
+
+    @keyframes typing {
+        0% {
+            width: 0;
+        }
+
+        50% {
+            width: 100%;
+        }
+
+        90% {
+            width: 100%;
+            opacity: 1;
+        }
+
+        100% {
+            width: 100%;
+            opacity: 0;
+        }
+    }
+
+    /* Floating Stats Cards */
+    .stat-card {
+        position: absolute;
+        background: rgba(30, 41, 59, 0.9);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        padding: 0.6rem 1rem;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        z-index: 10;
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px) scale(1.05);
+        border-color: rgba(139, 92, 246, 0.6);
+        box-shadow: 0 15px 30px rgba(139, 92, 246, 0.2);
+    }
+
+    .stat-1 {
+        top: 240px;
+        right: 20px;
+    }
+
+    .stat-2 {
+        top: 240px;
+        left: 20px;
+    }
+
+    .stat-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    .bg-purple {
+        background: rgba(139, 92, 246, 0.2);
+        color: #a78bfa;
+    }
+
+    .bg-pink {
+        background: rgba(236, 72, 153, 0.2);
+        color: #f472b6;
+    }
+
+    .stat-info h4 {
+        margin: 0;
+        font-size: 0.8rem;
+        color: #94a3b8;
+        font-weight: 500;
+    }
+
+    .stat-info p {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #fff;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+        margin-top: 2rem;
+        padding-bottom: 5rem;
+    }
+
+    .feature-card {
+        background: rgba(15, 23, 42, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 25px;
+        padding: 3rem 2rem;
+        transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at top right, rgba(139, 92, 246, 0.1), transparent);
+        opacity: 0;
+        transition: 0.4s;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-15px);
+        border-color: rgba(139, 92, 246, 0.3);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(139, 92, 246, 0.1);
+    }
+
+    .feature-card:hover::before {
+        opacity: 1;
+    }
+
+    .icon-wrapper {
+        width: 70px;
+        height: 70px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: 0.4s;
+    }
+
+    .feature-card:hover .icon-wrapper {
+        background: rgba(139, 92, 246, 0.2);
+        color: #a78bfa;
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .feature-card h3 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        font-weight: 800;
+    }
+
+    .feature-card p {
+        color: #94a3b8;
+        line-height: 1.6;
+    }
+
+    @media (max-width: 1300px) {
+        .hero-section {
+            flex-direction: column;
+            text-align: center;
+            gap: 6rem;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+        }
+
+        .hero-actions {
+            justify-content: center;
+        }
+
+        .features-grid {
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stat-card {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-content">
+        <div class="hero-badge">
+            <i class="fas fa-sparkles"></i> AI-Powered Interview System
+        </div>
+        <h1 class="hero-title">Experience the Future of <span>Interview Prep</span></h1>
+        <p class="hero-subtitle">Elevate your career with real-time AI mock interviews, deep resume analysis, and
+            instant performance feedback. Practice in English or Tamil like you would in a real company.</p>
+
+        <div class="hero-actions">
+            {% if user.is_authenticated %}
+            <a href="{% url 'dashboard' %}" class="btn-primary" style="padding: 1.2rem 3rem; font-size: 1.2rem;">Go to
+                Dashboard <i class="fas fa-arrow-right ms-2"></i></a>
+            {% else %}
+            <div style="display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;">
+                <a href="{% provider_login_url 'google' %}" class="btn-google"
+                    style="padding: 1.2rem 2.5rem; font-size: 1.1rem; flex: 1; display: inline-flex; align-items: center; justify-content: center; text-decoration: none;">
+                    <svg width="24" height="24" viewBox="0 0 18 18" style="margin-right: 10px;">
+                        <path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 002.38-5.88c0-.57-.05-.66-.15-1.18z"/>
+                        <path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 01-7.18-2.54H1.83v2.07A8 8 0 008.98 17z"/>
+                        <path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 010-3.04V5.41H1.83a8 8 0 000 7.18l2.67-2.07z"/>
+                        <path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 001.83 5.4L4.5 7.49a4.77 4.77 0 014.48-3.31z"/>
+                    </svg>
+                    <span>Continue with Google</span>
+                </a>
+                <a href="{% url 'login' %}" class="btn-outline"
+                    style="padding: 1.2rem 2.5rem; font-size: 1.1rem; flex: 1;">Sign In</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="hero-visual">
+        <div class="hero-visual-wrapper">
+            <div class="mock-interview-container" style="max-width: 100%;">
+                <div class="mock-header">
+                    <div style="color: #94a3b8; font-weight: 600;"><i class="fas fa-video me-2"></i> Technical Round
+                    </div>
+                    <div class="mock-status">
+                        <div class="pulse-dot"></div> Analyzing Response
+                    </div>
+                </div>
+
+                <div class="mock-body">
+                    <div class="ai-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="voice-waves">
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                    </div>
+
+                    <div class="transcript-box mt-4">
+                        <p style="color: #8b5cf6; font-size: 0.9rem; font-weight: 700; margin-bottom: 0.5rem;">AI
+                            Interviewer</p>
+                        <div class="transcript-text">"Can you explain how you would optimize this React component?"
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Floating Stats -->
+            <div class="stat-card stat-1">
+                <div class="stat-icon bg-purple"><i class="fas fa-bolt"></i></div>
+                <div class="stat-info">
+                    <h4>Real-time Feedback</h4>
+                    <p>98% Accuracy</p>
+                </div>
+            </div>
+
+            <div class="stat-card stat-2">
+                <div class="stat-icon bg-pink"><i class="fas fa-language"></i></div>
+                <div class="stat-info">
+                    <h4>Multilingual</h4>
+                    <p>Eng & Tamil</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="features-grid">
+    <div class="feature-card">
+        <div class="icon-wrapper" style="color: #60a5fa;"><i class="fas fa-microphone-alt"></i></div>
+        <h3>Conversational AI</h3>
+        <p>Speak naturally with our advanced AI interviewer. Practice your communication skills in a stress-free,
+            hyper-realistic environment.</p>
+    </div>
+    <div class="feature-card">
+        <div class="icon-wrapper" style="color: #f472b6;"><i class="fas fa-file-signature"></i></div>
+        <h3>Smart ATS Parsing</h3>
+        <p>Upload your resume and instantly get tailored interview questions based strictly on your declared skills,
+            projects, and experience.</p>
+    </div>
+    <div class="feature-card">
+        <div class="icon-wrapper" style="color: #34d399;"><i class="fas fa-laptop-code"></i></div>
+        <h3>Live Code Editor</h3>
+        <p>Tackle algorithmic challenges and system design questions in our built-in IDE, complete with immediate syntax
+            and logic evaluation.</p>
+    </div>
+</div>
+{% endblock %}

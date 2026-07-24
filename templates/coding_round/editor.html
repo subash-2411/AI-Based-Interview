@@ -1,0 +1,626 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ problem.title }} - Coding Round{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Full page layout */
+    .editor-page {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        height: calc(100vh - 140px);
+        min-height: 600px;
+    }
+
+    /* Top bar */
+    .editor-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.9rem 1.5rem;
+        background: rgba(15,23,42,0.7);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 20px;
+        margin-bottom: 1rem;
+        flex-shrink: 0;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 1rem; }
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #94a3b8;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.85rem;
+        padding: 0.45rem 1rem;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.07);
+        background: rgba(255,255,255,0.03);
+        transition: 0.3s;
+    }
+    .back-btn:hover { color: #fff; border-color: rgba(139,92,246,0.4); background: rgba(139,92,246,0.08); }
+
+    .problem-title-bar {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #f1f5f9;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .diff-chip {
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 0.25rem 0.75rem;
+        border-radius: 8px;
+    }
+    .diff-easy  { background:rgba(16,185,129,0.12);  color:#10b981; border:1px solid rgba(16,185,129,0.25); }
+    .diff-medium{ background:rgba(245,158,11,0.12);  color:#f59e0b; border:1px solid rgba(245,158,11,0.25); }
+    .diff-hard  { background:rgba(239,68,68,0.12);   color:#ef4444; border:1px solid rgba(239,68,68,0.25); }
+
+    .topbar-actions { display: flex; align-items: center; gap: 0.75rem; }
+    .btn-hint {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(139,92,246,0.1);
+        border: 1px solid rgba(139,92,246,0.3);
+        color: #a78bfa;
+        padding: 0.55rem 1.2rem;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .btn-hint:hover { background: rgba(139,92,246,0.2); border-color: rgba(139,92,246,0.5); }
+    .btn-submit {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+        border: none;
+        color: white;
+        padding: 0.6rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: 0.3s;
+        box-shadow: 0 4px 15px rgba(139,92,246,0.2);
+    }
+    .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(139,92,246,0.35); }
+    .btn-reset {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        color: #94a3b8;
+        padding: 0.55rem 1.1rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .btn-reset:hover { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.3); color: #f87171; }
+
+    /* Main grid */
+    .editor-grid {
+        display: grid;
+        grid-template-columns: 1fr 1.6fr;
+        gap: 1rem;
+        flex: 1;
+        min-height: 0;
+    }
+
+    /* Left: Problem Panel */
+    .problem-panel {
+        background: rgba(15,23,42,0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 20px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .panel-tabs {
+        display: flex;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        flex-shrink: 0;
+    }
+    .panel-tab {
+        padding: 0.9rem 1.5rem;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #64748b;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition: 0.2s;
+        user-select: none;
+    }
+    .panel-tab.active { color: #a78bfa; border-bottom-color: #8b5cf6; }
+    .panel-tab:hover:not(.active) { color: #94a3b8; }
+
+    .panel-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.75rem;
+        line-height: 1.7;
+        font-size: 0.92rem;
+        color: #cbd5e1;
+    }
+    .panel-body::-webkit-scrollbar { width: 4px; }
+    .panel-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .problem-statement h3 {
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #8b5cf6;
+        margin-bottom: 0.75rem;
+    }
+    .problem-statement p { color: #94a3b8; margin-bottom: 1.5rem; }
+    .problem-tags-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1.5rem; }
+    .tag-pill {
+        font-size: 0.7rem;
+        color: #94a3b8;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.07);
+        padding: 0.25rem 0.7rem;
+        border-radius: 6px;
+        font-weight: 600;
+    }
+
+    /* AI Hint box inside left panel */
+    .hint-box {
+        display: none;
+        background: rgba(139,92,246,0.07);
+        border: 1px solid rgba(139,92,246,0.2);
+        border-radius: 14px;
+        padding: 1.25rem;
+        margin-top: 1.5rem;
+    }
+    .hint-box h4 {
+        color: #a78bfa;
+        font-size: 0.85rem;
+        font-weight: 800;
+        margin: 0 0 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .hint-box p {
+        font-size: 0.88rem;
+        color: #e2e8f0;
+        line-height: 1.65;
+        margin: 0;
+        white-space: pre-wrap;
+    }
+
+    /* Right: Code Editor Panel */
+    .code-panel {
+        background: rgba(13,17,29,0.9);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 20px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .code-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 1.5rem;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        background: rgba(0,0,0,0.2);
+        flex-shrink: 0;
+    }
+    .code-filename {
+        font-family: 'Consolas', monospace;
+        font-size: 0.85rem;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .code-filename i { color: #8b5cf6; }
+    .lang-badge {
+        background: rgba(6,182,212,0.1);
+        border: 1px solid rgba(6,182,212,0.25);
+        color: #06b6d4;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 0.2rem 0.7rem;
+        border-radius: 6px;
+    }
+    .code-dots { display: flex; gap: 0.4rem; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-red { background: #ef4444; opacity: 0.6; }
+    .dot-yellow { background: #f59e0b; opacity: 0.6; }
+    .dot-green { background: #10b981; opacity: 0.6; }
+
+    #codeEditor {
+        flex: 1;
+        background: #0d111d;
+        color: #e2e8f0;
+        font-family: 'Consolas', 'Courier New', monospace;
+        font-size: 0.92rem;
+        line-height: 1.7;
+        padding: 1.5rem;
+        border: none;
+        outline: none;
+        resize: none;
+        tab-size: 4;
+        min-height: 0;
+    }
+    #codeEditor::placeholder { color: rgba(255,255,255,0.15); }
+    #codeEditor::-webkit-scrollbar { width: 6px; }
+    #codeEditor::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 4px; }
+
+    /* Result Modal */
+    .result-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.8);
+        backdrop-filter: blur(8px);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+    .result-modal-overlay.show { display: flex; }
+    .result-modal {
+        background: rgba(15,23,42,0.95);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 28px;
+        padding: 2.5rem;
+        max-width: 440px;
+        width: 90%;
+        text-align: center;
+        box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+        animation: modalIn 0.3s ease;
+    }
+    @keyframes modalIn { from { opacity:0; transform:scale(0.9) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
+
+    .result-icon {
+        width: 80px; height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin: 0 auto 1.5rem;
+    }
+    .result-icon.success { background: rgba(16,185,129,0.12); color: #10b981; border: 2px solid rgba(16,185,129,0.3); }
+    .result-icon.partial { background: rgba(245,158,11,0.12); color: #f59e0b; border: 2px solid rgba(245,158,11,0.3); }
+
+    .score-ring {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 1.5rem;
+    }
+    .score-ring svg { transform: rotate(-90deg); }
+    .score-ring-bg { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 8; }
+    .score-ring-fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+    .score-num {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        font-weight: 900;
+        color: #fff;
+    }
+
+    .result-title { font-size: 1.5rem; font-weight: 900; color: #fff; margin-bottom: 0.5rem; }
+    .result-msg { color: #94a3b8; font-size: 0.95rem; margin-bottom: 2rem; line-height: 1.5; }
+    .result-actions { display: flex; gap: 0.75rem; }
+    .btn-result-secondary {
+        flex: 1;
+        padding: 0.75rem;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #94a3b8;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.3s;
+        font-size: 0.9rem;
+    }
+    .btn-result-secondary:hover { background: rgba(255,255,255,0.09); color: #fff; }
+    .btn-result-primary {
+        flex: 1;
+        padding: 0.75rem;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+        border: none;
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.3s;
+        font-size: 0.9rem;
+    }
+    .btn-result-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+
+    @media (max-width: 900px) {
+        .editor-grid { grid-template-columns: 1fr; height: auto; }
+        .problem-panel { height: 320px; }
+        .code-panel { min-height: 400px; }
+        #codeEditor { min-height: 300px; }
+        .editor-page { height: auto; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="editor-page">
+
+    <!-- Top Bar -->
+    <div class="editor-topbar">
+        <div class="topbar-left">
+            <a href="{% url 'coding:coding_list' %}" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            <div class="problem-title-bar">
+                {{ problem.title }}
+                <span class="diff-chip {% if problem.difficulty == 'Easy' %}diff-easy{% elif problem.difficulty == 'Medium' %}diff-medium{% else %}diff-hard{% endif %}">
+                    {{ problem.difficulty }}
+                </span>
+            </div>
+        </div>
+        <div class="topbar-actions">
+            <button class="btn-reset" onclick="resetCode()">
+                <i class="fas fa-undo"></i> Reset
+            </button>
+            <select id="hintLangSelect" style="background: rgba(30, 41, 59, 0.8); color: #cbd5e1; border: 1px solid rgba(255, 255, 255, 0.1); padding: 0.5rem 0.8rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600; cursor: pointer; outline: none; transition: 0.3s; margin-right: 0.5rem; height: 38px;">
+                <option value="ta-EN">Tanglish</option>
+                <option value="en-US">English</option>
+            </select>
+            <button class="btn-hint" id="hintBtn" style="height: 38px;">
+                <i class="fas fa-lightbulb"></i> AI Hint
+            </button>
+            <button class="btn-submit" id="runBtn" style="height: 38px;">
+                <i class="fas fa-play"></i> Submit
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="editor-grid">
+
+        <!-- Left: Problem -->
+        <div class="problem-panel">
+            <div class="panel-tabs">
+                <div class="panel-tab active" onclick="switchTab('description', this)">Description</div>
+                <div class="panel-tab" onclick="switchTab('hints', this)">AI Hint</div>
+            </div>
+            <div class="panel-body">
+                <!-- Description Tab -->
+                <div class="tab-content active" id="tab-description">
+                    <div class="problem-statement">
+                        <h3>Problem Statement</h3>
+                        <div>{{ problem.description|linebreaks }}</div>
+                        {% if problem.tags %}
+                        <div class="problem-tags-row">
+                            {% for tag in problem.tags.split %}
+                                <span class="tag-pill">{{ tag|cut:"," }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- Hint Tab -->
+                <div class="tab-content" id="tab-hints">
+                    <div id="hintLoading" style="display:none; text-align:center; padding:2rem; color:#64748b;">
+                        <i class="fas fa-spinner fa-spin fa-2x" style="color:#8b5cf6; margin-bottom:1rem; display:block;"></i>
+                        AI is analyzing your code...
+                    </div>
+                    <div id="hintContent" style="display:none;">
+                        <h3 style="font-size:0.75rem; font-weight:800; text-transform:uppercase; letter-spacing:2px; color:#8b5cf6; margin-bottom:0.75rem;">
+                            <i class="fas fa-robot"></i> AI Tutor
+                        </h3>
+                        <p id="tutorHintText" style="color:#e2e8f0; line-height:1.7; white-space:pre-wrap; font-size:0.9rem;"></p>
+                    </div>
+                    <div id="hintEmpty" style="text-align:center; padding:3rem 1rem; color:#475569;">
+                        <i class="fas fa-lightbulb fa-2x" style="color:#8b5cf6; opacity:0.4; margin-bottom:1rem; display:block;"></i>
+                        <p style="font-size:0.9rem;">Click <strong style="color:#a78bfa;">AI Hint</strong> to get personalized guidance from your AI tutor.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Code Editor -->
+        <div class="code-panel">
+            <div class="code-header">
+                <div style="display:flex; align-items:center; gap:0.75rem;">
+                    <div class="code-dots">
+                        <div class="dot dot-red"></div>
+                        <div class="dot dot-yellow"></div>
+                        <div class="dot dot-green"></div>
+                    </div>
+                    <div class="code-filename">
+                        <i class="fas fa-code"></i>
+                        <span id="filenameSpan">solution.py</span>
+                    </div>
+                </div>
+                <span class="lang-badge">{{ problem.language|default:"Python" }}</span>
+            </div>
+            <textarea id="codeEditor" spellcheck="false">{{ problem.initial_code }}</textarea>
+        </div>
+
+    </div>
+</div>
+
+<!-- Result Modal -->
+<div class="result-modal-overlay" id="resultModal">
+    <div class="result-modal">
+        <div class="score-ring">
+            <svg viewBox="0 0 100 100" width="100" height="100">
+                <circle class="score-ring-bg" cx="50" cy="50" r="40"/>
+                <circle class="score-ring-fill" id="scoreRingFill" cx="50" cy="50" r="40"
+                    stroke="url(#scoreGrad)"
+                    stroke-dasharray="251.2"
+                    stroke-dashoffset="251.2"/>
+                <defs>
+                    <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#8b5cf6"/>
+                        <stop offset="100%" stop-color="#06b6d4"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <div class="score-num" id="scoreNum">0%</div>
+        </div>
+        <div class="result-title" id="resultTitle">Submission Result</div>
+        <div class="result-msg" id="resultMsg"></div>
+        <div class="result-actions">
+            <button class="btn-result-secondary" onclick="closeModal()">Try Again</button>
+            <button class="btn-result-primary" onclick="window.location.href='{% url 'coding:coding_list' %}'">
+                <i class="fas fa-list"></i> All Problems
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Tab switching
+    function switchTab(tabId, el) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+        el.classList.add('active');
+    }
+
+    // Filename
+    const langToExt = { 'python':'py','javascript':'js','js':'js','java':'java','c++':'cpp','cpp':'cpp','c':'c','ruby':'rb','go':'go' };
+    const currentLang = "{{ problem.language|default:'Python' }}".toLowerCase().trim();
+    document.getElementById('filenameSpan').textContent = 'solution.' + (langToExt[currentLang] || 'py');
+
+    // Tab key support
+    document.getElementById('codeEditor').addEventListener('keydown', function(e) {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const s = this.selectionStart, en = this.selectionEnd;
+            this.value = this.value.substring(0,s) + '    ' + this.value.substring(en);
+            this.selectionStart = this.selectionEnd = s + 4;
+        }
+    });
+
+    // Submit
+    const runBtn = document.getElementById('runBtn');
+    runBtn.onclick = async () => {
+        runBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Evaluating...';
+        runBtn.disabled = true;
+        try {
+            const resp = await fetch("{% url 'coding:submit_code_api' problem.id %}", {
+                method: 'POST',
+                headers: { 'Content-Type':'application/json', 'X-CSRFToken':'{{ csrf_token }}' },
+                body: JSON.stringify({ code: document.getElementById('codeEditor').value })
+            });
+            const data = await resp.json();
+            showResult(data.score);
+        } catch(e) {
+            alert('Submission failed. Please try again.');
+        } finally {
+            runBtn.innerHTML = '<i class="fas fa-play"></i> Submit';
+            runBtn.disabled = false;
+        }
+    };
+
+    function showResult(score) {
+        const modal = document.getElementById('resultModal');
+        const fill = document.getElementById('scoreRingFill');
+        const scoreNum = document.getElementById('scoreNum');
+        const title = document.getElementById('resultTitle');
+        const msg = document.getElementById('resultMsg');
+
+        modal.classList.add('show');
+
+        // Animate score ring (circumference = 251.2)
+        const offset = 251.2 - (251.2 * score / 100);
+        setTimeout(() => { fill.style.strokeDashoffset = offset; }, 100);
+
+        let n = 0;
+        const counter = setInterval(() => {
+            n = Math.min(n + 2, score);
+            scoreNum.textContent = n + '%';
+            if (n >= score) clearInterval(counter);
+        }, 20);
+
+        if (score >= 80) {
+            title.textContent = 'Great Work!';
+            title.style.color = '#10b981';
+            msg.textContent = 'Your solution passed the evaluation. Strong logic and structure!';
+        } else if (score >= 50) {
+            title.textContent = 'Almost There!';
+            title.style.color = '#f59e0b';
+            msg.textContent = 'Your solution partially passed. Try refining your logic or edge cases.';
+        } else {
+            title.textContent = 'Keep Trying!';
+            title.style.color = '#ef4444';
+            msg.textContent = 'Use the AI Hint to understand the approach. You\'ve got this!';
+        }
+    }
+
+    function closeModal() { document.getElementById('resultModal').classList.remove('show'); }
+
+    function resetCode() {
+        if (confirm('Reset your code to the starter template?')) {
+            document.getElementById('codeEditor').value = `{{ problem.initial_code|escapejs }}`;
+        }
+    }
+
+    // AI Hint
+    document.getElementById('hintBtn').onclick = async () => {
+        // Switch to hints tab
+        switchTab('hints', document.querySelectorAll('.panel-tab')[1]);
+        document.getElementById('hintEmpty').style.display = 'none';
+        document.getElementById('hintContent').style.display = 'none';
+        document.getElementById('hintLoading').style.display = 'block';
+
+        const hintBtn = document.getElementById('hintBtn');
+        hintBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Thinking...';
+        hintBtn.disabled = true;
+
+        try {
+            const hintLang = document.getElementById('hintLangSelect').value;
+            const resp = await fetch("{% url 'coding:get_hint_api' problem.id %}", {
+                method: 'POST',
+                headers: { 'Content-Type':'application/json', 'X-CSRFToken':'{{ csrf_token }}' },
+                body: JSON.stringify({ 
+                    code: document.getElementById('codeEditor').value,
+                    language: hintLang
+                })
+            });
+            const data = await resp.json();
+            document.getElementById('hintLoading').style.display = 'none';
+            if (data.status === 'success') {
+                document.getElementById('tutorHintText').textContent = data.hint;
+                document.getElementById('hintContent').style.display = 'block';
+            } else {
+                document.getElementById('hintEmpty').style.display = 'block';
+            }
+        } catch(e) {
+            document.getElementById('hintLoading').style.display = 'none';
+            document.getElementById('hintEmpty').style.display = 'block';
+        } finally {
+            hintBtn.innerHTML = '<i class="fas fa-lightbulb"></i> AI Hint';
+            hintBtn.disabled = false;
+        }
+    };
+</script>
+{% endblock %}

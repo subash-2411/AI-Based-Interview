@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile - {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <!-- Header Section -->
+    <div class="glass-card profile-header">
+        <div class="profile-main-info">
+            <div class="profile-avatar">
+                {% if user.profile_pic %}
+                    <img src="{{ user.profile_pic.url }}" alt="{{ user.username }}">
+                {% else %}
+                    <i class="fas fa-user-astronaut"></i>
+                {% endif %}
+                <div class="level-badge">Lv. {{ history.level }}</div>
+            </div>
+            <div class="profile-text">
+                <h1 class="hero-title" style="font-size: 2.5rem; margin-bottom: 0.5rem; text-align: left;">{{ user.get_full_name|default:user.username }}</h1>
+                <p class="text-muted"><i class="fas fa-envelope mr-2"></i> {{ user.email }}</p>
+                {% if user.bio %}
+                    <p class="profile-bio mt-3">{{ user.bio }}</p>
+                {% else %}
+                    <p class="text-muted mt-3 italic">No bio added yet.</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="profile-actions">
+            <a href="{% url 'edit_profile' %}" class="btn-primary"><i class="fas fa-edit"></i> Edit Profile</a>
+        </div>
+    </div>
+
+    <div class="profile-grid mt-4">
+        <!-- Stats Card -->
+        <div class="glass-card stats-card">
+            <h3 class="mb-4"><i class="fas fa-chart-pie text-primary"></i> Performance Stats</h3>
+            <div class="stats-items">
+                <div class="stat-item">
+                    <span class="stat-label">Total Interviews</span>
+                    <span class="stat-value">{{ history.total_interviews }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Average Score</span>
+                    <span class="stat-value">{{ history.avg_score|floatformat:1 }}%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Total XP</span>
+                    <span class="stat-value text-gradient">{{ history.xp }}</span>
+                </div>
+            </div>
+            
+            <div class="xp-progress-container mt-4">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="small">XP Progress</span>
+                    <span class="small">{{ history.xp|add:"-1000"|default:history.xp }}/1000</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {% widthratio history.xp 10 1 %}%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skills Card -->
+        <div class="glass-card skills-card">
+            <h3 class="mb-4"><i class="fas fa-code text-secondary"></i> Technical Skills</h3>
+            <div class="skills-list">
+                {% for skill in skills %}
+                    <div class="skill-tag">
+                        <span>{{ skill.name }}</span>
+                        <div class="skill-dot"></div>
+                    </div>
+                {% empty %}
+                    <p class="text-muted">No skills listed. Start an interview to extract skills from your resume!</p>
+                {% endfor %}
+            </div>
+            
+            <div class="mt-4 pt-3 border-top">
+                <p class="small text-muted mb-3">Add more skills to improve your AI interview matching.</p>
+                <div class="input-group">
+                    <input type="text" placeholder="Add a skill..." class="input-field" style="padding: 0.6rem;">
+                    <button class="btn-primary" style="padding: 0.6rem 1rem; border-radius: 0 12px 12px 0; margin-left: -10px;">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .profile-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding-bottom: 4rem;
+    }
+    .profile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 3rem;
+        gap: 2rem;
+    }
+    .profile-main-info {
+        display: flex;
+        align-items: center;
+        gap: 2.5rem;
+    }
+    .profile-avatar {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        background: var(--glass);
+        border: 2px solid var(--primary);
+        border-radius: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3.5rem;
+        color: var(--primary);
+        overflow: hidden;
+    }
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .level-badge {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--primary);
+        color: white;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-align: center;
+        padding: 2px 0;
+    }
+    .profile-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+    .stats-items {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        text-align: center;
+    }
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .stat-label { font-size: 0.8rem; color: var(--text-muted); }
+    .stat-value { font-size: 1.5rem; font-weight: 800; }
+    
+    .progress-bar {
+        height: 8px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(to right, var(--primary), var(--secondary));
+        box-shadow: 0 0 10px var(--primary-glow);
+    }
+    
+    .skills-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+    }
+    .skill-tag {
+        background: rgba(139, 92, 246, 0.1);
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+    .skill-dot { width: 8px; height: 8px; background: var(--secondary); border-radius: 50%; }
+    
+    .border-top { border-top: 1px solid var(--glass-border); }
+    .italic { font-style: italic; }
+    .mr-2 { margin-right: 0.5rem; }
+
+    @media (max-width: 768px) {
+        .profile-header { flex-direction: column; text-align: center; padding: 2rem; }
+        .profile-main-info { flex-direction: column; gap: 1.5rem; }
+        .profile-text { text-align: center !important; }
+        .profile-text h1 { text-align: center !important; }
+        .profile-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}

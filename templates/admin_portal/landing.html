@@ -1,0 +1,416 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Center — AI Interview Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #050810;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ── Deep background glow ── */
+        .bg-glow {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .glow-red {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(220, 38, 38, 0.25) 0%, transparent 65%);
+            border-radius: 50%;
+            bottom: -100px;
+            right: -100px;
+            animation: breathe 6s ease-in-out infinite;
+        }
+
+        .glow-dark {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(139, 0, 0, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            top: -80px;
+            left: -80px;
+            animation: breathe 8s ease-in-out infinite reverse;
+        }
+
+        .glow-purple {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(88, 28, 135, 0.12) 0%, transparent 70%);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50%       { transform: scale(1.12); opacity: 1; }
+        }
+
+        /* ── Grid pattern overlay ── */
+        .grid-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+        }
+
+        /* ── Top pill badge ── */
+        .top-badge {
+            position: fixed;
+            top: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            border-radius: 30px;
+            padding: 0.45rem 1.1rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #6ee7b7;
+            z-index: 100;
+            letter-spacing: 0.3px;
+            animation: fadeDown 0.6s cubic-bezier(0.16,1,0.3,1) forwards;
+        }
+
+        .top-badge .dot {
+            width: 7px;
+            height: 7px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.5); }
+            50%       { box-shadow: 0 0 0 5px rgba(16,185,129,0); }
+        }
+
+        @keyframes fadeDown {
+            from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* ── Main card ── */
+        .card {
+            position: relative;
+            z-index: 10;
+            background: rgba(10, 12, 24, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 28px;
+            padding: 3.5rem 3rem 2.5rem;
+            max-width: 520px;
+            width: 90%;
+            text-align: center;
+            backdrop-filter: blur(30px);
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.04),
+                0 40px 80px rgba(0,0,0,0.7),
+                0 0 120px rgba(220,38,38,0.08);
+            animation: riseUp 0.7s cubic-bezier(0.16,1,0.3,1) forwards;
+        }
+
+        @keyframes riseUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Shield icon */
+        .shield-wrap {
+            margin: 0 auto 1.5rem;
+            width: 72px;
+            height: 72px;
+            position: relative;
+        }
+
+        .shield-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 40% 35%, rgba(239,68,68,0.15), transparent 60%);
+            border: 1px solid rgba(239,68,68,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: #f87171;
+            position: relative;
+            animation: iconPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes iconPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.3), 0 0 30px rgba(239,68,68,0.1); }
+            50%       { box-shadow: 0 0 0 10px rgba(239,68,68,0), 0 0 50px rgba(239,68,68,0.2); }
+        }
+
+        /* Title */
+        .card-title {
+            font-size: 3rem;
+            font-weight: 900;
+            letter-spacing: -1.5px;
+            line-height: 1;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff 0%, #fca5a5 60%, #f87171 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-desc {
+            color: rgba(148, 163, 184, 0.85);
+            font-size: 0.95rem;
+            line-height: 1.65;
+            max-width: 360px;
+            margin: 0 auto 2.5rem;
+        }
+
+        /* Access button */
+        .access-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.65rem;
+            width: 100%;
+            padding: 1rem 2rem;
+            border-radius: 14px;
+            border: 1px solid rgba(239,68,68,0.3);
+            background: rgba(12, 14, 26, 0.9);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 800;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.2px;
+            box-shadow:
+                0 0 0 1px rgba(239,68,68,0.15),
+                0 8px 32px rgba(239,68,68,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+
+        .access-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(239,68,68,0.08), transparent 60%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .access-btn:hover::before { opacity: 1; }
+
+        .access-btn:hover {
+            border-color: rgba(239,68,68,0.6);
+            box-shadow:
+                0 0 0 1px rgba(239,68,68,0.3),
+                0 12px 48px rgba(239,68,68,0.3),
+                inset 0 1px 0 rgba(255,255,255,0.06);
+            transform: translateY(-2px);
+        }
+
+        .access-btn i { font-size: 0.95rem; opacity: 0.7; }
+
+        /* Secondary buttons row */
+        .btn-row {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 0.85rem;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.7rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.07);
+            background: rgba(255,255,255,0.03);
+            color: rgba(148,163,184,0.8);
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            border-color: rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+        }
+
+        /* Bottom warning */
+        .bottom-warning {
+            position: fixed;
+            bottom: 1.75rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: rgba(245, 158, 11, 0.7);
+            z-index: 100;
+            white-space: nowrap;
+            animation: fadeUp 0.8s 0.3s cubic-bezier(0.16,1,0.3,1) both;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* Side action (System Logs) */
+        .side-action {
+            position: fixed;
+            bottom: 3.5rem;
+            right: 2.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            padding: 0.6rem 1.1rem;
+            border-radius: 30px;
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59,130,246,0.2);
+            color: #60a5fa;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.25s;
+            z-index: 100;
+            animation: fadeRight 0.7s 0.4s cubic-bezier(0.16,1,0.3,1) both;
+        }
+
+        @keyframes fadeRight {
+            from { opacity: 0; transform: translateX(15px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        .side-action:hover {
+            background: rgba(59,130,246,0.15);
+            border-color: rgba(59,130,246,0.4);
+            color: #93c5fd;
+            transform: translateY(-2px);
+        }
+
+        /* User Management tag - top left corner */
+        .corner-tag {
+            position: fixed;
+            top: 1.5rem;
+            left: 2.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            background: rgba(16,185,129,0.08);
+            border: 1px solid rgba(16,185,129,0.2);
+            color: #6ee7b7;
+            font-size: 0.78rem;
+            font-weight: 700;
+            z-index: 100;
+            animation: fadeLeft 0.6s cubic-bezier(0.16,1,0.3,1) forwards;
+        }
+
+        @keyframes fadeLeft {
+            from { opacity: 0; transform: translateX(-10px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Background elements -->
+    <div class="bg-glow">
+        <div class="glow-red"></div>
+        <div class="glow-dark"></div>
+        <div class="glow-purple"></div>
+    </div>
+    <div class="grid-overlay"></div>
+
+    <!-- Top left tag -->
+    <div class="corner-tag">
+        <i class="fas fa-users"></i> User Management
+    </div>
+
+    <!-- Main card -->
+    <div class="card">
+        <!-- Shield icon -->
+        <div class="shield-wrap">
+            <div class="shield-icon">
+                <i class="fas fa-shield-halved"></i>
+            </div>
+        </div>
+
+        <!-- Title -->
+        <h1 class="card-title">Command Center</h1>
+
+        <!-- Description -->
+        <p class="card-desc">
+            Restricted Access. Manage users, monitor interview data, and configure AI engine parameters from the secure admin console.
+        </p>
+
+        <!-- Access button -->
+        <a href="{% url 'admin_portal:login' %}" class="access-btn">
+            Access Admin Panel &nbsp;<i class="fas fa-lock"></i>
+        </a>
+
+        <!-- Secondary actions -->
+        <div class="btn-row">
+            <a href="{% url 'dashboard' %}" class="btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Site
+            </a>
+            <a href="{% url 'admin_portal:login' %}" class="btn-secondary" style="color:#f87171; border-color:rgba(239,68,68,0.15);">
+                <i class="fas fa-sign-in-alt"></i> Admin Login
+            </a>
+        </div>
+    </div>
+
+    <!-- Side System Logs button -->
+    <a href="{% url 'admin_portal:login' %}" class="side-action">
+        <i class="fas fa-server"></i> System Logs & Data
+    </a>
+
+    <!-- Bottom warning -->
+    <div class="bottom-warning">
+        <i class="fas fa-triangle-exclamation" style="color: #f59e0b;"></i>
+        Authorized Personnel Only. Ensure Django server is running.
+    </div>
+
+
+</body>
+</html>

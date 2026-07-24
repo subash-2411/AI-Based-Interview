@@ -1,0 +1,87 @@
+{% extends 'admin_portal/base.html' %}
+{% block title %}Interviews — Command Center{% endblock %}
+{% block nav_interviews %}active{% endblock %}
+{% block breadcrumb %}Interviews{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1><i class="fas fa-microphone" style="color:var(--purple); margin-right:0.5rem;"></i>Interview Sessions</h1>
+        <p>{{ total }} total · {{ completed }} completed · Avg score {{ avg_score|floatformat:1 }}%</p>
+    </div>
+</div>
+
+<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-bottom:1.5rem;">
+    <div class="stat-card" style="--accent-color:var(--purple);">
+        <div class="stat-top"><span class="stat-label">Total Sessions</span><div class="stat-icon" style="background:rgba(139,92,246,0.1);"><i class="fas fa-microphone" style="color:var(--purple);"></i></div></div>
+        <div class="stat-value">{{ total }}</div>
+    </div>
+    <div class="stat-card" style="--accent-color:var(--green);">
+        <div class="stat-top"><span class="stat-label">Completed</span><div class="stat-icon" style="background:rgba(16,185,129,0.1);"><i class="fas fa-check-circle" style="color:var(--green);"></i></div></div>
+        <div class="stat-value">{{ completed }}</div>
+        <div class="stat-sub">{{ total|add:"-completed" }} incomplete</div>
+    </div>
+    <div class="stat-card" style="--accent-color:var(--amber);">
+        <div class="stat-top"><span class="stat-label">Avg Score</span><div class="stat-icon" style="background:rgba(245,158,11,0.1);"><i class="fas fa-star" style="color:var(--amber);"></i></div></div>
+        <div class="stat-value">{{ avg_score|floatformat:1 }}%</div>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <span class="panel-title"><i class="fas fa-table"></i> All Interview Sessions</span>
+        <span style="font-size:0.73rem; color:var(--muted);">Latest 50</span>
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Language</th>
+                <th>Difficulty</th>
+                <th>Score</th>
+                <th>Status</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for iv in sessions %}
+            <tr>
+                <td style="color:var(--muted2); font-size:0.72rem;">#{{ iv.id }}</td>
+                <td>
+                    <div class="user-cell">
+                        <div class="user-av">{{ iv.user.username|first|upper }}</div>
+                        <div class="user-name-cell">
+                            <strong>{{ iv.user.username }}</strong>
+                            <span>{{ iv.user.email|truncatechars:18 }}</span>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    {% if iv.language == 'ta-IN' %}<span class="badge badge-amber"><i class="fas fa-language"></i> Tamil</span>
+                    {% else %}<span class="badge badge-blue"><i class="fas fa-language"></i> English</span>{% endif %}
+                </td>
+                <td>
+                    {% if iv.difficulty == 'Hard' %}<span class="badge badge-red">Hard</span>
+                    {% elif iv.difficulty == 'Easy' %}<span class="badge badge-green">Easy</span>
+                    {% else %}<span class="badge badge-amber">Medium</span>{% endif %}
+                </td>
+                <td>
+                    <div class="score-bar-wrap">
+                        <div class="score-bar-bg"><div class="score-bar-fill" style="width:{{ iv.score }}%;"></div></div>
+                        <span class="score-num">{{ iv.score|floatformat:0 }}%</span>
+                    </div>
+                </td>
+                <td>
+                    {% if iv.is_completed %}<span class="badge badge-green">Done</span>
+                    {% else %}<span class="badge badge-amber">Ongoing</span>{% endif %}
+                </td>
+                <td style="color:var(--muted); font-size:0.73rem; white-space:nowrap;">{{ iv.created_at|date:"d M Y H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" style="text-align:center; color:var(--muted); padding:3rem;">No interview sessions yet</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

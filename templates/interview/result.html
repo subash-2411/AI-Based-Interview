@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Interview Result - AI Interview Pro{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <h1 class="hero-title">Interview Completed</h1>
+    <p class="hero-subtitle">Great job! Here is your initial performance overview.</p>
+</div>
+
+<div class="result-container glass-card">
+    <div class="result-header text-center mb-5">
+        <div class="score-display">
+            <span class="score-val">Score: {{ session.score|floatformat:1 }}%</span>
+        </div>
+        <div style="margin-top: -0.2rem; margin-bottom: 1.2rem; display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); padding: 0.5rem 1.2rem; border-radius: 20px; color: #a78bfa; font-weight: 700; font-size: 0.9rem;">
+            <i class="far fa-clock"></i> Time Taken: {{ session.formatted_duration }}
+        </div>
+        <p class="text-muted">Based on your technical accuracy and keyword usage.</p>
+    </div>
+
+    <div class="qa-review">
+        <h3>Detailed Feedback</h3>
+        {% for q in session.questions.all %}
+            <div class="qa-item glass-card mt-3">
+                <p class="q-text"><strong>Q:</strong> {{ q.question_text }}</p>
+                <p class="a-text"><strong>Your Answer:</strong> {{ q.user_answer|default:"No answer provided" }}</p>
+                {% if q.ideal_answer %}
+                <p class="a-text text-success mt-2" style="color: #4ade80 !important;"><strong>AI's Ideal Answer:</strong> {{ q.ideal_answer }}</p>
+                {% endif %}
+                <div class="feedback-box mt-2 p-2" style="background: rgba(99, 102, 241, 0.1); border-radius: 8px;">
+                    <span class="text-primary small"><strong>AI Feedback:</strong> {{ q.feedback }}</span>
+                    <span class="badge float-end" style="background: var(--secondary)">{{ q.score|floatformat:0 }} pts</span>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="text-center mt-5 d-flex justify-content-center gap-3">
+        <a href="{% url 'dashboard' %}" class="btn-outline">Back to Dashboard</a>
+        <a href="{% url 'interview:download_report' session.id %}" class="btn-primary">
+            <i class="fas fa-file-pdf"></i> Download Report (PDF)
+        </a>
+    </div>
+</div>
+
+<style>
+    .score-display {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--primary);
+        margin-bottom: 1rem;
+    }
+    .qa-item { border-radius: 15px; padding: 1.5rem; }
+    .q-text { color: white; margin-bottom: 0.5rem; }
+    .a-text { color: var(--text-muted); }
+</style>
+{% endblock %}

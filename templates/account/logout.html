@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Sign Out" %} - AI Interview Pro{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="glass-card" style="text-align: center;">
+        <h2 class="hero-title" style="font-size: 2.5rem; margin-bottom: 1rem;">{% trans "Sign Out" %}</h2>
+        <p class="hero-subtitle" style="margin-bottom: 2rem;">{% trans "Are you sure you want to sign out?" %}</p>
+
+        <form method="post" action="{% url 'account_logout' %}">
+            {% csrf_token %}
+            {% if redirect_field_value %}
+                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+            {% endif %}
+            <button class="btn-primary" type="submit" style="width: 100%;">
+                {% trans "Sign Out" %}
+            </button>
+            <a href="{% url 'dashboard' %}" style="display: block; margin-top: 1.5rem; color: var(--text-muted); text-decoration: none;">{% trans "Go Back" %}</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

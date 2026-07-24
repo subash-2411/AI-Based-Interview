@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load account socialaccount %}
+
+{% block title %}{% trans "Sign In" %} - AI Interview Pro{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="glass-card">
+        <h2 class="hero-title" style="font-size: 2.5rem; margin-bottom: 0.5rem;">{% trans "Welcome Back" %}</h2>
+        <p class="hero-subtitle" style="margin-bottom: 2rem;">{% trans "Sign in to continue your interview journey" %}</p>
+
+        {% get_providers as socialaccount_providers %}
+
+        {% if socialaccount_providers %}
+            <div class="socialaccount_ballot">
+                <a title="Google" class="socialaccount_provider google btn-google" 
+                   href="{% provider_login_url 'google' %}">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google">
+                    <span>Continue with Google</span>
+                </a>
+            </div>
+
+            <div class="separator" style="margin: 2rem 0;">
+                <span>{% trans "OR" %}</span>
+            </div>
+        {% endif %}
+
+        <form class="login" method="POST" action="{% url 'account_login' %}">
+            {% csrf_token %}
+            
+            <div class="input-group">
+                <label for="id_login" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Email</label>
+                <input type="email" name="login" placeholder="Email address" class="input-field" required id="id_login">
+            </div>
+
+            <div class="input-group">
+                <label for="id_password" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Password</label>
+                <input type="password" name="password" placeholder="Password" class="input-field" required id="id_password">
+            </div>
+
+            {% if redirect_field_value %}
+                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+            {% endif %}
+
+            <button class="btn-primary" type="submit" style="width: 100%; margin-top: 1rem;">
+                {% trans "Sign In" %}
+            </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 2rem; color: var(--text-muted);">
+            <p>{% trans "Don't have an account?" %} 
+                <a href="{{ signup_url }}" style="color: var(--primary); text-decoration: none; font-weight: 600;">{% trans "Sign Up" %}</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

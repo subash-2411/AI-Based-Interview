@@ -1,0 +1,406 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Resume Builder - Premium Edition{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root {
+        --card-bg: rgba(15, 23, 42, 0.4);
+        --input-bg: rgba(2, 6, 23, 0.5);
+    }
+
+    .builder-container {
+        padding: 4rem 1rem;
+        animation: fadeIn 1s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .premium-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(30px) saturate(200%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 40px;
+        padding: 4rem;
+        box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.5);
+        position: relative;
+    }
+
+    .section-glow {
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        background: var(--primary);
+        filter: blur(150px);
+        opacity: 0.1;
+        pointer-events: none;
+        z-index: -1;
+    }
+
+    .step-indicator {
+        display: flex;
+        justify-content: center;
+        gap: 3rem;
+        margin-bottom: 4rem;
+    }
+
+    .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.8rem;
+        opacity: 0.4;
+        transition: 0.5s;
+    }
+
+    .step.active {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    .step-icon {
+        width: 60px;
+        height: 60px;
+        background: var(--input-bg);
+        border: 2px solid var(--glass-border);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        transition: 0.4s;
+    }
+
+    .step.active .step-icon {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        border-color: transparent;
+        box-shadow: 0 10px 25px var(--primary-glow);
+    }
+
+    .step-label {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .input-wrapper {
+        position: relative;
+        margin-bottom: 2.5rem;
+    }
+
+    .floating-label {
+        position: absolute;
+        left: 1.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        pointer-events: none;
+        transition: 0.3s;
+        font-size: 1rem;
+    }
+
+    .input-field:focus + .floating-label,
+    .input-field:not(:placeholder-shown) + .floating-label {
+        top: -12px;
+        left: 1rem;
+        font-size: 0.8rem;
+        color: var(--primary);
+        background: var(--darker);
+        padding: 0 0.5rem;
+        border-radius: 4px;
+    }
+
+    textarea.input-field + .floating-label {
+        top: 1.5rem;
+        transform: none;
+    }
+
+    textarea.input-field:focus + .floating-label,
+    textarea.input-field:not(:placeholder-shown) + .floating-label {
+        top: -12px;
+    }
+
+    .suggestion-item {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        padding: 1.2rem;
+        margin-top: 1rem;
+        cursor: pointer;
+        transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .suggestion-item:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--primary);
+        transform: translateX(10px) scale(1.02);
+    }
+
+    .suggestion-item::before {
+        content: '\f0da';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        left: -20px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--primary);
+        transition: 0.4s;
+        opacity: 0;
+    }
+
+    .suggestion-item:hover::before {
+        left: 10px;
+        opacity: 1;
+    }
+
+    .suggestion-item:hover {
+        padding-left: 2.5rem;
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        padding: 1.5rem 4rem;
+        border-radius: 25px;
+        border: none;
+        color: #fff;
+        font-weight: 800;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: 0.5s;
+        box-shadow: 0 20px 40px var(--primary-glow);
+        display: inline-flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 30px 60px var(--primary-glow);
+    }
+
+    .btn-ai {
+        background: rgba(139, 92, 246, 0.1);
+        border: 1px solid var(--primary);
+        color: var(--primary);
+        padding: 0.8rem 1.5rem;
+        border-radius: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+
+    .btn-ai:hover {
+        background: var(--primary);
+        color: #fff;
+        box-shadow: 0 0 20px var(--primary-glow);
+    }
+
+    .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .grid-2 { grid-template-columns: 1fr; }
+        .premium-card { padding: 2rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="builder-container" style="max-width: 1000px; margin: 0 auto;">
+    <div style="text-align: center; margin-bottom: 5rem;">
+        <span style="text-transform: uppercase; letter-spacing: 4px; color: var(--primary); font-weight: 800; font-size: 0.9rem;">Next-Gen Resume Building</span>
+        <h1 class="hero-title" style="margin-top: 1rem;">Craft Your Future.</h1>
+        <p class="hero-subtitle">Our AI doesn't just build resumes; it builds careers. Create a professional, ATS-optimized resume in minutes.</p>
+    </div>
+
+    <div class="premium-card">
+        <div class="section-glow" style="top: -100px; left: -100px;"></div>
+        <div class="section-glow" style="bottom: -100px; right: -100px; background: var(--accent);"></div>
+
+        <div class="step-indicator">
+            <div class="step active" id="step-1-ind">
+                <div class="step-icon"><i class="fas fa-user-astronaut"></i></div>
+                <span class="step-label">About You</span>
+            </div>
+            <div class="step" id="step-2-ind">
+                <div class="step-icon"><i class="fas fa-brain"></i></div>
+                <span class="step-label">Objective</span>
+            </div>
+            <div class="step" id="step-3-ind">
+                <div class="step-icon"><i class="fas fa-rocket"></i></div>
+                <span class="step-label">Skills & Exp</span>
+            </div>
+        </div>
+
+        <form method="POST" id="resume-form" action="{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}">
+            {% csrf_token %}
+            
+            <!-- Step 1: Basic Info -->
+            <div id="step-1">
+                <div class="grid-2">
+                    <div class="input-wrapper">
+                        <input type="text" name="name" class="input-field" placeholder=" " required>
+                        <label class="floating-label">Full Name</label>
+                    </div>
+                    <div class="input-wrapper">
+                        <input type="email" name="email" class="input-field" placeholder=" " required>
+                        <label class="floating-label">Email Address</label>
+                    </div>
+                </div>
+                <div class="input-wrapper">
+                    <input type="text" name="phone" class="input-field" placeholder=" " required>
+                    <label class="floating-label">Phone Number (e.g. +91 98765 43210)</label>
+                </div>
+                <div style="text-align: right; margin-top: 2rem;">
+                    <button type="button" onclick="nextStep(2)" class="btn-ai">Next: Career Goals <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <!-- Step 2: Objective -->
+            <div id="step-2" style="display: none;">
+                <div class="input-wrapper">
+                    <textarea name="objective" id="objective" class="input-field" style="height: 180px;" placeholder=" " required></textarea>
+                    <label class="floating-label">Tell us about your career goals...</label>
+                    <div style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                        <button type="button" id="optimize-btn" class="btn-ai">
+                            <i class="fas fa-sparkles"></i> AI Magic Optimize
+                        </button>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);"><i class="fas fa-info-circle"></i> AI will suggest while you type</span>
+                    </div>
+                </div>
+
+                <div id="ai-suggestions" style="margin-top: 2rem; display: none;">
+                    <div style="display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1.5rem;">
+                        <div style="width: 30px; height: 1px; background: var(--primary);"></div>
+                        <p style="font-size: 0.9rem; font-weight: 700; color: var(--primary); text-transform: uppercase;">AI Generated Suggestions</p>
+                    </div>
+                    <div id="suggestions-list" style="display: flex; flex-direction: column; gap: 1rem;"></div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; margin-top: 3rem;">
+                    <button type="button" onclick="nextStep(1)" class="btn-ai" style="border-color: rgba(255,255,255,0.1); color: var(--text-muted);">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button type="button" onclick="nextStep(3)" class="btn-ai">Next: Skills & Experience <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <!-- Step 3: Skills & Exp -->
+            <div id="step-3" style="display: none;">
+                <div class="input-wrapper">
+                    <input type="text" name="skills" id="skills-input" class="input-field" placeholder=" " required>
+                    <label class="floating-label">Skills (Comma separated, e.g. Python, React, AWS)</label>
+                </div>
+                <div class="grid-2">
+                    <div class="input-wrapper">
+                        <input type="text" name="education" class="input-field" placeholder=" " required>
+                        <label class="floating-label">Latest Education</label>
+                    </div>
+                    <div class="input-wrapper">
+                        <input type="text" name="experience" class="input-field" placeholder=" " required>
+                        <label class="floating-label">Work Experience</label>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; margin-top: 3rem; align-items: center;">
+                    <button type="button" onclick="nextStep(2)" class="btn-ai" style="border-color: rgba(255,255,255,0.1); color: var(--text-muted);">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button type="submit" class="btn-submit">
+                        Launch Resume <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let currentStep = 1;
+
+    function nextStep(step) {
+        // Simple fade out/in effect
+        document.getElementById(`step-${currentStep}`).style.display = 'none';
+        document.getElementById(`step-${currentStep}-ind`).classList.remove('active');
+        
+        document.getElementById(`step-${step}`).style.display = 'block';
+        document.getElementById(`step-${step}-ind`).classList.add('active');
+        
+        currentStep = step;
+        window.scrollTo({ top: 200, behavior: 'smooth' });
+    }
+
+    // AI Logic
+    let timeout = null;
+
+    async function fetchSuggestions() {
+        const text = document.getElementById('objective').value;
+        const skills = document.getElementById('skills-input').value;
+        const list = document.getElementById('suggestions-list');
+        const container = document.getElementById('ai-suggestions');
+
+        if (text.length < 5) {
+            container.style.display = 'none';
+            return;
+        }
+
+        try {
+            const response = await fetch('{% url "resume:optimize_objective" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ text: text, skills: skills })
+            });
+            const data = await response.json();
+            
+            list.innerHTML = '';
+            if (data.suggestions && data.suggestions.length > 0) {
+                data.suggestions.forEach(s => {
+                    const div = document.createElement('div');
+                    div.className = 'suggestion-item';
+                    div.innerText = s;
+                    div.onclick = () => {
+                        document.getElementById('objective').value = s;
+                        container.style.display = 'none';
+                        // Trigger floating label update
+                        document.getElementById('objective').dispatchEvent(new Event('input'));
+                    };
+                    list.appendChild(div);
+                });
+                container.style.display = 'block';
+            }
+        } catch (e) {
+            console.error('Error fetching suggestions:', e);
+        }
+    }
+
+    document.getElementById('objective').addEventListener('input', function() {
+        clearTimeout(timeout);
+        timeout = setTimeout(fetchSuggestions, 1000);
+    });
+
+    document.getElementById('optimize-btn').addEventListener('click', async function() {
+        const btn = this;
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+        await fetchSuggestions();
+        btn.innerHTML = originalContent;
+    });
+</script>
+{% endblock %}

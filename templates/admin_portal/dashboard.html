@@ -1,0 +1,305 @@
+{% extends 'admin_portal/base.html' %}
+
+{% block title %}Dashboard — Command Center{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+{% block breadcrumb %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1><i class="fas fa-shield-halved" style="color:var(--red); margin-right:0.5rem;"></i>Command Center</h1>
+        <p>Real-time platform overview · All data from live database</p>
+    </div>
+    <div style="display:flex; gap:0.5rem;">
+        <a href="{% url 'admin_portal:users' %}" class="qa-btn"><i class="fas fa-user-plus"></i> Manage Users</a>
+        <a href="{% url 'admin_portal:coding' %}" class="qa-btn"><i class="fas fa-plus"></i> Add Problem</a>
+    </div>
+</div>
+
+<!-- ── STAT CARDS ── -->
+<div class="stats-grid">
+    <div class="stat-card" style="--accent-color: var(--red);">
+        <div class="stat-top">
+            <span class="stat-label">Total Users</span>
+            <div class="stat-icon" style="background:rgba(239,68,68,0.1);">
+                <i class="fas fa-users" style="color:var(--red);"></i>
+            </div>
+        </div>
+        <div class="stat-value" id="s-users">{{ total_users }}</div>
+        <div class="stat-sub"><span class="up">↑ {{ new_users_week }}</span> new this week</div>
+    </div>
+
+    <div class="stat-card" style="--accent-color: var(--blue);">
+        <div class="stat-top">
+            <span class="stat-label">Active Users</span>
+            <div class="stat-icon" style="background:rgba(59,130,246,0.1);">
+                <i class="fas fa-user-check" style="color:var(--blue);"></i>
+            </div>
+        </div>
+        <div class="stat-value">{{ active_users }}</div>
+        <div class="stat-sub">Logged in last 7 days</div>
+    </div>
+
+    <div class="stat-card" style="--accent-color: var(--purple);">
+        <div class="stat-top">
+            <span class="stat-label">Interviews</span>
+            <div class="stat-icon" style="background:rgba(139,92,246,0.1);">
+                <i class="fas fa-microphone" style="color:var(--purple);"></i>
+            </div>
+        </div>
+        <div class="stat-value" id="s-interviews">{{ total_interviews }}</div>
+        <div class="stat-sub"><span class="up">{{ completed_iv }}</span> completed · Avg <strong>{{ avg_score }}%</strong></div>
+    </div>
+
+    <div class="stat-card" style="--accent-color: var(--cyan);">
+        <div class="stat-top">
+            <span class="stat-label">Resumes</span>
+            <div class="stat-icon" style="background:rgba(6,182,212,0.1);">
+                <i class="fas fa-file-alt" style="color:var(--cyan);"></i>
+            </div>
+        </div>
+        <div class="stat-value" id="s-resumes">{{ total_resumes }}</div>
+        <div class="stat-sub">Avg ATS: <strong>{{ avg_ats }}%</strong></div>
+    </div>
+
+    <div class="stat-card" style="--accent-color: var(--green);">
+        <div class="stat-top">
+            <span class="stat-label">Code Submissions</span>
+            <div class="stat-icon" style="background:rgba(16,185,129,0.1);">
+                <i class="fas fa-code" style="color:var(--green);"></i>
+            </div>
+        </div>
+        <div class="stat-value" id="s-submissions">{{ total_submissions }}</div>
+        <div class="stat-sub">Across {{ total_problems }} problems</div>
+    </div>
+</div>
+
+<!-- ── MAIN GRID ── -->
+<div class="content-grid">
+
+    <!-- Users table -->
+    <div class="panel">
+        <div class="panel-header">
+            <span class="panel-title"><i class="fas fa-users"></i> Recent Users</span>
+            <a href="{% url 'admin_portal:users' %}" class="panel-action">View all <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Mobile</th>
+                    <th>Joined</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in recent_users %}
+                <tr>
+                    <td>
+                        <div class="user-cell">
+                            <div class="user-av">{{ u.username|first|upper }}</div>
+                            <div class="user-name-cell">
+                                <strong>{{ u.username }}</strong>
+                                <span>{{ u.email|truncatechars:22 }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="color:var(--muted);">{{ u.phone_number|default:"—" }}</td>
+                    <td style="color:var(--muted); white-space:nowrap;">{{ u.date_joined|date:"d M y" }}</td>
+                    <td>
+                        {% if u.is_staff %}
+                            <span class="badge badge-red"><i class="fas fa-shield-alt"></i> Admin</span>
+                        {% else %}
+                            <span class="badge badge-green">Active</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'admin_portal:user_detail' u.id %}" class="qa-btn" style="padding:0.3rem 0.65rem; font-size:0.72rem;">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" style="color:var(--muted); text-align:center; padding:2rem;">No users yet</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Right column -->
+    <div style="display:flex; flex-direction:column; gap:1.25rem;">
+
+        <!-- User signups chart -->
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-title"><i class="fas fa-chart-bar"></i> Signups (7 days)</span>
+            </div>
+            <div class="chart-wrap">
+                <div class="bar-chart" id="barChart"></div>
+            </div>
+        </div>
+
+        <!-- Top Users by Interview Count -->
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-title"><i class="fas fa-trophy"></i> Top Users</span>
+                <span style="font-size:0.7rem; color:var(--muted);">By interviews</span>
+            </div>
+            <div class="panel-body">
+                {% for u in top_users %}
+                <div class="top-user-row">
+                    <span class="top-user-rank">#{{ forloop.counter }}</span>
+                    <div class="user-av" style="width:24px;height:24px;font-size:0.62rem;">{{ u.username|first|upper }}</div>
+                    <div class="top-user-info">
+                        <strong>{{ u.username }}</strong>
+                        <span>{{ u.email|truncatechars:20 }}</span>
+                    </div>
+                    <span class="top-user-count">{{ u.iv_count }} IVs</span>
+                </div>
+                {% empty %}
+                <p style="color:var(--muted); font-size:0.8rem; text-align:center; padding:1rem;">No interview data</p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ── 3-COLUMN GRID ── -->
+<div class="content-grid-3">
+
+    <!-- Recent Interviews -->
+    <div class="panel">
+        <div class="panel-header">
+            <span class="panel-title"><i class="fas fa-microphone"></i> Recent Interviews</span>
+            <a href="{% url 'admin_portal:interviews' %}" class="panel-action">All <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr><th>User</th><th>Lang</th><th>Score</th></tr>
+            </thead>
+            <tbody>
+                {% for iv in recent_interviews %}
+                <tr>
+                    <td>
+                        <div style="font-weight:600; font-size:0.78rem;">{{ iv.user.username }}</div>
+                        <div style="font-size:0.7rem; color:var(--muted);">{{ iv.created_at|date:"d M" }}</div>
+                    </td>
+                    <td>
+                        {% if iv.language == 'ta-IN' %}
+                            <span class="badge badge-amber">Tamil</span>
+                        {% else %}
+                            <span class="badge badge-blue">English</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="score-bar-wrap">
+                            <div class="score-bar-bg">
+                                <div class="score-bar-fill" style="width:{{ iv.score }}%;"></div>
+                            </div>
+                            <span class="score-num">{{ iv.score|floatformat:0 }}%</span>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" style="color:var(--muted); text-align:center; padding:1.5rem;">No interviews</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Recent Resumes -->
+    <div class="panel">
+        <div class="panel-header">
+            <span class="panel-title"><i class="fas fa-file-alt"></i> Recent Resumes</span>
+            <a href="{% url 'admin_portal:resumes' %}" class="panel-action">All <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr><th>User</th><th>Date</th><th>ATS</th></tr>
+            </thead>
+            <tbody>
+                {% for r in recent_resumes %}
+                <tr>
+                    <td style="font-weight:600; font-size:0.78rem;">{{ r.user.username }}</td>
+                    <td style="color:var(--muted); font-size:0.73rem;">{{ r.uploaded_at|date:"d M" }}</td>
+                    <td>
+                        <span class="badge {% if r.ats_score >= 70 %}badge-green{% elif r.ats_score >= 40 %}badge-amber{% else %}badge-red{% endif %}">
+                            {{ r.ats_score|floatformat:0 }}%
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" style="color:var(--muted); text-align:center; padding:1.5rem;">No resumes</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Recent Submissions -->
+    <div class="panel">
+        <div class="panel-header">
+            <span class="panel-title"><i class="fas fa-code"></i> Code Submissions</span>
+            <a href="{% url 'admin_portal:coding' %}" class="panel-action">All <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr><th>User</th><th>Problem</th><th>Score</th></tr>
+            </thead>
+            <tbody>
+                {% for s in recent_submissions %}
+                <tr>
+                    <td style="font-weight:600; font-size:0.78rem;">{{ s.user.username }}</td>
+                    <td style="font-size:0.75rem; color:var(--muted);">{{ s.problem.title|truncatechars:18 }}</td>
+                    <td>
+                        <span class="badge {% if s.score >= 70 %}badge-green{% elif s.score >= 40 %}badge-amber{% else %}badge-red{% endif %}">
+                            {{ s.score|floatformat:0 }}%
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" style="color:var(--muted); text-align:center; padding:1.5rem;">No submissions</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // ── Bar chart render ──
+    const chartData = {{ user_chart|safe }};
+    const barChart = document.getElementById('barChart');
+    const maxCount = Math.max(...chartData.map(d => d.count), 1);
+
+    chartData.forEach(d => {
+        const col = document.createElement('div');
+        col.className = 'bar-col';
+        const pct = Math.round((d.count / maxCount) * 100);
+        col.innerHTML = `
+            <div class="bar" style="height: ${Math.max(pct, 3)}%;" title="${d.count} signups"></div>
+            <div class="bar-label">${d.day}</div>
+        `;
+        barChart.appendChild(col);
+    });
+
+    // ── Live stats refresh (every 30s) ──
+    setInterval(() => {
+        fetch('{% url "admin_portal:stats_api" %}')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('s-users').textContent = data.total_users;
+                document.getElementById('s-interviews').textContent = data.total_interviews;
+                document.getElementById('s-resumes').textContent = data.total_resumes;
+                document.getElementById('s-submissions').textContent = data.total_submissions;
+            })
+            .catch(() => {});
+    }, 30000);
+</script>
+{% endblock %}

@@ -1,0 +1,1223 @@
+{% extends 'base.html' %}
+
+{% block title %}Interview Room - AI Interview Pro{% endblock %}
+
+{% block content %}
+<!-- AI Pre-Interview Wave Preloader -->
+<div id="aiPreloader" class="preloader-overlay">
+    <div class="preloader-content">
+        <div class="preloader-logo-container">
+            <svg class="glowing-ai-logo" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="url(#logoGlow)" stroke-width="1.5" class="outer-ring" />
+                <path d="M50,25 C36.2,25 25,36.2 25,50 C25,63.8 36.2,75 50,75 C63.8,75 75,63.8 75,50 C75,36.2 63.8,25 50,25 Z M50,30 C61,30 70,39 70,50 C70,61 61,70 50,70 C39,70 30,61 30,50 C30,39 39,30 50,30 Z" fill="url(#brainGrad)" />
+                <path d="M50,37 C42.8,37 37,42.8 37,50 C37,57.2 42.8,63 50,63 C57.2,63 63,57.2 63,50 C63,42.8 57.2,37 50,37 Z" fill="url(#coreGrad)" />
+                <circle cx="50" cy="50" r="4" fill="#06b6d4" />
+                <defs>
+                    <linearGradient id="logoGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#8b5cf6" />
+                        <stop offset="100%" stop-color="#06b6d4" />
+                    </linearGradient>
+                    <linearGradient id="brainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#a78bfa" />
+                        <stop offset="100%" stop-color="#22d3ee" />
+                    </linearGradient>
+                    <linearGradient id="coreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#6366f1" />
+                        <stop offset="100%" stop-color="#ec4899" />
+                    </linearGradient>
+                </defs>
+            </svg>
+        </div>
+        <div class="waves-container">
+            <svg class="liquid-waves" viewBox="0 0 120 28" preserveAspectRatio="none">
+                <path class="wave-path wave-1" fill="url(#logoGlow)" d="M0,15 C30,5 30,25 60,15 C90,5 90,25 120,15 L120,28 L0,28 Z" />
+                <path class="wave-path wave-2" fill="url(#logoGlow)" opacity="0.6" d="M0,18 C30,10 30,26 60,18 C90,10 90,26 120,18 L120,28 L0,28 Z" />
+            </svg>
+        </div>
+        <h3 class="loader-status-text" id="loaderStatus">Initializing AI Interview Chamber...</h3>
+        <div class="mini-bar">
+            <div class="mini-bar-fill" id="loaderBarFill"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Pre-Interview Overlay -->
+<div id="startOverlay" class="overlay-container">
+    <div class="glass-card overlay-card">
+        <div class="pulse-icon-wrapper">
+            <i class="fas fa-headset pulse-icon"></i>
+        </div>
+        <h2 class="overlay-title">Initialize Interview Engine</h2>
+        <p class="overlay-subtitle">Your AI Interviewer is ready. This session includes real-time audio processing and video recording. Please ensure your environment is well-lit and quiet.</p>
+        
+        <div class="tech-check" id="techCheckArea">
+            <button id="requestMediaBtn" class="btn-primary" style="background: linear-gradient(135deg, #f59e0b, #ef4444); border:none; padding: 1rem; border-radius: 12px; cursor: pointer; color: white; font-weight: bold; width: 100%; font-size: 1.1rem; transition: 0.3s; margin-bottom: 0.5rem;">
+                <i class="fas fa-video"></i> Grant Camera & Mic Access
+            </button>
+            <div id="mediaStatus" style="display: none; justify-content: space-around; width: 100%; margin-top: 0.5rem;">
+                <div class="check-item"><i class="fas fa-video text-green-400"></i> Camera Ready</div>
+                <div class="check-item"><i class="fas fa-microphone text-green-400"></i> Mic Ready</div>
+            </div>
+            <div id="mediaError" style="display: none; color: #ef4444; font-size: 0.9rem; margin-top: 0.5rem;">
+                Could not access camera/mic. You can still enter text-only mode.
+            </div>
+            
+            <div class="ai-init-status" id="aiInitStatus">
+                <i class="fas fa-spinner fa-spin" id="aiStatusIcon" style="color: #a78bfa;"></i>
+                <span id="aiStatusText" style="font-weight: 600; color: #cbd5e1;">Preparing AI Interviewer & questions...</span>
+            </div>
+        </div>
+
+        <button id="beginBtn" class="start-btn" disabled style="opacity: 0.4; cursor: not-allowed;">
+            ENTER INTERVIEW ROOM <i class="fas fa-sign-in-alt ms-2"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Evaluation Overlay -->
+<div id="evaluationOverlay" class="overlay-container" style="display: none;">
+    <div class="glass-card overlay-card">
+        <div class="pulse-icon-wrapper" style="animation: pulseRing 1.5s infinite;">
+            <i class="fas fa-brain pulse-icon"></i>
+        </div>
+        <h2 class="overlay-title">Evaluating Interview</h2>
+        <p class="overlay-subtitle">Please wait while our AI engine analyzes your responses, generates feedback, and calculates your final score...</p>
+        
+        <div class="ai-init-status" style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; align-items: flex-start; gap: 1rem; width: 100%; border: 1px solid rgba(255, 255, 255, 0.05);">
+            <div style="display: flex; align-items: center; gap: 0.8rem; width: 100%;">
+                <i class="fas fa-spinner fa-spin" id="evalStep1Icon" style="color: #a78bfa;"></i>
+                <span id="evalStep1Text" style="font-weight: 600; color: #cbd5e1; font-size: 0.95rem;">Compiling responses...</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.8rem; width: 100%;">
+                <i class="fas fa-circle-notch" id="evalStep2Icon" style="color: #4b5563;"></i>
+                <span id="evalStep2Text" style="font-weight: 600; color: #94a3b8; font-size: 0.95rem;">Running AI concept evaluation...</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.8rem; width: 100%;">
+                <i class="fas fa-circle-notch" id="evalStep3Icon" style="color: #4b5563;"></i>
+                <span id="evalStep3Text" style="font-weight: 600; color: #94a3b8; font-size: 0.95rem;">Generating report card...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Interview Interface -->
+<div class="interview-dashboard">
+    
+    <!-- Top Header Bar -->
+    <div class="interview-top-bar glass-panel">
+        <div class="session-info">
+            <div class="recording-indicator">
+                <span class="live-dot"></span> LIVE RECORDING
+            </div>
+            <span class="badge badge-outline">{{ session.difficulty }}</span>
+            <span class="badge badge-outline">{{ session.language }}</span>
+        </div>
+        <div class="timer-display">
+            <i class="fas fa-clock"></i> <span id="timer">00:00</span>
+        </div>
+        <button class="btn-danger-outline" onclick="completeInterview()">
+            <i class="fas fa-phone-slash"></i> End Interview
+        </button>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="interview-grid">
+        
+        <!-- AI Interviewer Side (Left) -->
+        <div class="ai-column">
+            <div class="glass-panel ai-panel">
+                <div class="ai-visualizer-container">
+                    <div class="ai-avatar-ring">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="voice-waves" id="aiPulse" style="opacity: 0;">
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                    </div>
+                </div>
+
+                <div class="question-container">
+                    <div class="q-label">Current Question <span id="qCounter">0/5</span></div>
+                    <h2 id="questionText" class="question-text">System initializing...</h2>
+                    <button id="repeatBtn" class="action-icon-btn tooltip-container">
+                        <i class="fas fa-redo-alt"></i>
+                        <span class="tooltip-text">Repeat Question</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Video & Interaction Side (Right) -->
+        <div class="user-column">
+            <div class="video-container glass-panel">
+                <video id="webcam" autoplay muted playsinline style="display: none;"></video>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 1.5rem 0 1.5rem; z-index: 2;">
+                    <h3 style="color: white; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem;">
+                        <i class="fas fa-closed-captioning" style="color: #a78bfa; font-size: 1.3rem;"></i> Live Transcript
+                    </h3>
+                    <div style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.4rem 1rem; border-radius: 50px; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; border: 1px solid rgba(239, 68, 68, 0.3); animation: pulseRing 2s infinite;">
+                        <i class="fas fa-microphone" style="font-size: 0.8rem;"></i> Recording Active
+                    </div>
+                </div>
+
+                <!-- HUD Overlays on Video -->
+                <div class="video-hud" id="voiceIndicator" style="position: absolute; top: 1.5rem; left: 50%; transform: translateX(-50%); display: none; background: rgba(139, 92, 246, 0.2); border-color: rgba(139, 92, 246, 0.4);">
+                    <i class="fas fa-microphone-lines pulsing-mic"></i> Listening
+                </div>
+                
+                <!-- Live Transcript Overlay -->
+                <div style="flex: 1; padding: 1.5rem; display: flex; flex-direction: column; z-index: 2;">
+                    <textarea id="answerInput" class="transcript-box" placeholder="Your speech will be transcribed here in real-time..." style="flex: 1; height: 100%; width: 100%; font-size: 1.25rem; line-height: 1.7; padding: 1.5rem; background: rgba(0,0,0,0.3); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); resize: none; color: #f8fafc; box-shadow: inset 0 4px 20px rgba(0,0,0,0.5);"></textarea>
+                </div>
+            </div>
+
+            <!-- Controls Panel -->
+            <div class="controls-panel">
+                <button id="micBtn" class="control-btn mic-btn">
+                    <i class="fas fa-microphone"></i> <span>Start Speaking</span>
+                </button>
+                
+                <button id="nextBtn" class="control-btn next-btn">
+                    <span>Submit & Next</span> <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* AI Preloader Styles */
+    .preloader-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #020617;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .preloader-content {
+        text-align: center;
+        max-width: 450px;
+        width: 90%;
+        padding: 2.5rem;
+        background: rgba(15, 23, 42, 0.4);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 32px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    
+    .preloader-logo-container {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 2rem auto;
+        position: relative;
+    }
+    
+    .glowing-ai-logo {
+        width: 100%;
+        height: 100%;
+        animation: logoPulse 2s infinite ease-in-out;
+    }
+    
+    .outer-ring {
+        stroke-dasharray: 283;
+        stroke-dashoffset: 0;
+        animation: ringRotate 4s linear infinite;
+        transform-origin: center;
+    }
+    
+    @keyframes ringRotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    @keyframes logoPulse {
+        0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.35)); }
+        50% { transform: scale(1.05); filter: drop-shadow(0 0 25px rgba(6, 182, 212, 0.75)); }
+    }
+    
+    .waves-container {
+        width: 100%;
+        height: 40px;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+        position: relative;
+        border-radius: 12px;
+    }
+    
+    .liquid-waves {
+        width: 200%;
+        height: 100%;
+        position: absolute;
+        left: 0;
+        bottom: 0;
+    }
+    
+    .wave-path {
+        transform-origin: center;
+    }
+    
+    .wave-1 {
+        animation: waveMove1 4s linear infinite;
+    }
+    
+    .wave-2 {
+        animation: waveMove2 6s linear infinite;
+    }
+    
+    @keyframes waveMove1 {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
+    
+    @keyframes waveMove2 {
+        0% { transform: translateX(-50%); }
+        100% { transform: translateX(0); }
+    }
+    
+    .loader-status-text {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #f8fafc;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #fff, #94a3b8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: 0.5px;
+        font-family: 'Outfit', sans-serif;
+    }
+    
+    .mini-bar {
+        height: 4px;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .mini-bar-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #8b5cf6, #06b6d4, #ec4899);
+        border-radius: 10px;
+        transition: width 0.1s linear;
+    }
+
+    /* Premium Futuristic theme */
+    :root {
+        --primary: #8b5cf6;
+        --primary-glow: rgba(139, 92, 246, 0.4);
+        --secondary: #06b6d4;
+        --secondary-glow: rgba(6, 182, 212, 0.4);
+        --dark-bg: #030712;
+        --card-bg: rgba(17, 24, 39, 0.75);
+        --card-border: rgba(255, 255, 255, 0.08);
+        --text-color: #f3f4f6;
+    }
+
+    .interview-dashboard {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding-top: 0.5rem;
+        height: calc(100vh - 190px); /* Fit within viewport to prevent scrollbars */
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .glass-panel {
+        background: var(--card-bg);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border: 1px solid var(--card-border);
+        border-radius: 24px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Top Bar */
+    .interview-top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 2rem;
+        margin-bottom: 1rem;
+        border-radius: 20px;
+        flex-shrink: 0;
+    }
+
+    .session-info { display: flex; align-items: center; gap: 1.2rem; }
+    
+    .recording-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #f87171;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        font-size: 0.85rem;
+    }
+
+    .live-dot {
+        width: 10px; height: 10px;
+        background: #ef4444;
+        border-radius: 50%;
+        box-shadow: 0 0 10px #ef4444;
+        animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    .badge-outline {
+        border: 1px solid rgba(139, 92, 246, 0.4);
+        color: #c4b5fd;
+        background: rgba(139, 92, 246, 0.08);
+        padding: 0.35rem 0.85rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+    }
+
+    .timer-display {
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: var(--secondary);
+        font-variant-numeric: tabular-nums;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-shadow: 0 0 10px var(--secondary-glow);
+    }
+
+    .btn-danger-outline {
+        background: rgba(239, 68, 68, 0.08);
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        color: #f87171;
+        padding: 0.5rem 1.25rem;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .btn-danger-outline:hover {
+        background: #ef4444;
+        color: white;
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+        border-color: #ef4444;
+    }
+
+    /* Grid Layout */
+    .interview-grid {
+        display: grid;
+        grid-template-columns: 1fr 1.35fr;
+        gap: 1.5rem;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .ai-column, .user-column {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+    
+    /* AI Side */
+    .ai-panel {
+        padding: 2.5rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100%;
+    }
+
+    .ai-panel::before {
+        content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+        background: linear-gradient(90deg, var(--primary), var(--secondary));
+    }
+
+    .ai-visualizer-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .ai-avatar-ring {
+        width: 130px; height: 130px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, rgba(6, 182, 212, 0.05) 100%);
+        border: 2px solid rgba(139, 92, 246, 0.4);
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 0 30px rgba(139, 92, 246, 0.2), inset 0 0 20px rgba(139, 92, 246, 0.2);
+        margin-bottom: 1.5rem;
+        font-size: 3.5rem;
+        color: #a78bfa;
+        position: relative;
+        animation: auraPulse 3s infinite ease-in-out alternate;
+    }
+    
+    @keyframes auraPulse {
+        0% {
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.15), inset 0 0 10px rgba(139, 92, 246, 0.1);
+            border-color: rgba(139, 92, 246, 0.3);
+            transform: scale(0.98);
+        }
+        100% {
+            box-shadow: 0 0 45px rgba(139, 92, 246, 0.45), inset 0 0 25px rgba(6, 182, 212, 0.3);
+            border-color: rgba(6, 182, 212, 0.6);
+            transform: scale(1.02);
+        }
+    }
+
+    .voice-waves {
+        display: flex; align-items: center; gap: 6px; height: 35px; transition: opacity 0.3s;
+        margin-top: 1rem;
+    }
+
+    .wave {
+        width: 5px; height: 10px; background: linear-gradient(180deg, #a78bfa, #06b6d4); border-radius: 10px;
+        animation: soundWave 1.2s ease-in-out infinite alternate;
+    }
+    .wave:nth-child(2) { animation-delay: 0.15s; height: 22px; }
+    .wave:nth-child(3) { animation-delay: 0.3s; height: 35px; }
+    .wave:nth-child(4) { animation-delay: 0.15s; height: 22px; }
+    .wave:nth-child(5) { animation-delay: 0.45s; height: 10px; }
+
+    @keyframes soundWave { 0% { transform: scaleY(0.35); opacity: 0.6; } 100% { transform: scaleY(1); opacity: 1; } }
+
+    .question-container {
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        padding: 1.5rem;
+        position: relative;
+        text-align: left;
+        height: auto; /* Allow dynamic height up to max-height without expanding page */
+        min-height: 150px;
+        max-height: 220px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-sizing: border-box;
+    }
+
+    .q-label {
+        color: #a78bfa;
+        font-size: 0.8rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+        display: flex; justify-content: space-between;
+        flex-shrink: 0;
+    }
+
+    .question-text {
+        font-size: 1.2rem;
+        line-height: 1.5;
+        font-weight: 500;
+        color: white;
+        overflow-y: auto; /* Scroll internally inside the container */
+        flex: 1;
+        margin-right: 2.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    .question-text::-webkit-scrollbar {
+        width: 4px;
+    }
+    .question-text::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+
+    .action-icon-btn {
+        position: absolute;
+        bottom: 1.25rem; right: 1.25rem;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255,255,255,0.08);
+        width: 40px; height: 40px;
+        border-radius: 50%;
+        color: white;
+        font-size: 1.1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+    .action-icon-btn:hover { background: rgba(139, 92, 246, 0.4); transform: rotate(180deg); border-color: rgba(139, 92, 246, 0.5); }
+
+    /* User Side */
+    .video-container {
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        flex-direction: column;
+        border-radius: 24px;
+        background: #020617;
+        min-height: 0;
+    }
+
+    #webcam {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        object-fit: cover;
+        transform: scaleX(-1);
+    }
+
+    .video-hud {
+        position: absolute;
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(8px);
+        padding: 0.4rem 0.9rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: white;
+        z-index: 10;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .top-right { top: 1.25rem; right: 1.25rem; display: none; }
+    .pulsing-mic { color: #f87171; animation: pulse 1s infinite alternate; margin-right: 5px; }
+
+    .live-transcript-overlay {
+        position: absolute;
+        bottom: 0; left: 0; width: 100%;
+        background: linear-gradient(to top, rgba(3, 7, 18, 0.95) 0%, rgba(3, 7, 18, 0.6) 70%, transparent 100%);
+        padding: 2.5rem 1.5rem 1.25rem 1.5rem;
+        z-index: 5;
+    }
+
+    .transcript-label {
+        font-size: 0.75rem; color: #a78bfa; text-transform: uppercase; font-weight: 800; margin-bottom: 0.25rem;
+        letter-spacing: 1px;
+    }
+
+    .transcript-box {
+        width: 100%;
+        background: transparent;
+        border: none;
+        color: white;
+        font-size: 1.05rem;
+        line-height: 1.5;
+        resize: none;
+        height: 50px;
+        outline: none;
+    }
+    .transcript-box::placeholder { color: rgba(255, 255, 255, 0.35); }
+
+    .controls-panel {
+        display: flex;
+        gap: 1.25rem;
+        padding: 1rem 0 0 0;
+        flex-shrink: 0;
+    }
+
+    .control-btn {
+        flex: 1;
+        display: flex; align-items: center; justify-content: center; gap: 0.75rem;
+        padding: 1rem;
+        border-radius: 16px;
+        font-weight: 700;
+        font-size: 1.05rem;
+        cursor: pointer;
+        border: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .mic-btn {
+        background: rgba(139, 92, 246, 0.1);
+        color: #c4b5fd;
+        border: 1px solid rgba(139, 92, 246, 0.35);
+    }
+    .mic-btn:hover { background: rgba(139, 92, 246, 0.25); border-color: rgba(139, 92, 246, 0.5); }
+    .mic-btn.active {
+        background: rgba(239, 68, 68, 0.15);
+        color: #fca5a5;
+        border-color: rgba(239, 68, 68, 0.45);
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+    }
+
+    .next-btn {
+        background: linear-gradient(135deg, var(--secondary), #3b82f6);
+        color: white;
+        box-shadow: 0 10px 20px rgba(6, 182, 212, 0.2);
+    }
+    .next-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 22px rgba(6, 182, 212, 0.4); }
+
+    /* Overlay styles - Scrollable and responsive */
+    .overlay-container {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(2, 6, 23, 0.96);
+        backdrop-filter: blur(24px);
+        z-index: 9999;
+        display: flex; align-items: center; justify-content: center;
+        overflow-y: auto;
+        padding: 1.5rem;
+    }
+    
+    .overlay-card {
+        max-width: 550px; 
+        width: 100%;
+        text-align: center; 
+        padding: 2.5rem 2rem;
+        border: 1px solid rgba(139, 92, 246, 0.25);
+        box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 0 30px rgba(139,92,246,0.1);
+        border-radius: 28px;
+        background: rgba(15, 23, 42, 0.85);
+        max-height: calc(100vh - 3rem);
+        overflow-y: auto;
+        box-sizing: border-box;
+    }
+    .overlay-card::-webkit-scrollbar {
+        width: 6px;
+    }
+    .overlay-card::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+    
+    .pulse-icon-wrapper {
+        width: 90px; height: 90px; margin: 0 auto 1.5rem;
+        background: rgba(139, 92, 246, 0.1);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        animation: pulseRing 2s infinite;
+    }
+    .pulse-icon { font-size: 2.5rem; color: #a78bfa; }
+    
+    @keyframes pulseRing { 0% { box-shadow: 0 0 0 0 rgba(139,92,246,0.4); } 70% { box-shadow: 0 0 0 15px rgba(139,92,246,0); } 100% { box-shadow: 0 0 0 0 rgba(139,92,246,0); } }
+    
+    .overlay-title { font-size: 2.1rem; font-weight: 800; margin-bottom: 0.75rem; color: white; }
+    .overlay-subtitle { color: #94a3b8; font-size: 1rem; line-height: 1.5; margin-bottom: 2rem; }
+    
+    .tech-check { 
+        display: flex; 
+        flex-direction: column;
+        gap: 1rem; 
+        margin-bottom: 2rem; 
+        background: rgba(0,0,0,0.25); 
+        padding: 1.25rem; 
+        border-radius: 16px; 
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+    .check-item { font-weight: 600; color: #cbd5e1; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; }
+    .text-green-400 { color: #4ade80; }
+
+    .ai-init-status {
+        background: rgba(0,0,0,0.3); 
+        padding: 0.75rem 1rem; 
+        border-radius: 12px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        gap: 0.5rem; 
+        border: 1px solid rgba(255, 255, 255, 0.05); 
+        width: 100%;
+        font-size: 0.85rem;
+    }
+
+    .start-btn {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        border: none;
+        color: white;
+        font-weight: bold;
+        width: 100%;
+        padding: 1rem;
+        border-radius: 14px;
+        cursor: pointer;
+        font-size: 1.05rem;
+        transition: 0.3s;
+        box-shadow: 0 10px 20px rgba(139, 92, 246, 0.2);
+    }
+    .start-btn:not(:disabled):hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 25px rgba(139, 92, 246, 0.4);
+    }
+
+    .loading-pulse {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: #cbd5e1;
+        font-weight: 500;
+        font-size: 1.15rem;
+        animation: pulseText 1.5s infinite alternate;
+    }
+    @keyframes pulseText {
+        0% { opacity: 0.6; }
+        100% { opacity: 1; }
+    }
+
+    @media (max-width: 1024px) {
+        .interview-grid { grid-template-columns: 1fr; overflow-y: auto; }
+        .interview-dashboard { height: auto; overflow: visible; }
+        .video-container { height: 350px; }
+        .ai-panel { height: auto; }
+        .question-container { height: auto; min-height: 140px; }
+    }
+</style>
+
+<script>
+    let questions = {{ questions_json|safe }};
+    let currentIdx = 0;
+    const lang = "{{ session.language }}";
+    
+    let questionsLoaded = questions.length > 0;
+    let mediaReady = false;
+    let interviewStarted = false;
+    
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    
+    const questionText = document.getElementById('questionText');
+    const answerInput = document.getElementById('answerInput');
+    const micBtn = document.getElementById('micBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const repeatBtn = document.getElementById('repeatBtn');
+    const beginBtn = document.getElementById('beginBtn');
+    const startOverlay = document.getElementById('startOverlay');
+    const aiPulse = document.getElementById('aiPulse');
+    const voiceIndicator = document.getElementById('voiceIndicator');
+    const qCounter = document.getElementById('qCounter');
+
+    // Text to Speech Engine
+    function speak(text) {
+        if (!text) return;
+        
+        aiPulse.style.opacity = '1';
+
+        const synth = window.speechSynthesis;
+        synth.cancel(); 
+        
+        const utter = new SpeechSynthesisUtterance(text);
+        const voices = synth.getVoices();
+        
+        let tamilVoice = null;
+        if (lang.includes('ta')) {
+            tamilVoice = voices.find(v => v.lang.includes('ta') && v.name.includes('Google'));
+            if (!tamilVoice) tamilVoice = voices.find(v => v.lang.includes('ta'));
+        }
+
+        if (lang.includes('ta') && !tamilVoice) {
+            console.log("Using Cloud Fallback for Tamil/Tanglish...");
+            const audio = new Audio(`https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=ta&client=tw-ob`);
+            audio.onended = () => { aiPulse.style.opacity = '0'; };
+            audio.play().catch(e => {
+                console.error("Cloud TTS blocked:", e);
+                aiPulse.style.opacity = '0';
+            });
+            return;
+        }
+
+        if (tamilVoice) utter.voice = tamilVoice;
+        utter.lang = lang;
+        utter.rate = 0.95;
+        
+        utter.onend = () => { aiPulse.style.opacity = '0'; };
+        utter.onerror = () => { aiPulse.style.opacity = '0'; };
+        
+        synth.speak(utter);
+    }
+
+    // Speech Recognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+    let isListening = false;
+
+    if (recognition) {
+        recognition.lang = lang === 'ta-EN' ? 'ta-IN' : lang;
+        recognition.interimResults = true;
+        recognition.continuous = true;
+
+        recognition.onstart = () => {
+            isListening = true;
+            voiceIndicator.style.display = 'block';
+            micBtn.classList.add('active');
+            micBtn.innerHTML = '<i class="fas fa-stop-circle"></i> <span>Stop Recording</span>';
+        };
+
+        recognition.onend = () => {
+            isListening = false;
+            voiceIndicator.style.display = 'none';
+            micBtn.classList.remove('active');
+            micBtn.innerHTML = '<i class="fas fa-microphone"></i> <span>Start Speaking</span>';
+        };
+
+        recognition.onerror = (event) => {
+            isListening = false;
+            micBtn.classList.remove('active');
+            if (event.error === 'not-allowed') {
+                alert("Microphone blocked! Please allow access.");
+            }
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = Array.from(event.results)
+                .map(result => result[0].transcript)
+                .join('');
+            answerInput.value = transcript;
+            // Auto scroll to bottom
+            answerInput.scrollTop = answerInput.scrollHeight;
+        };
+    }
+
+    micBtn.onclick = () => {
+        if (!recognition) return alert("Browser not supported. Use Chrome.");
+        
+        if (!isListening) {
+            answerInput.value = "";
+            recognition.start();
+        } else {
+            recognition.stop();
+        }
+    };
+
+    function loadQuestion() {
+        if (currentIdx < questions.length) {
+            const q = questions[currentIdx];
+            qCounter.innerText = `${currentIdx + 1}/${questions.length}`;
+            
+            // Typewriter effect for question
+            questionText.innerText = "";
+            let i = 0;
+            const speed = 30; // ms per char
+            function typeWriter() {
+                if (i < q.length) {
+                    questionText.innerHTML += q.charAt(i);
+                    i++;
+                    setTimeout(typeWriter, speed);
+                } else {
+                    speak(q);
+                }
+            }
+            typeWriter();
+            
+        } else {
+            completeInterview();
+        }
+    }
+
+    const requestMediaBtn = document.getElementById('requestMediaBtn');
+    const mediaStatus = document.getElementById('mediaStatus');
+    const mediaError = document.getElementById('mediaError');
+    let mediaStream = null;
+
+    function checkReadyToBegin() {
+        // Optimization: Let the user enter as soon as webcam/mic permissions are granted
+        if (mediaReady) {
+            beginBtn.disabled = false;
+            beginBtn.style.opacity = '1';
+            beginBtn.style.cursor = 'pointer';
+            
+            // Auto click to enter immediately to save time!
+            beginBtn.click();
+        }
+    }
+
+    function updateAiStatus(success, errorMsg = "") {
+        const aiStatusIcon = document.getElementById('aiStatusIcon');
+        const aiStatusText = document.getElementById('aiStatusText');
+        
+        if (success) {
+            aiStatusIcon.className = "fas fa-check-circle";
+            aiStatusIcon.style.color = "#4ade80";
+            aiStatusText.innerText = "AI Interviewer Ready";
+        } else {
+            aiStatusIcon.className = "fas fa-times-circle";
+            aiStatusIcon.style.color = "#ef4444";
+            aiStatusText.innerText = errorMsg || "AI Interviewer offline";
+        }
+    }
+
+    async function initAiEngine() {
+        // Questions are pre-embedded in the page via questions_json template variable.
+        // If they're already present, mark as ready instantly with no network call needed.
+        if (questionsLoaded) {
+            updateAiStatus(true);
+            return;
+        }
+        
+        // Fallback: fetch from API only if no questions were pre-generated
+        try {
+            const response = await fetch("{% url 'interview:generate_questions_api' session.id %}");
+            const data = await response.json();
+            if (data.status === 'success') {
+                questions = data.questions;
+                questionsLoaded = true;
+                updateAiStatus(true);
+                
+                if (interviewStarted) {
+                    micBtn.disabled = false;
+                    nextBtn.disabled = false;
+                    micBtn.style.opacity = '1';
+                    nextBtn.style.opacity = '1';
+                    setTimeout(loadQuestion, 300);
+                }
+            } else {
+                updateAiStatus(false, "Failed to load questions. Please refresh.");
+                if (interviewStarted) {
+                    questionText.innerText = "Failed to load questions. Please refresh the page.";
+                }
+            }
+        } catch (e) {
+            console.error(e);
+            updateAiStatus(false, "Error loading questions. Please refresh.");
+            if (interviewStarted) {
+                questionText.innerText = "Error loading questions. Please refresh the page.";
+            }
+        }
+    }
+
+    requestMediaBtn.onclick = async () => {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            requestMediaBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Requesting...';
+            
+            let successStream = null;
+            let finalError = "";
+            
+            try {
+                successStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+            } catch(e1) {
+                console.log("Audio access failed.", e1);
+                finalError = e1.message || e1.name || "Access Denied";
+            }
+
+            if (successStream) {
+                mediaStream = successStream;
+                requestMediaBtn.style.display = 'none';
+                mediaStatus.style.display = 'flex';
+                mediaError.style.display = 'none';
+                
+                mediaReady = true;
+                checkReadyToBegin();
+            } else {
+                requestMediaBtn.style.display = 'none';
+                mediaError.innerHTML = "Camera/Mic blocked by browser or missing hardware. <br><span style='font-size:0.8rem;color:#94a3b8;'>Error: " + finalError + "</span><br>You can still enter text-only mode.";
+                mediaError.style.display = 'block';
+                
+                beginBtn.innerHTML = 'ENTER (TEXT-ONLY MODE) <i class="fas fa-sign-in-alt ms-2"></i>';
+                mediaReady = true;
+                checkReadyToBegin();
+            }
+        } else {
+            alert("Your browser does not support media access.");
+        }
+    };
+
+    beginBtn.onclick = () => {
+        if (mediaStream) {
+            document.getElementById('webcam').srcObject = mediaStream;
+            
+            // Start recording
+            try {
+                mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm' });
+            } catch (e) {
+                console.log("MediaRecorder webm failed, falling back to default");
+                mediaRecorder = new MediaRecorder(mediaStream);
+            }
+            
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    recordedChunks.push(event.data);
+                }
+            };
+            mediaRecorder.start();
+            console.log("Started recording...");
+        }
+        startOverlay.style.display = 'none';
+        interviewStarted = true;
+        
+        if (!questionsLoaded) {
+            // Display background loading state while fetching questions
+            questionText.innerHTML = '<span class="loading-pulse"><i class="fas fa-spinner fa-spin" style="color: #a78bfa; margin-right: 0.5rem;"></i> AI Interviewer is preparing your questions...</span>';
+            micBtn.disabled = true;
+            nextBtn.disabled = true;
+            micBtn.style.opacity = '0.5';
+            nextBtn.style.opacity = '0.5';
+        } else {
+            setTimeout(loadQuestion, 500);
+        }
+    };
+
+    nextBtn.onclick = async () => {
+        if (isListening) recognition.stop();
+        
+        const answer = answerInput.value;
+        const btnOriginalText = nextBtn.innerHTML;
+        nextBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        nextBtn.disabled = true;
+
+        await fetch("{% url 'interview:submit_answer_api' session.id %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ index: currentIdx, answer: answer })
+        });
+        
+        currentIdx++;
+        answerInput.value = "";
+        nextBtn.innerHTML = btnOriginalText;
+        nextBtn.disabled = false;
+        loadQuestion();
+    };
+
+    async function completeInterview() {
+        if (isListening) recognition.stop();
+        
+        // Hide standard interface and show evaluation overlay
+        const evaluationOverlay = document.getElementById('evaluationOverlay');
+        evaluationOverlay.style.display = 'flex';
+        
+        // Handle Video Upload
+        if (mediaRecorder && mediaRecorder.state !== "inactive") {
+            mediaRecorder.stop();
+            await new Promise(resolve => {
+                mediaRecorder.onstop = async () => {
+                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                    const formData = new FormData();
+                    formData.append('video_recording', blob, 'interview.webm');
+                    try {
+                        await fetch("{% url 'interview:upload_recording_api' session.id %}", {
+                            method: 'POST',
+                            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                            body: formData
+                        });
+                        console.log("Video uploaded successfully.");
+                    } catch(e) {
+                        console.error("Video upload failed", e);
+                    }
+                    resolve();
+                };
+            });
+        }
+        
+        const step1Icon = document.getElementById('evalStep1Icon');
+        const step1Text = document.getElementById('evalStep1Text');
+        const step2Icon = document.getElementById('evalStep2Icon');
+        const step2Text = document.getElementById('evalStep2Text');
+        const step3Icon = document.getElementById('evalStep3Icon');
+        const step3Text = document.getElementById('evalStep3Text');
+        
+        // Step 1: Compiling responses
+        await new Promise(resolve => setTimeout(resolve, 800));
+        step1Icon.className = "fas fa-check-circle";
+        step1Icon.style.color = "#4ade80";
+        step1Text.style.color = "#94a3b8";
+        
+        // Step 2: Running AI evaluation
+        step2Icon.className = "fas fa-spinner fa-spin";
+        step2Icon.style.color = "#a78bfa";
+        step2Text.style.color = "#cbd5e1";
+        
+        try {
+            const response = await fetch(`{% url 'interview:complete_interview' session.id %}?ajax=1&duration=${s}`, {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                // Step 2 done
+                step2Icon.className = "fas fa-check-circle";
+                step2Icon.style.color = "#4ade80";
+                step2Text.style.color = "#94a3b8";
+                
+                // Step 3: Generating report card
+                step3Icon.className = "fas fa-spinner fa-spin";
+                step3Icon.style.color = "#a78bfa";
+                step3Text.style.color = "#cbd5e1";
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                step3Icon.className = "fas fa-check-circle";
+                step3Icon.style.color = "#4ade80";
+                step3Text.style.color = "#94a3b8";
+                
+                // Redirect
+                window.location.href = data.redirect_url;
+            } else {
+                alert("Evaluation failed. Redirecting to results page.");
+                window.location.href = "{% url 'interview:interview_result' session.id %}";
+            }
+        } catch (e) {
+            console.error("Evaluation error:", e);
+            alert("An error occurred during evaluation. Redirecting to results.");
+            window.location.href = "{% url 'interview:interview_result' session.id %}";
+        }
+    }
+
+    repeatBtn.onclick = () => speak(questions[currentIdx]);
+    
+    // AI Preloader Screen Steps Flow
+    (function() {
+        const preloader = document.getElementById('aiPreloader');
+        const statusText = document.getElementById('loaderStatus');
+        const fillBar = document.getElementById('loaderBarFill');
+        
+        const preloaderSteps = [
+            { time: 0,    text: "Loading interview configuration...", progress: 30 },
+            { time: 400,  text: "Syncing your questions...", progress: 65 },
+            { time: 800,  text: "Entering interview chamber...", progress: 100 }
+        ];
+        
+        preloaderSteps.forEach(step => {
+            setTimeout(() => {
+                if (statusText) statusText.innerText = step.text;
+                if (fillBar) fillBar.style.width = step.progress + "%";
+            }, step.time);
+        });
+        
+        // Dismiss faster since questions are pre-loaded — no need for a long wait
+        setTimeout(() => {
+            if (preloader) {
+                preloader.style.opacity = '0';
+                setTimeout(() => {
+                    preloader.style.visibility = 'hidden';
+                }, 400);
+            }
+        }, 1300);
+    })();
+
+    // Start AI engine loading on load
+    initAiEngine();
+    
+    // Automatically trigger media request on page load to speed up entry
+    setTimeout(() => {
+        const requestBtn = document.getElementById('requestMediaBtn');
+        if (requestBtn) {
+            requestBtn.click();
+        }
+    }, 100);
+    
+    // Timer
+    let s = 0;
+    setInterval(() => {
+        s++;
+        document.getElementById('timer').innerText = `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+    }, 1000);
+</script>
+{% endblock %}

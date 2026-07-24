@@ -1,0 +1,627 @@
+{% extends 'base.html' %}
+
+{% block title %}Career Dashboard - AI Ecosystem{% endblock %}
+
+{% block extra_head %}
+<style>
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.25rem;
+        margin-top: 1.25rem;
+    }
+
+    .ai-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 24px;
+        padding: 2rem;
+        position: relative;
+        overflow: hidden;
+        transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .ai-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(6, 182, 212, 0.4);
+        box-shadow: 0 20px 40px rgba(6, 182, 212, 0.15);
+    }
+
+    .ai-card-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .ai-icon-box {
+        width: 50px;
+        height: 50px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .ai-card-title {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #fff;
+    }
+
+    .ai-card-subtitle {
+        font-size: 0.85rem;
+        color: #94a3b8;
+    }
+
+    .main-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+        margin-top: 1.25rem;
+    }
+
+    /* AI Coach specific styles */
+    .coach-message {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(15, 23, 42, 0.8));
+        border-left: 4px solid #8b5cf6;
+        padding: 1.5rem;
+        border-radius: 0 16px 16px 0;
+        font-size: 1.05rem;
+        color: #e2e8f0;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+        box-shadow: inset 0 0 20px rgba(139, 92, 246, 0.05);
+    }
+
+    .badge-tag {
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: 0.3s;
+    }
+    .badge-tag:hover {
+        transform: scale(1.05);
+    }
+
+    .badge-strong { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+    .badge-weak { background: rgba(244, 63, 94, 0.1); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.2); }
+    .badge-action { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2); }
+
+    .meter-ring {
+        position: relative;
+        width: 140px;
+        height: 140px;
+    }
+
+    .hero-banner {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(6, 182, 212, 0.05));
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        border-radius: 30px;
+        padding: 3rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    }
+
+    .hero-banner::before {
+        content: '';
+        position: absolute;
+        top: -50%; right: -10%;
+        width: 500px; height: 500px;
+        background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+
+    .roadmap-timeline {
+        position: relative;
+        padding-left: 2rem;
+        margin-top: 1.5rem;
+    }
+
+    .roadmap-timeline::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: rgba(255,255,255,0.1);
+    }
+
+    .roadmap-item {
+        position: relative;
+        margin-bottom: 2rem;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.05);
+        padding: 1.5rem;
+        border-radius: 16px;
+        transition: 0.3s;
+    }
+
+    .roadmap-item:hover {
+        background: rgba(255,255,255,0.05);
+        transform: translateX(5px);
+    }
+
+    .roadmap-node {
+        position: absolute;
+        left: -2rem;
+        top: 1.5rem;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        transform: translateX(-50%);
+        border: 3px solid #020617;
+    }
+
+    .roadmap-node-1 { background: #ec4899; box-shadow: 0 0 15px rgba(236,72,153,0.6); }
+    .roadmap-node-2 { background: #06b6d4; box-shadow: 0 0 15px rgba(6,182,212,0.6); }
+    .roadmap-node-3 { background: #10b981; box-shadow: 0 0 15px rgba(16,185,129,0.6); }
+
+    .roadmap-item ul {
+        color: #94a3b8;
+        font-size: 0.9rem;
+        padding-left: 1.2rem;
+        margin-top: 0.8rem;
+    }
+    .roadmap-item li { margin-bottom: 0.5rem; }
+
+    @media (max-width: 1200px) {
+        .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+        .main-row { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero-banner">
+    <div style="z-index: 1;">
+        <span style="text-transform: uppercase; letter-spacing: 4px; color: #06b6d4; font-weight: 800; font-size: 0.8rem;"><i class="fas fa-sparkles"></i> AI Ecosystem</span>
+        <h1 style="font-size: 2rem; font-weight: 900; margin: 0.4rem 0; color: #fff;">Hello, {{ user.username }} 👋</h1>
+        <p style="color: #94a3b8; font-size: 0.95rem; max-width: 500px;">Your intelligent career dashboard — analyze skills, practice interviews, and map your success path.</p>
+    </div>
+    <div style="z-index: 1; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <a href="{% url 'resume_studio:dashboard' %}" class="btn-primary" style="padding: 0.7rem 1.5rem; border-radius: 12px; font-weight: 700; font-size:0.88rem;"><i class="fas fa-magic"></i> Resume Studio</a>
+        <a href="{% url 'interview:quick_start_interview' %}?lang=en-US" class="btn-secondary" style="padding: 0.7rem 1.5rem; border-radius: 12px; font-weight: 700; font-size:0.88rem;"><i class="fas fa-play"></i> Mock Interview</a>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Readiness Meter -->
+    <div class="ai-card" style="grid-column: span 1;">
+        <div class="ai-card-header">
+            <div class="ai-icon-box" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                <i class="fas fa-gauge-high"></i>
+            </div>
+            <div>
+                <div class="ai-card-title">Job Readiness</div>
+                <div class="ai-card-subtitle">AI Computed Score</div>
+            </div>
+        </div>
+        <div style="display: flex; justify-content: center; align-items: center; flex: 1;">
+            <div class="meter-ring">
+                <svg width="140" height="140" viewBox="0 0 140 140">
+                    <circle cx="70" cy="70" r="60" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="12"></circle>
+                    <circle cx="70" cy="70" r="60" fill="none" stroke="#10b981" stroke-width="12" stroke-dasharray="377" stroke-dashoffset="{{ readiness_offset|default:100 }}" style="transition: 1.5s ease-out; filter: drop-shadow(0 0 10px rgba(16,185,129,0.4));"></circle>
+                </svg>
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                    <span style="font-size: 2rem; font-weight: 900; color: #fff;">{{ history.avg_score|floatformat:0|default:78 }}%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Career Stats -->
+    <div class="ai-card" style="grid-column: span 1;">
+        <div class="ai-card-header">
+            <div class="ai-icon-box" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div>
+                <div class="ai-card-title">My Progress</div>
+                <div class="ai-card-subtitle">Platform Stats</div>
+            </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 1rem; flex: 1; justify-content: center;">
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5rem;">
+                <span style="color: #94a3b8; font-weight: 600;">Interviews Taken</span>
+                <span style="color: #fff; font-weight: 800; font-size: 1.1rem;">{{ history.total_interviews|default:0 }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5rem;">
+                <span style="color: #94a3b8; font-weight: 600;">XP Earned</span>
+                <span style="color: #3b82f6; font-weight: 800; font-size: 1.1rem;">{{ history.xp|default:0 }} XP</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: #94a3b8; font-weight: 600;">Current Level</span>
+                <span style="color: #fff; font-weight: 800; font-size: 1.1rem;">Level {{ history.level|default:1 }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Interviews -->
+    <div class="ai-card" style="grid-column: span 2;">
+        <div class="ai-card-header">
+            <div class="ai-icon-box" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                <i class="fas fa-clipboard-question"></i>
+            </div>
+            <div>
+                <div class="ai-card-title">Recent Interviews</div>
+                <div class="ai-card-subtitle">Track your mock performance history</div>
+            </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.8rem; flex: 1; margin-top: 1rem; width: 100%;">
+            {% for session in recent_sessions|slice:":3" %}
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 0.8rem 1.2rem; border-radius: 12px; transition: 0.2s;">
+                <div style="min-width: 0; flex: 1; padding-right: 1rem;">
+                    <div style="color: #fff; font-weight: 700; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        {{ session.category|title }}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.8rem; margin-top: 0.3rem; flex-wrap: wrap;">
+                        <span style="color: #64748b; font-size: 0.78rem;">
+                            <i class="far fa-calendar-alt" style="margin-right: 0.3rem;"></i>{{ session.created_at|date:"M d, Y" }}
+                        </span>
+                        <span style="color: #64748b; font-size: 0.78rem;">
+                            <i class="far fa-clock" style="margin-right: 0.3rem;"></i>{{ session.formatted_duration }}
+                        </span>
+                        <span style="color: rgba(139, 92, 246, 0.8); font-size: 0.78rem; font-weight: 600;">
+                            <i class="far fa-file-pdf" style="margin-right: 0.3rem;"></i>{{ session.resume_name }}
+                        </span>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0;">
+                    <span style="font-weight: 800; font-size: 1.1rem; color: {% if session.score >= 80 %}#10b981{% elif session.score >= 60 %}#f59e0b{% else %}#ef4444{% endif %}; margin-right: 0.3rem;">
+                        {{ session.score|floatformat:1 }}<span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">/100</span>
+                    </span>
+                    <a href="{% url 'interview:interview_result' session.id %}" class="btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.78rem; text-decoration: none; border-radius: 8px;">
+                        Report
+                    </a>
+                    <a href="{% url 'interview:download_report' session.id %}" class="btn-secondary" style="padding: 0.4rem 0.6rem; font-size: 0.78rem; text-decoration: none; border-radius: 8px; background: rgba(255,255,255,0.05);" title="Download PDF Report">
+                        <i class="fas fa-download"></i>
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div style="text-align: center; padding: 3rem 0; color: #94a3b8; width: 100%;">
+                <p style="font-size: 0.95rem; color: #94a3b8; margin: 0; font-weight: 500;"><i class="fas fa-folder-open" style="margin-right: 0.5rem; opacity: 0.6;"></i>No interviews taken yet.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="main-row">
+    <!-- AI Career Coach -->
+    <div class="ai-card">
+        <div class="ai-card-header">
+            <div class="ai-icon-box" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+                <i class="fas fa-user-astronaut"></i>
+            </div>
+            <div>
+                <div class="ai-card-title">AI Career Coach</div>
+                <div class="ai-card-subtitle">Upload resume for customized career advice</div>
+            </div>
+        </div>
+        
+        <!-- Error Box -->
+        <div id="coachErrorBox" style="display: none; background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.2); padding: 1rem; border-radius: 12px; text-align: center; color: #fca5a5; margin: 1rem 1.5rem 0 1.5rem;">
+            <i class="fas fa-exclamation-circle" style="color: #f43f5e; margin-right: 0.5rem;"></i>
+            <span id="coachErrorText" style="font-size: 0.88rem; font-weight: 600; line-height: 1.4;"></span>
+        </div>
+        
+        <div id="coachLoader" style="display: none; text-align: center; padding: 4rem 2rem;">
+            <i class="fas fa-circle-notch fa-spin fa-3x" style="color: #8b5cf6; margin-bottom: 1rem;"></i>
+            <p style="color: #94a3b8;" id="coachLoaderText">Analyzing your resume...</p>
+        </div>
+
+        {% if latest_resume and latest_resume.analysis_results %}
+        <div id="coachContent">
+            <div class="coach-message" style="margin-bottom: 1.5rem;">
+                "Based on your profile, you are at the <strong style="color: #fff;">{{ latest_resume.analysis_results.level }}</strong> stage."
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                <div style="background: rgba(16,185,129,0.03); border: 1px solid rgba(16,185,129,0.1); padding: 1.5rem; border-radius: 16px;">
+                    <h4 style="color: #10b981; font-size: 0.95rem; margin-bottom: 1rem; text-transform: uppercase;"><i class="fas fa-dumbbell"></i> Strong Areas</h4>
+                    <div style="display: flex; flex-direction: column; gap: 0.8rem;" id="coachStrong">
+                        {% for s in latest_resume.analysis_results.strong %}
+                        <span class="badge-tag badge-strong"><i class="fas fa-check"></i> {{ s }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div style="background: rgba(244,63,94,0.03); border: 1px solid rgba(244,63,94,0.1); padding: 1.5rem; border-radius: 16px;">
+                    <h4 style="color: #f43f5e; font-size: 0.95rem; margin-bottom: 1rem; text-transform: uppercase;"><i class="fas fa-triangle-exclamation"></i> Weak Areas</h4>
+                    <div style="display: flex; flex-direction: column; gap: 0.8rem;" id="coachWeak">
+                        {% for w in latest_resume.analysis_results.weak %}
+                        <span class="badge-tag badge-weak"><i class="fas fa-xmark"></i> {{ w }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: rgba(59,130,246,0.03); border: 1px solid rgba(59,130,246,0.1); padding: 1.5rem; border-radius: 16px;">
+                <h4 style="color: #3b82f6; font-size: 0.95rem; margin-bottom: 1rem; text-transform: uppercase;"><i class="fas fa-list-check"></i> Recommended Next Actions</h4>
+                <div style="display: flex; flex-direction: column; gap: 0.8rem;" id="coachActions">
+                    {% for a in latest_resume.analysis_results.actions %}
+                    <span class="badge-tag badge-action"><i class="fas fa-arrow-right"></i> {{ a }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div style="margin-top: 1.5rem; text-align: center;">
+                <button type="button" onclick="triggerResumeUpload()" class="btn-secondary" style="font-size: 0.85rem; padding: 0.6rem 1.2rem;"><i class="fas fa-upload"></i> Upload New Resume</button>
+            </div>
+        </div>
+        {% else %}
+        <!-- Upload State -->
+        <div id="coachUploadState" style="text-align: center; padding: 3rem 1.5rem;">
+            <i class="fas fa-file-invoice fa-3x" style="color: #8b5cf6; margin-bottom: 1.2rem; opacity: 0.8;"></i>
+            <h4 style="color: #fff; font-size: 1.1rem; margin-bottom: 0.5rem;">Upload Resume for Analysis</h4>
+            <p style="color: #94a3b8; font-size: 0.88rem; max-width: 320px; margin: 0 auto 1.5rem auto; line-height: 1.5;">Get an accurate, AI-powered analysis of your skills, strong/weak areas, and next career steps.</p>
+            
+            <button type="button" onclick="triggerResumeUpload()" class="btn-primary" style="padding: 0.75rem 2rem; border-radius: 12px; font-size: 0.9rem; border: none; cursor: pointer;"><i class="fas fa-cloud-upload-alt"></i> Select Resume File</button>
+        </div>
+        
+        <div id="coachContent" style="display: none;">
+            <div class="coach-message" style="margin-bottom: 1.5rem;"></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                <div style="background: rgba(16,185,129,0.03); border: 1px solid rgba(16,185,129,0.1); padding: 1.5rem; border-radius: 16px;">
+                    <h4 style="color: #10b981; font-size: 0.95rem; margin-bottom: 1rem; text-transform: uppercase;"><i class="fas fa-dumbbell"></i> Strong Areas</h4>
+                    <div style="display: flex; flex-direction: column; gap: 0.8rem;" id="coachStrong"></div>
+                </div>
+                <div style="background: rgba(244,63,94,0.03); border: 1px solid rgba(244,63,94,0.1); padding: 1.5rem; border-radius: 16px;">
+                    <h4 style="color: #f43f5e; font-size: 0.95rem; margin-bottom: 1rem; text-transform: uppercase;"><i class="fas fa-triangle-exclamation"></i> Weak Areas</h4>
+                    <div style="display: flex; flex-direction: column; gap: 0.8rem;" id="coachWeak"></div>
+                </div>
+            </div>
+            <div style="background: rgba(59,130,246,0.03); border: 1px solid rgba(59,130,246,0.1); padding: 1.5rem; border-radius: 16px;">
+                <h4 style="color: #3b82f6; font-size: 0.95rem; margin-bottom: 1rem; text-transform: uppercase;"><i class="fas fa-list-check"></i> Recommended Next Actions</h4>
+                <div style="display: flex; flex-direction: column; gap: 0.8rem;" id="coachActions"></div>
+            </div>
+            <div style="margin-top: 1.5rem; text-align: center;">
+                <button type="button" onclick="triggerResumeUpload()" class="btn-secondary" style="font-size: 0.85rem; padding: 0.6rem 1.2rem;"><i class="fas fa-upload"></i> Upload New Resume</button>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Hidden file input -->
+        <input type="file" id="coachResumeInput" accept=".pdf,.docx" style="display: none;" onchange="handleResumeFileSelected(this)">
+    </div>
+
+    <!-- AI Roadmap Generator -->
+    <div class="ai-card">
+        <div class="ai-card-header">
+            <div class="ai-icon-box" style="background: rgba(236, 72, 153, 0.1); color: #ec4899;">
+                <i class="fas fa-map-location-dot"></i>
+            </div>
+            <div>
+                <div class="ai-card-title">Career Roadmap</div>
+                <div class="ai-card-subtitle">Your next 90 days</div>
+            </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1.5rem;">
+            <input type="text" id="roadmapGoal" value="Full Stack Developer" style="background: #020617; border: 1px solid rgba(255,255,255,0.05); color: #fff; padding: 0.8rem 1.2rem; border-radius: 12px; outline: none; font-size: 1.05rem; width: 100%;">
+            <button id="btnGenerateRoadmap" class="btn-primary" style="padding: 0.8rem 1.5rem; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%;"><i class="fas fa-wand-magic-sparkles"></i> Generate Roadmap</button>
+        </div>
+
+        <div id="roadmapLoader" style="display: none; text-align: center; padding: 4rem 2rem;">
+            <i class="fas fa-circle-notch fa-spin fa-3x" style="color: #ec4899; margin-bottom: 1rem;"></i>
+            <p style="color: #94a3b8;">Crafting your 90-day plan...</p>
+        </div>
+
+        <div id="roadmapContent" class="roadmap-timeline">
+            
+            <div class="roadmap-item">
+                <div class="roadmap-node roadmap-node-1"></div>
+                <h4 style="color: #fff; font-size: 1.1rem; margin-bottom: 0.5rem;">Day 0 - 30: Foundation</h4>
+                <ul id="rd30">
+                    <li>Master Advanced Javascript concepts</li>
+                    <li>Build 2 React frontend projects</li>
+                    <li>Learn state management (Redux/Zustand)</li>
+                </ul>
+            </div>
+
+            <div class="roadmap-item">
+                <div class="roadmap-node roadmap-node-2"></div>
+                <h4 style="color: #fff; font-size: 1.1rem; margin-bottom: 0.5rem;">Day 30 - 60: Core Skills</h4>
+                <ul id="rd60">
+                    <li>Learn Node.js or Django fundamentals</li>
+                    <li>Create RESTful APIs and connect database</li>
+                    <li>Implement JWT Authentication</li>
+                </ul>
+            </div>
+
+            <div class="roadmap-item">
+                <div class="roadmap-node roadmap-node-3"></div>
+                <h4 style="color: #fff; font-size: 1.1rem; margin-bottom: 0.5rem;">Day 60 - 90: Interview Prep</h4>
+                <ul id="rd90">
+                    <li>Build a full-stack clone (e.g., Twitter)</li>
+                    <li>Deploy on Vercel and AWS/Render</li>
+                    <li>Start applying for jobs and mock interviews</li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = '{{ csrf_token }}';
+
+    // AI Coach Analysis Upload & Rendering
+    function triggerResumeUpload() {
+        document.getElementById('coachResumeInput').click();
+    }
+
+    async function handleResumeFileSelected(input) {
+        if (!input.files || input.files.length === 0) return;
+        const file = input.files[0];
+        
+        // Show loader state
+        const uploadState = document.getElementById('coachUploadState');
+        if (uploadState) uploadState.style.display = 'none';
+        document.getElementById('coachContent').style.display = 'none';
+        
+        const loader = document.getElementById('coachLoader');
+        loader.style.display = 'block';
+        document.getElementById('coachLoaderText').innerText = "Uploading & parsing your resume...";
+
+        const formData = new FormData();
+        formData.append('resume', file);
+
+        try {
+            document.getElementById('coachErrorBox').style.display = 'none';
+            const res = await fetch('/api/career-coach/upload/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken
+                },
+                body: formData
+            });
+            const data = await res.json();
+            
+            if (res.ok && data.status === 'success') {
+                renderCoachAnalysis(data.analysis);
+                loader.style.display = 'none';
+                document.getElementById('coachContent').style.display = 'block';
+            } else {
+                const errMsg = data.message || "Failed to process resume.";
+                document.getElementById('coachErrorText').innerText = errMsg;
+                document.getElementById('coachErrorBox').style.display = 'block';
+                resetCoachUploadState();
+            }
+        } catch (e) {
+            console.error(e);
+            const errMsg = "An error occurred during resume parsing.";
+            document.getElementById('coachErrorText').innerText = errMsg;
+            document.getElementById('coachErrorBox').style.display = 'block';
+            resetCoachUploadState();
+        }
+        // Clear input value so same file can be re-selected
+        input.value = "";
+    }
+
+    function renderCoachAnalysis(analysis) {
+        document.getElementById('coachErrorBox').style.display = 'none';
+        document.querySelector('.coach-message').innerHTML = `"Based on your profile, you are at the <strong style="color: #fff;">${analysis.level}</strong> stage."`;
+        document.getElementById('coachStrong').innerHTML = analysis.strong.map(s => `<span class="badge-tag badge-strong"><i class="fas fa-check"></i> ${s}</span>`).join('');
+        document.getElementById('coachWeak').innerHTML = analysis.weak.map(w => `<span class="badge-tag badge-weak"><i class="fas fa-xmark"></i> ${w}</span>`).join('');
+        document.getElementById('coachActions').innerHTML = analysis.actions.map(a => `<span class="badge-tag badge-action"><i class="fas fa-arrow-right"></i> ${a}</span>`).join('');
+    }
+
+    function resetCoachUploadState() {
+        document.getElementById('coachLoader').style.display = 'none';
+        const uploadState = document.getElementById('coachUploadState');
+        if (uploadState) {
+            uploadState.style.display = 'block';
+        } else {
+            document.getElementById('coachContent').style.display = 'block';
+        }
+    }
+
+    // Roadmap Generator
+    document.getElementById('btnGenerateRoadmap').addEventListener('click', async () => {
+        document.getElementById('roadmapContent').style.display = 'none';
+        document.getElementById('roadmapLoader').style.display = 'block';
+
+        const goal = document.getElementById('roadmapGoal').value;
+        const userSkills = "{% for skill in skills %}{{ skill.name }}{% if not forloop.last %}, {% endif %}{% empty %}Python, Django, SQL{% endfor %}";
+
+        try {
+            const res = await fetch('/api/roadmap/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    goal: goal,
+                    skills: userSkills
+                })
+            });
+            const data = await res.json();
+            
+            if (data.error) {
+                document.getElementById('roadmapContent').innerHTML = `
+                    <div style="background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.2); padding: 1.5rem; border-radius: 16px; text-align: center; color: #fca5a5; margin-top: 1rem;">
+                        <i class="fas fa-exclamation-circle fa-2x" style="margin-bottom: 0.8rem; color: #f43f5e;"></i>
+                        <p style="margin: 0; font-size: 0.95rem; font-weight: 600;">${data.error}</p>
+                    </div>
+                `;
+                document.getElementById('roadmapLoader').style.display = 'none';
+                document.getElementById('roadmapContent').style.display = 'block';
+                return;
+            }
+            
+            document.getElementById('roadmapContent').innerHTML = `
+                <div class="roadmap-item">
+                    <div class="roadmap-node roadmap-node-1"></div>
+                    <h4 style="color: #fff; font-size: 1.1rem; margin-bottom: 0.5rem;">Day 0 - 30: Foundation</h4>
+                    <ul id="rd30">
+                        ${data.day30.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div class="roadmap-item">
+                    <div class="roadmap-node roadmap-node-2"></div>
+                    <h4 style="color: #fff; font-size: 1.1rem; margin-bottom: 0.5rem;">Day 30 - 60: Core Skills</h4>
+                    <ul id="rd60">
+                        ${data.day60.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div class="roadmap-item">
+                    <div class="roadmap-node roadmap-node-3"></div>
+                    <h4 style="color: #fff; font-size: 1.1rem; margin-bottom: 0.5rem;">Day 60 - 90: Interview Prep</h4>
+                    <ul id="rd90">
+                        ${data.day90.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+            
+        } catch (e) {
+            console.error(e);
+            document.getElementById('roadmapContent').innerHTML = `
+                <div style="background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.2); padding: 1.5rem; border-radius: 16px; text-align: center; color: #fca5a5; margin-top: 1rem;">
+                    <i class="fas fa-exclamation-circle fa-2x" style="margin-bottom: 0.8rem; color: #f43f5e;"></i>
+                    <p style="margin: 0; font-size: 0.95rem; font-weight: 600;">Failed to generate roadmap. Please try again.</p>
+                </div>
+            `;
+        }
+ 
+        document.getElementById('roadmapLoader').style.display = 'none';
+        document.getElementById('roadmapContent').style.display = 'block';
+    });
+</script>
+{% endblock %}

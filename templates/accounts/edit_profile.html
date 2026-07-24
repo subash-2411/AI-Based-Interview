@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile - {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="glass-card">
+        <h2 class="hero-title" style="font-size: 2.5rem; margin-bottom: 0.5rem; text-align: center;">Edit Profile</h2>
+        <p class="hero-subtitle" style="margin-bottom: 2rem; text-align: center;">Update your personal information</p>
+
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                {% for error in form.non_field_errors %}
+                    <div class="alert alert-error mb-3">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+
+            {% for field in form %}
+                <div class="input-group">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">{{ field.label }}</label>
+                    {% if field.name == 'profile_pic' %}
+                        <div class="file-input-wrapper">
+                            {{ field }}
+                        </div>
+                    {% else %}
+                        {{ field }}
+                    {% endif %}
+                    
+                    {% if field.errors %}
+                        {% for error in field.errors %}
+                            <div class="alert alert-error" style="padding: 0.5rem; margin-top: 0.5rem; font-size: 0.8rem;">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn-primary" style="flex: 1;">Save Changes</button>
+                <a href="{% url 'profile' %}" class="btn-outline" style="flex: 1; text-align: center; text-decoration: none; padding: 0.8rem; border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text-muted);">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .btn-outline:hover {
+        background: rgba(255,255,255,0.05);
+        color: white;
+    }
+    textarea.input-field {
+        resize: vertical;
+        min-height: 100px;
+    }
+    .file-input-wrapper {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--glass-border);
+        padding: 1rem;
+        border-radius: 12px;
+        color: var(--text-muted);
+    }
+    .file-input-wrapper input {
+        color: white;
+    }
+</style>
+{% endblock %}

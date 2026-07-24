@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}Resume Analyzer - AI Resume Studio{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto; text-align: center;">
+    <h2><i class="fas fa-chart-line" style="color: #a855f7;"></i> AI Resume Analyzer</h2>
+    <p style="color: #94a3b8; margin-bottom: 3rem;">Get deep insights into your strengths and weaknesses.</p>
+
+    <div class="glass-card" style="padding: 4rem 2rem; border: 2px dashed rgba(168, 85, 247, 0.5);">
+        <h3>Select a Resume to Analyze</h3>
+        <select id="resumeSelect" class="form-control" style="background: rgba(255,255,255,0.1); color: white; border: none; padding: 1rem; border-radius: 10px; width: 60%; margin: 1rem auto; display: block;">
+            {% for resume in resumes %}
+                <option value="{{ resume.id }}">{{ resume }}</option>
+            {% empty %}
+                <option value="">No resumes uploaded yet.</option>
+            {% endfor %}
+        </select>
+        <button id="analyzeBtn" class="btn-primary mt-3" onclick="loadAnalysis()" {% if not resumes %}disabled{% endif %}>Analyze Now</button>
+    </div>
+
+    <!-- Results Area -->
+    <div class="glass-card mt-5" style="padding: 2rem; text-align: left; display: none; transform: translateY(20px); transition: all 0.5s ease;" id="analysisResults">
+        <h3 style="color: #a855f7; display: flex; align-items: center; gap: 10px;"><i class="fas fa-bolt"></i> AI Analysis Report</h3>
+        <hr style="border-color: rgba(255,255,255,0.1); margin: 1rem 0;">
+        
+        <div style="margin-bottom: 2rem;">
+            <p><strong>Name:</strong> <span id="resName"></span></p>
+            <p><strong>Email:</strong> <span id="resEmail"></span></p>
+            <p><strong>Phone:</strong> <span id="resPhone"></span></p>
+            <p><strong>Objective:</strong> <span id="resObjective"></span></p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
+            <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 10px; text-align: center;">
+                <h5>Formatting</h5>
+                <h4 style="color: #8b5cf6;" id="resFormatting">80%</h4>
+            </div>
+            <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 10px; text-align: center;">
+                <h5>Impact</h5>
+                <h4 style="color: #06b6d4;" id="resImpact">75%</h4>
+            </div>
+            <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 10px; text-align: center;">
+                <h5>Clarity</h5>
+                <h4 style="color: #ec4899;" id="resClarity">85%</h4>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
+            <div>
+                <h4 style="color: #22c55e;"><i class="fas fa-arrow-trend-up"></i> Strengths</h4>
+                <ul style="color: #94a3b8; line-height: 1.8;" id="resStrengths">
+                    <!-- Loaded dynamically -->
+                </ul>
+            </div>
+            <div>
+                <h4 style="color: #ef4444;"><i class="fas fa-arrow-trend-down"></i> Recommendations</h4>
+                <ul style="color: #94a3b8; line-height: 1.8;" id="resRecommendations">
+                    <!-- Loaded dynamically -->
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function loadAnalysis() {
+        const select = document.getElementById('resumeSelect');
+        const resumeId = select.value;
+        if (!resumeId) return;
+
+        const btn = document.getElementById('analyzeBtn');
+        const results = document.getElementById('analysisResults');
+        
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+        btn.disabled = true;
+        
+        try {
+            const response = await fetch(`?resume_id=${resumeId}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                document.getElementById('resName').innerText = data.name;
+                document.getElementById('resEmail').innerText = data.email;
+                document.getElementById('resPhone').innerText = data.phone;
+                document.getElementById('resObjective').innerText = data.objective;
+                
+                document.getElementById('resFormatting').innerText = data.formatting_score + '%';
+                document.getElementById('resImpact').innerText = data.impact_score + '%';
+                document.getElementById('resClarity').innerText = data.clarity_score + '%';
+                
+                // Strengths based on section audit
+                const strengths = document.getElementById('resStrengths');
+                strengths.innerHTML = '';
+                for (const [section, present] of Object.entries(data.sections)) {
+                    if (present) {
+                        strengths.innerHTML += `<li>Good coverage of <strong>${section}</strong> section.</li>`;
+                    }
+                }
+                if (strengths.innerHTML === '') {
+                    strengths.innerHTML = '<li>No prominent sections detected. Make sure to format sections cleanly.</li>';
+                }
+                
+                // Recommendations
+                const recommendations = document.getElementById('resRecommendations');
+                recommendations.innerHTML = '';
+                data.recommendations.forEach(rec => {
+                    recommendations.innerHTML += `<li>${rec}</li>`;
+                });
+                for (const [section, present] of Object.entries(data.sections)) {
+                    if (!present) {
+                        recommendations.innerHTML += `<li>Consider adding a <strong>${section}</strong> section.</li>`;
+                    }
+                }
+                
+                results.style.display = 'block';
+                setTimeout(() => {
+                    results.style.transform = 'translateY(0)';
+                }, 50);
+            } else {
+                alert(data.error || 'Error loading analysis.');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Something went wrong during analysis.');
+        } finally {
+            btn.innerHTML = 'Analyze Now';
+            btn.disabled = false;
+        }
+    }
+</script>
+{% endblock %}
+

@@ -1,0 +1,434 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login — Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #050810;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ── Atmosphere ── */
+        .bg-glow { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+        .glow-blob {
+            position: absolute;
+            border-radius: 50%;
+            animation: breathe 7s ease-in-out infinite;
+        }
+        .blob-1 {
+            width: 700px; height: 700px;
+            background: radial-gradient(circle, rgba(220,38,38,0.18) 0%, transparent 65%);
+            bottom: -200px; right: -150px;
+        }
+        .blob-2 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(109,40,217,0.12) 0%, transparent 65%);
+            top: -100px; left: -100px;
+            animation-delay: -3s;
+        }
+        .blob-3 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(220,38,38,0.08) 0%, transparent 65%);
+            top: 50%; left: 30%;
+            transform: translate(-50%,-50%);
+            animation-delay: -1.5s;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); }
+            50%       { transform: scale(1.1); }
+        }
+
+        .grid-overlay {
+            position: fixed; inset: 0; z-index: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+            background-size: 48px 48px;
+            pointer-events: none;
+        }
+
+        /* ── Card ── */
+        .card {
+            position: relative;
+            z-index: 10;
+            background: rgba(8, 10, 22, 0.9);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 24px;
+            padding: 2.5rem 2.5rem 2rem;
+            width: 420px;
+            max-width: 92vw;
+            backdrop-filter: blur(40px);
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.03),
+                0 40px 80px rgba(0,0,0,0.7),
+                0 0 80px rgba(220,38,38,0.06);
+            animation: riseUp 0.65s cubic-bezier(0.16,1,0.3,1) forwards;
+        }
+
+        @keyframes riseUp {
+            from { opacity: 0; transform: translateY(24px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Header */
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .shield-icon {
+            width: 48px; height: 48px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.05));
+            border: 1px solid rgba(239,68,68,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: #f87171;
+            flex-shrink: 0;
+            animation: iconPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes iconPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.25); }
+            50%       { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+        }
+
+        .card-header-text h1 {
+            font-size: 1.3rem;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            color: #fff;
+            line-height: 1;
+            margin-bottom: 0.2rem;
+        }
+
+        .card-header-text p {
+            font-size: 0.75rem;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        /* Divider */
+        .divider {
+            height: 1px;
+            background: rgba(255,255,255,0.05);
+            margin-bottom: 1.75rem;
+        }
+
+        /* Error message */
+        .error-msg {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.2);
+            border-radius: 10px;
+            padding: 0.7rem 0.9rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.82rem;
+            color: #fca5a5;
+            font-weight: 600;
+        }
+
+        /* Form fields */
+        .field-group { margin-bottom: 1.1rem; }
+
+        .field-label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 0.45rem;
+        }
+
+        .field-wrap {
+            position: relative;
+        }
+
+        .field-icon {
+            position: absolute;
+            left: 0.9rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #334155;
+            font-size: 0.82rem;
+            transition: color 0.2s;
+            pointer-events: none;
+        }
+
+        .field-input {
+            width: 100%;
+            background: rgba(15, 18, 35, 0.8);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 11px;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            color: #f1f5f9;
+            font-size: 0.88rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            outline: none;
+            transition: all 0.2s;
+            -webkit-autofill: none;
+        }
+
+        .field-input::placeholder { color: #334155; }
+
+        .field-input:focus {
+            border-color: rgba(239,68,68,0.4);
+            background: rgba(20, 24, 45, 0.9);
+            box-shadow: 0 0 0 3px rgba(239,68,68,0.08);
+        }
+
+        .field-input:focus + .field-icon,
+        .field-wrap:focus-within .field-icon { color: #f87171; }
+
+        /* Password toggle */
+        .pw-toggle {
+            position: absolute;
+            right: 0.9rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #334155;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.82rem;
+            padding: 0;
+            transition: color 0.2s;
+        }
+        .pw-toggle:hover { color: #64748b; }
+
+        /* Submit button */
+        .submit-btn {
+            width: 100%;
+            padding: 0.9rem;
+            border-radius: 12px;
+            border: 1px solid rgba(239,68,68,0.25);
+            background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(185,28,28,0.08));
+            color: #fff;
+            font-size: 0.92rem;
+            font-weight: 800;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            letter-spacing: 0.3px;
+            margin-top: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(239,68,68,0.1), transparent 60%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .submit-btn:hover::before { opacity: 1; }
+
+        .submit-btn:hover {
+            border-color: rgba(239,68,68,0.5);
+            box-shadow: 0 8px 30px rgba(239,68,68,0.2);
+            transform: translateY(-1px);
+        }
+
+        .submit-btn:active { transform: translateY(0); }
+
+        .submit-btn.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        /* Footer */
+        .card-footer {
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+
+        .back-link {
+            font-size: 0.78rem;
+            color: #334155;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .back-link:hover { color: #64748b; }
+
+        /* Security badge */
+        .security-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.7rem;
+            color: #1e3a5f;
+            font-weight: 600;
+            margin-top: 0.75rem;
+        }
+
+        /* Top corner label */
+        .corner-tag {
+            position: fixed;
+            top: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(10,15,30,0.9);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 30px;
+            padding: 0.4rem 1.1rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #334155;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-glow">
+    <div class="glow-blob blob-1"></div>
+    <div class="glow-blob blob-2"></div>
+    <div class="glow-blob blob-3"></div>
+</div>
+<div class="grid-overlay"></div>
+
+<div class="corner-tag">
+    <i class="fas fa-shield-halved" style="color:#ef4444;"></i>
+    AI Interview Pro — Restricted Zone
+</div>
+
+<div class="card">
+
+    <div class="card-header">
+        <div class="shield-icon">
+            <i class="fas fa-shield-halved"></i>
+        </div>
+        <div class="card-header-text">
+            <h1>Command Center</h1>
+            <p>Superadmin authentication required</p>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    {% if error %}
+    <div class="error-msg">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <form method="POST" id="loginForm">
+        {% csrf_token %}
+
+        <div class="field-group">
+            <label class="field-label" for="username">Username</label>
+            <div class="field-wrap">
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    class="field-input"
+                    placeholder="Enter admin username"
+                    autocomplete="username"
+                    value="{{ username|default:'' }}"
+                    required
+                >
+                <i class="fas fa-user field-icon"></i>
+            </div>
+        </div>
+
+        <div class="field-group">
+            <label class="field-label" for="password">Password</label>
+            <div class="field-wrap">
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    class="field-input"
+                    placeholder="Enter admin password"
+                    autocomplete="current-password"
+                    required
+                >
+                <i class="fas fa-lock field-icon"></i>
+                <button type="button" class="pw-toggle" onclick="togglePw()" id="pwToggle" tabindex="-1">
+                    <i class="fas fa-eye" id="pwIcon"></i>
+                </button>
+            </div>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">
+            <i class="fas fa-unlock-alt"></i>
+            Authenticate & Enter
+        </button>
+    </form>
+
+    <div class="card-footer">
+        <a href="/" class="back-link">
+            <i class="fas fa-arrow-left"></i> Return to main site
+        </a>
+        <br>
+        <span class="security-badge">
+            <i class="fas fa-shield-check"></i>
+            Secured · Superuser access only
+        </span>
+    </div>
+
+</div>
+
+<script>
+    function togglePw() {
+        const inp = document.getElementById('password');
+        const icon = document.getElementById('pwIcon');
+        if (inp.type === 'password') {
+            inp.type = 'text';
+            icon.className = 'fas fa-eye-slash';
+        } else {
+            inp.type = 'password';
+            icon.className = 'fas fa-eye';
+        }
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', function() {
+        const btn = document.getElementById('submitBtn');
+        btn.classList.add('loading');
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Authenticating…';
+    });
+</script>
+</body>
+</html>

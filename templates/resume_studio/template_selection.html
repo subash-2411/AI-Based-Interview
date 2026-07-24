@@ -1,0 +1,668 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Template Library - AI Resume Studio{% endblock %}
+
+{% block extra_head %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<style>
+    * { box-sizing: border-box; }
+
+    body { background: #060912; }
+
+    /* ─── PAGE HERO ─── */
+    .hero-section {
+        text-align: center;
+        padding: 4rem 1rem 2.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: -120px; left: 50%;
+        transform: translateX(-50%);
+        width: 600px; height: 600px;
+        background: radial-gradient(ellipse, rgba(139,92,246,0.18) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(139,92,246,0.12);
+        border: 1px solid rgba(139,92,246,0.35);
+        color: #c4b5fd;
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 0.38rem 1rem;
+        border-radius: 50px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 1.5rem;
+    }
+    .hero-badge span { width:6px; height:6px; background:#a78bfa; border-radius:50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .hero-title {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 800;
+        color: #f8fafc;
+        line-height: 1.1;
+        margin-bottom: 1rem;
+    }
+    .hero-title span {
+        background: linear-gradient(135deg, #a855f7 0%, #06b6d4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .hero-desc {
+        color: #94a3b8;
+        font-size: 1.05rem;
+        max-width: 580px;
+        margin: 0 auto 2.5rem;
+        line-height: 1.7;
+    }
+    .hero-stats {
+        display: flex;
+        justify-content: center;
+        gap: 3rem;
+        margin-bottom: 3rem;
+    }
+    .stat-item { text-align: center; }
+    .stat-num { font-size: 1.6rem; font-weight: 800; color: #f1f5f9; }
+    .stat-label { font-size: 0.75rem; color: #64748b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ─── TABS ─── */
+    .tabs-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 3rem;
+    }
+    .tabs {
+        display: flex;
+        background: rgba(15,23,42,0.9);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 50px;
+        padding: 5px;
+        backdrop-filter: blur(20px);
+        gap: 4px;
+    }
+    .tab-btn {
+        background: transparent;
+        border: none;
+        color: #64748b;
+        padding: 0.75rem 2rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Inter', sans-serif;
+        letter-spacing: 0.2px;
+    }
+    .tab-btn.active {
+        background: linear-gradient(135deg, #7c3aed, #0891b2);
+        color: #fff;
+        box-shadow: 0 4px 20px rgba(124,58,237,0.4);
+    }
+    .tab-btn:hover:not(.active) { color: #e2e8f0; background: rgba(255,255,255,0.05); }
+
+    /* ─── TEMPLATE GRID ─── */
+    .template-section {
+        display: none;
+        animation: fadeSlide 0.4s ease;
+    }
+    .template-section.active {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 2rem;
+        padding: 0.5rem 0 4rem;
+    }
+    @keyframes fadeSlide {
+        from { opacity:0; transform:translateY(16px); }
+        to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* ─── TEMPLATE CARD ─── */
+    .t-card {
+        background: #0d1426;
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 16px;
+        overflow: hidden;
+        position: relative;
+        cursor: pointer;
+        transition: transform 0.35s cubic-bezier(.4,0,.2,1), box-shadow 0.35s ease, border-color 0.3s;
+        display: flex;
+        flex-direction: column;
+    }
+    .t-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 24px 48px rgba(0,0,0,0.55), 0 0 0 1px rgba(139,92,246,0.35);
+        border-color: rgba(139,92,246,0.35);
+    }
+    .t-card:hover .overlay-btn { opacity:1; transform:translateY(0); }
+    .t-card:hover .preview-wrap::after { opacity:1; }
+
+    .preview-wrap {
+        height: 360px;
+        padding: 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #111827;
+        position: relative;
+    }
+    .preview-wrap::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to bottom, transparent 60%, rgba(13,20,38,0.9) 100%);
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+    }
+
+    /* the A4 mini-paper */
+    .mini-paper {
+        width: 100%;
+        height: 100%;
+        background: #fff;
+        border-radius: 4px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        overflow: hidden;
+        font-family: 'Inter', sans-serif;
+        color: #1e293b;
+        position: relative;
+    }
+
+    .overlay-btn {
+        position: absolute;
+        bottom: 1.4rem;
+        left: 50%;
+        transform: translateX(-50%) translateY(10px);
+        background: linear-gradient(135deg, #7c3aed, #0891b2);
+        color: #fff;
+        border: none;
+        border-radius: 50px;
+        padding: 0.6rem 1.8rem;
+        font-size: 0.85rem;
+        font-weight: 700;
+        cursor: pointer;
+        opacity: 0;
+        transition: all 0.3s ease;
+        z-index: 10;
+        white-space: nowrap;
+        box-shadow: 0 4px 20px rgba(124,58,237,0.5);
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* ─── CARD FOOTER ─── */
+    .card-foot {
+        padding: 1.1rem 1.4rem 1.3rem;
+        background: #0d1426;
+        border-top: 1px solid rgba(255,255,255,0.05);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .card-title { color: #f1f5f9; font-size: 1rem; font-weight: 700; margin-bottom: 2px; }
+    .card-desc  { color: #64748b; font-size: 0.78rem; }
+    .card-badges { display: flex; gap: 0.4rem; flex-wrap: wrap; justify-content: flex-end; }
+    .badge {
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 0.18rem 0.55rem;
+        border-radius: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+    .badge-ats  { background: rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); color:#34d399; }
+    .badge-new  { background: linear-gradient(135deg,#f59e0b,#ef4444); color:#fff; }
+    .badge-cv   { background: rgba(6,182,212,0.12); border:1px solid rgba(6,182,212,0.3); color:#22d3ee; }
+    .badge-pop  { background: rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.3); color:#c4b5fd; }
+
+    /* ─── SECTION LABEL ─── */
+    .section-label {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        margin-top: 0.5rem;
+    }
+    .section-label h2 { font-size: 1.1rem; font-weight: 700; color: #e2e8f0; white-space: nowrap; }
+    .section-label::after { content:''; flex:1; height:1px; background: linear-gradient(to right, rgba(255,255,255,0.1), transparent); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ─── HERO ─── -->
+<div class="hero-section">
+    <div class="hero-badge"><span></span> AI Resume Studio</div>
+    <h1 class="hero-title">Professional Resume<br><span>Templates</span></h1>
+    <p class="hero-desc">ATS-optimised, recruiter-approved templates. Click any template to open the live editor and start building instantly.</p>
+
+    <div class="hero-stats">
+        <div class="stat-item">
+            <div class="stat-num">7+</div>
+            <div class="stat-label">Templates</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-num">100%</div>
+            <div class="stat-label">ATS Friendly</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-num">PDF</div>
+            <div class="stat-label">Export Ready</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-num">Free</div>
+            <div class="stat-label">No Watermark</div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── TABS ─── -->
+<div class="tabs-wrapper">
+    <div class="tabs">
+        <button class="tab-btn active" id="tabResume" onclick="switchTab('resume')">📄 Resume (1-Page)</button>
+        <button class="tab-btn" id="tabCv" onclick="switchTab('cv')">📋 Curriculum Vitae</button>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     RESUME TEMPLATES
+════════════════════════════════════════ -->
+<div class="template-section active" id="sec-resume">
+
+    <div class="section-label"><h2>Resume Templates</h2></div>
+
+    <!-- ① Classic Executive -->
+    <div class="t-card" onclick="openTemplate('classic')">
+        <div class="preview-wrap">
+            <div class="mini-paper">
+                <!-- Classic: centered header + ruled sections -->
+                <div style="padding:14px 16px; font-family:Georgia,serif;">
+                    <div style="text-align:center; border-bottom:2px solid #0f172a; padding-bottom:6px; margin-bottom:8px;">
+                        <div style="font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:1.5px; color:#0f172a;">NARMADHA</div>
+                        <div style="font-size:6px; color:#475569; margin-top:3px; font-style:italic;">Software Engineer</div>
+                        <div style="font-size:5.5px; color:#64748b; margin-top:2px;">narmadha@gmail.com &nbsp;·&nbsp; +91 98765 43210 &nbsp;·&nbsp; Villianur, Pondicherry</div>
+                    </div>
+                    <div style="margin-bottom:6px;">
+                        <div style="font-weight:700; font-size:7px; text-transform:uppercase; color:#0f172a; border-bottom:0.5px solid #cbd5e1; margin-bottom:3px; padding-bottom:1px; letter-spacing:0.8px;">Professional Summary</div>
+                        <div style="font-size:5px; color:#334155; line-height:1.5;">Dedicated Software Engineer with 4+ years in Python & Django development, delivering robust APIs from Pondicherry. Strong track record in building scalable, enterprise-grade web applications.</div>
+                    </div>
+                    <div style="margin-bottom:6px;">
+                        <div style="font-weight:700; font-size:7px; text-transform:uppercase; color:#0f172a; border-bottom:0.5px solid #cbd5e1; margin-bottom:3px; padding-bottom:1px; letter-spacing:0.8px;">Work Experience</div>
+                        <div style="display:flex;justify-content:space-between;font-weight:700;font-size:5.5px;color:#0f172a;"><span>Senior Software Engineer — Infosys</span><span>2022 – Present</span></div>
+                        <div style="font-style:italic;font-size:5px;color:#64748b;margin-bottom:2px;">Chennai, Tamil Nadu</div>
+                        <div style="font-size:5px;color:#475569;margin-bottom:3px;">Built scalable REST APIs & Django microservices for 10+ enterprise clients. Reduced latency by 40%.</div>
+                        <div style="display:flex;justify-content:space-between;font-weight:700;font-size:5.5px;color:#0f172a;"><span>Software Developer — TCS</span><span>2020 – 2022</span></div>
+                        <div style="font-style:italic;font-size:5px;color:#64748b;margin-bottom:2px;">Pondicherry</div>
+                        <div style="font-size:5px;color:#475569;">Automated data pipelines reducing processing time by 35% using Python & SQL.</div>
+                    </div>
+                    <div style="margin-bottom:6px;">
+                        <div style="font-weight:700; font-size:7px; text-transform:uppercase; color:#0f172a; border-bottom:0.5px solid #cbd5e1; margin-bottom:3px; padding-bottom:1px; letter-spacing:0.8px;">Education</div>
+                        <div style="font-weight:700;font-size:5.5px;color:#0f172a;">B.E. Computer Science — Pondicherry University</div>
+                        <div style="font-size:5px;color:#64748b;">2016 – 2020 &nbsp;|&nbsp; CGPA: 8.6 / 10</div>
+                    </div>
+                    <div>
+                        <div style="font-weight:700; font-size:7px; text-transform:uppercase; color:#0f172a; border-bottom:0.5px solid #cbd5e1; margin-bottom:3px; padding-bottom:1px; letter-spacing:0.8px;">Technical Skills</div>
+                        <div style="font-size:5px;color:#334155;">Python · Django · REST API · PostgreSQL · Docker · AWS · Git · React · Redis</div>
+                    </div>
+                </div>
+            </div>
+            <button class="overlay-btn">✦ Use This Template</button>
+        </div>
+        <div class="card-foot">
+            <div>
+                <div class="card-title">Classic Executive</div>
+                <div class="card-desc">Timeless serif, always recruiter-approved</div>
+            </div>
+            <div class="card-badges">
+                <span class="badge badge-ats">ATS ✓</span>
+                <span class="badge badge-pop">Popular</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ② Professional Clean -->
+    <div class="t-card" onclick="openTemplate('professional')">
+        <div class="preview-wrap">
+            <div class="mini-paper">
+                <!-- blue header band -->
+                <div style="background:linear-gradient(135deg,#1e3a8a,#1d4ed8); color:#fff; padding:10px 14px;">
+                    <div style="font-weight:800; font-size:12px; letter-spacing:0.5px;">SUBASH S.</div>
+                    <div style="font-size:5.5px; color:#bfdbfe; font-weight:500; margin-top:2px;">Python Backend Engineer</div>
+                    <div style="display:flex; gap:10px; margin-top:4px; font-size:4.5px; color:#93c5fd; flex-wrap:wrap;">
+                        <span>📧 subash.s@gmail.com</span>
+                        <span>📞 +91 98765 43210</span>
+                        <span>📍 Villianur, Pondicherry</span>
+                        <span>🔗 linkedin.com/in/subash-s</span>
+                    </div>
+                </div>
+                <div style="padding:8px 14px; display:grid; grid-template-columns:1.3fr 1fr; gap:10px;">
+                    <!-- left -->
+                    <div>
+                        <div style="color:#1e3a8a; font-weight:800; font-size:5.5px; text-transform:uppercase; border-bottom:1.5px solid #1e3a8a; padding-bottom:1px; margin-bottom:3px; letter-spacing:0.5px;">Experience</div>
+                        <div style="font-weight:700; font-size:5.5px; color:#0f172a;">Backend Engineer · Infosys</div>
+                        <div style="font-size:4.5px; color:#3b82f6; margin-bottom:1px;">2022 – Present · Chennai</div>
+                        <div style="font-size:4.5px; color:#475569; margin-bottom:4px;">Designed REST APIs & Django services for 10+ enterprise clients; cut latency by 40%.</div>
+                        <div style="font-weight:700; font-size:5.5px; color:#0f172a;">Developer · TCS</div>
+                        <div style="font-size:4.5px; color:#3b82f6; margin-bottom:1px;">2020 – 2022 · Pondicherry</div>
+                        <div style="font-size:4.5px; color:#475569; margin-bottom:6px;">Automated data pipelines; reduced processing time by 35%.</div>
+
+                        <div style="color:#1e3a8a; font-weight:800; font-size:5.5px; text-transform:uppercase; border-bottom:1.5px solid #1e3a8a; padding-bottom:1px; margin-bottom:3px; letter-spacing:0.5px;">Education</div>
+                        <div style="font-weight:700; font-size:5.5px; color:#0f172a;">B.E. Computer Science</div>
+                        <div style="font-size:4.5px; color:#64748b;">Pondicherry University · 2020 · CGPA 8.8</div>
+                    </div>
+                    <!-- right -->
+                    <div>
+                        <div style="color:#1e3a8a; font-weight:800; font-size:5.5px; text-transform:uppercase; border-bottom:1.5px solid #1e3a8a; padding-bottom:1px; margin-bottom:3px; letter-spacing:0.5px;">Technical Skills</div>
+                        <div style="font-size:4.5px; color:#1e293b; line-height:1.8;">Python · Django · DRF<br>PostgreSQL · Redis · Celery<br>Docker · AWS · Git<br>React · REST API · CI/CD</div>
+
+                        <div style="color:#1e3a8a; font-weight:800; font-size:5.5px; text-transform:uppercase; border-bottom:1.5px solid #1e3a8a; padding-bottom:1px; margin:5px 0 3px; letter-spacing:0.5px;">Certifications</div>
+                        <div style="font-size:4.5px; color:#475569; line-height:1.8;">AWS Solutions Architect<br>Google Cloud Associate<br>Python Institute PCEP</div>
+
+                        <div style="color:#1e3a8a; font-weight:800; font-size:5.5px; text-transform:uppercase; border-bottom:1.5px solid #1e3a8a; padding-bottom:1px; margin:5px 0 3px; letter-spacing:0.5px;">Languages</div>
+                        <div style="font-size:4.5px; color:#475569; line-height:1.8;">Tamil (Native)<br>English (Professional)<br>Hindi (Conversational)</div>
+                    </div>
+                </div>
+            </div>
+            <button class="overlay-btn">✦ Use This Template</button>
+        </div>
+        <div class="card-foot">
+            <div>
+                <div class="card-title">Professional Clean</div>
+                <div class="card-desc">Branded header, two-column, highly ATS-friendly</div>
+            </div>
+            <div class="card-badges">
+                <span class="badge badge-ats">ATS ✓</span>
+                <span class="badge badge-new">New</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ③ Creative Accent -->
+    <div class="t-card" onclick="openTemplate('creative')">
+        <div class="preview-wrap">
+            <div class="mini-paper" style="border-top:8px solid #7c3aed;">
+                <div style="padding:10px 14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                        <div>
+                            <div style="font-weight:900; font-size:13px; color:#0f172a; letter-spacing:-0.5px; line-height:1.05;">PRIYANGA</div>
+                            <div style="font-weight:900; font-size:13px; color:#0f172a; letter-spacing:-0.5px;">Z.</div>
+                            <div style="font-size:5.5px; color:#7c3aed; font-weight:700; margin-top:2px;">UI/UX & Product Designer</div>
+                        </div>
+                        <div style="text-align:right; font-size:5px; color:#64748b; line-height:1.8; margin-top:2px;">priyanga.z@gmail.com<br>+91 87654 32100<br>Thavalakuppam,<br>Puducherry</div>
+                    </div>
+                    <div style="width:100%; height:0.5px; background:linear-gradient(to right,#7c3aed,transparent); margin-bottom:8px;"></div>
+                    <div style="display:grid; grid-template-columns:0.8fr 1.8fr; gap:8px;">
+                        <div>
+                            <div style="font-size:5.5px; font-weight:800; color:#fff; background:#7c3aed; padding:1px 5px; border-radius:2px; margin-bottom:3px; display:inline-block;">Skills</div>
+                            <div style="font-size:4.5px; color:#475569; line-height:1.8;">Figma<br>Adobe XD<br>React<br>Tailwind CSS<br>Framer Motion<br>Prototyping</div>
+                        </div>
+                        <div>
+                            <div style="font-size:5.5px; font-weight:800; color:#fff; background:#7c3aed; padding:1px 5px; border-radius:2px; margin-bottom:3px; display:inline-block;">Experience</div>
+                            <div style="font-weight:700; font-size:5.5px; color:#0f172a;">Sr. Product Designer — Zoho</div>
+                            <div style="font-size:4.5px; color:#7c3aed; font-weight:600; margin-bottom:1px;">2021 – Present · Thavalakuppam</div>
+                            <div style="font-size:4.5px; color:#475569; margin-bottom:4px;">Redesigned 3 core products for 1M+ users, boosting NPS by 28 points.</div>
+                            <div style="font-weight:700; font-size:5.5px; color:#0f172a;">UX Designer — Freshworks</div>
+                            <div style="font-size:4.5px; color:#7c3aed; font-weight:600; margin-bottom:1px;">2019 – 2021</div>
+                            <div style="font-size:4.5px; color:#475569;">Built design system adopted across 5 teams; reduced dev time by 30%.</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:6px;">
+                        <div style="font-size:5.5px; font-weight:800; color:#fff; background:#7c3aed; padding:1px 5px; border-radius:2px; margin-bottom:3px; display:inline-block;">Education</div>
+                        <div style="font-size:5px; color:#0f172a; font-weight:700;">B.Des. Visual Communication — Pondicherry University &nbsp; 2019</div>
+                    </div>
+                </div>
+            </div>
+            <button class="overlay-btn">✦ Use This Template</button>
+        </div>
+        <div class="card-foot">
+            <div>
+                <div class="card-title">Creative Accent</div>
+                <div class="card-desc">Bold layout for designers & creative professionals</div>
+            </div>
+            <div class="card-badges">
+                <span class="badge badge-ats">ATS ✓</span>
+                <span class="badge badge-new">New</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ④ Modern Tech -->
+    <div class="t-card" onclick="openTemplate('modern')">
+        <div class="preview-wrap">
+            <div class="mini-paper" style="display:flex; border-radius:4px; overflow:hidden; height:100%;">
+                <!-- sidebar -->
+                <div style="width:33%; background:#1e293b; color:#f8fafc; padding:10px; display:flex; flex-direction:column; gap:6px;">
+                    <div>
+                        <div style="font-weight:800; font-size:9px; color:#fff; line-height:1.1;">DEVA<br>JASON</div>
+                        <div style="font-size:5px; color:#38bdf8; font-weight:600; margin-top:2px;">Full Stack Developer</div>
+                    </div>
+                    <div>
+                        <div style="font-size:5px; font-weight:700; color:#38bdf8; text-transform:uppercase; border-bottom:0.5px solid rgba(255,255,255,0.12); padding-bottom:1px; margin-bottom:2px;">Contact</div>
+                        <div style="font-size:4.2px; color:#cbd5e1; line-height:1.7;">jason.deva@gmail.com<br>+91 90123 45678<br>Thavalakuppam,<br>Pondicherry</div>
+                    </div>
+                    <div>
+                        <div style="font-size:5px; font-weight:700; color:#38bdf8; text-transform:uppercase; border-bottom:0.5px solid rgba(255,255,255,0.12); padding-bottom:1px; margin-bottom:2px;">Skills</div>
+                        <div style="font-size:4px; color:#cbd5e1; line-height:1.8;">React · Node.js<br>Python · Django<br>MongoDB · AWS<br>TypeScript · Git<br>Docker · Redis</div>
+                    </div>
+                    <div>
+                        <div style="font-size:5px; font-weight:700; color:#38bdf8; text-transform:uppercase; border-bottom:0.5px solid rgba(255,255,255,0.12); padding-bottom:1px; margin-bottom:2px;">Education</div>
+                        <div style="font-size:4.2px; color:#cbd5e1; line-height:1.5;"><strong style="color:#fff;">B.E. CSE</strong><br>SRM University<br>2020</div>
+                    </div>
+                </div>
+                <!-- main -->
+                <div style="flex:1; padding:10px; background:#fff; display:flex; flex-direction:column; gap:6px;">
+                    <div>
+                        <div style="font-size:6px; font-weight:800; text-transform:uppercase; color:#0f172a; border-bottom:1.5px solid #e2e8f0; padding-bottom:1px; margin-bottom:3px; letter-spacing:0.5px;">Experience</div>
+                        <div style="font-weight:700; font-size:5.5px; color:#0f172a;">Full Stack Developer — Wipro</div>
+                        <div style="font-size:4.5px; color:#3b82f6; font-weight:600;">2021 – Present &nbsp;·&nbsp; Pondicherry</div>
+                        <div style="font-size:4.5px; color:#475569; margin:1.5px 0 4px;">React + Django apps on AWS serving 50K+ daily active users. Led team of 6 engineers.</div>
+                        <div style="font-weight:700; font-size:5.5px; color:#0f172a;">Frontend Developer — HCL</div>
+                        <div style="font-size:4.5px; color:#3b82f6; font-weight:600;">2020 – 2021</div>
+                        <div style="font-size:4.5px; color:#475569; margin-top:1.5px;">Built responsive dashboards; improved load speed by 45%.</div>
+                    </div>
+                    <div>
+                        <div style="font-size:6px; font-weight:800; text-transform:uppercase; color:#0f172a; border-bottom:1.5px solid #e2e8f0; padding-bottom:1px; margin-bottom:3px; letter-spacing:0.5px;">Projects</div>
+                        <div style="font-weight:700; font-size:5px; color:#0f172a;">AI Interview Pro Platform</div>
+                        <div style="font-size:4.5px; color:#475569;">Django + Gemini AI mock interview system · 500+ students</div>
+                    </div>
+                    <div>
+                        <div style="font-size:6px; font-weight:800; text-transform:uppercase; color:#0f172a; border-bottom:1.5px solid #e2e8f0; padding-bottom:1px; margin-bottom:2px; letter-spacing:0.5px;">Certifications</div>
+                        <div style="font-size:4.5px; color:#475569; line-height:1.6;">AWS Solutions Architect Associate<br>Google Cloud Professional Developer</div>
+                    </div>
+                </div>
+            </div>
+            <button class="overlay-btn">✦ Use This Template</button>
+        </div>
+        <div class="card-foot">
+            <div>
+                <div class="card-title">Modern Tech</div>
+                <div class="card-desc">Two-column, ideal for tech & engineering roles</div>
+            </div>
+            <div class="card-badges">
+                <span class="badge badge-ats">ATS ✓</span>
+                <span class="badge badge-pop">Popular</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- ══════════════════════════════════════
+     CV TEMPLATES
+════════════════════════════════════════ -->
+<div class="template-section" id="sec-cv">
+
+    <div class="section-label"><h2>CV Templates</h2></div>
+
+    <!-- ⑤ Academic CV -->
+    <div class="t-card" onclick="openTemplate('academic')">
+        <div class="preview-wrap">
+            <div class="mini-paper" style="font-family:Georgia,serif; padding:12px 14px; color:#000;">
+                <div style="text-align:center; border-bottom:1.5px solid #000; padding-bottom:5px; margin-bottom:7px;">
+                    <div style="font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:1px;">DR. SURENDER KUMAR</div>
+                    <div style="font-size:5.5px; color:#475569; margin-top:2px; font-style:italic;">Associate Professor · Artificial Intelligence</div>
+                    <div style="font-size:5px; color:#555; margin-top:2px;">surender.k@pondy.ac.in &nbsp;·&nbsp; www.surenderlab.in &nbsp;·&nbsp; Pondicherry University</div>
+                </div>
+                <div style="margin-bottom:6px;">
+                    <div style="font-weight:700; font-size:6px; text-transform:uppercase; background:#f8fafc; padding:1.5px 4px; border-left:2.5px solid #000; margin-bottom:3px; letter-spacing:0.6px;">Education</div>
+                    <div style="display:flex;justify-content:space-between;font-weight:700;font-size:5.5px;"><span>Ph.D. — Artificial Intelligence</span><span>2016–2021</span></div>
+                    <div style="font-style:italic;font-size:4.8px;color:#333;margin-bottom:2px;">Pondicherry University · Thesis: Multilingual NLP for Tamil & Low-Resource Languages</div>
+                    <div style="display:flex;justify-content:space-between;font-weight:700;font-size:5.5px;"><span>B.Tech. — Computer Science</span><span>2012–2016</span></div>
+                    <div style="font-size:4.8px;color:#555;">Pondicherry Engineering College · CGPA: 9.2 / 10</div>
+                </div>
+                <div style="margin-bottom:6px;">
+                    <div style="font-weight:700; font-size:6px; text-transform:uppercase; background:#f8fafc; padding:1.5px 4px; border-left:2.5px solid #000; margin-bottom:3px; letter-spacing:0.6px;">Publications</div>
+                    <div style="font-size:4.8px; color:#000; line-height:1.7;">Surender K. et al. (2024). "Cross-lingual Transfer for Tamil NLP." ACL.<br>Surender K. et al. (2023). "Tamil NLP Transformers." EMNLP.<br>Surender K. et al. (2022). "Low-Resource NMT." NAACL.</div>
+                </div>
+                <div style="margin-bottom:6px;">
+                    <div style="font-weight:700; font-size:6px; text-transform:uppercase; background:#f8fafc; padding:1.5px 4px; border-left:2.5px solid #000; margin-bottom:3px; letter-spacing:0.6px;">Research Interests</div>
+                    <div style="font-size:4.8px;color:#333;">NLP · Machine Translation · Transformers · Low-Resource Languages · Tamil Computing</div>
+                </div>
+                <div>
+                    <div style="font-weight:700; font-size:6px; text-transform:uppercase; background:#f8fafc; padding:1.5px 4px; border-left:2.5px solid #000; margin-bottom:3px; letter-spacing:0.6px;">Academic Positions</div>
+                    <div style="display:flex;justify-content:space-between;font-weight:700;font-size:5.5px;"><span>Associate Professor — Pondicherry University</span><span>2021–Present</span></div>
+                    <div style="font-size:4.8px;color:#555;">Department of Computer Science & Engineering, Villianur Campus</div>
+                </div>
+            </div>
+            <button class="overlay-btn">✦ Use This Template</button>
+        </div>
+        <div class="card-foot">
+            <div>
+                <div class="card-title">Academic CV</div>
+                <div class="card-desc">Long-form layout for researchers & professors</div>
+            </div>
+            <div class="card-badges">
+                <span class="badge badge-cv">CV</span>
+                <span class="badge badge-ats">ATS ✓</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ⑥ Modern CV -->
+    <div class="t-card" onclick="openTemplate('cvmodern')">
+        <div class="preview-wrap">
+            <div class="mini-paper" style="border-radius:4px; overflow:hidden;">
+                <div style="background:#0f172a; color:#fff; padding:10px 14px;">
+                    <div style="font-weight:800; font-size:11px; letter-spacing:0.3px;">SUBASH</div>
+                    <div style="font-size:5.5px; color:#94a3b8; margin-top:2px;">Cloud Infrastructure Engineer · Accenture India</div>
+                    <div style="display:flex; gap:8px; margin-top:3px; font-size:4.5px; color:#64748b; flex-wrap:wrap;">
+                        <span>subash@gmail.com</span><span>+91 98765 43210</span><span>Villianur, Pondicherry</span>
+                    </div>
+                </div>
+                <div style="padding:8px 14px; display:flex; flex-direction:column; gap:5px;">
+                    <div>
+                        <div style="font-size:6px; font-weight:800; color:#0f172a; border-bottom:1.5px solid #e2e8f0; padding-bottom:1px; margin-bottom:2px; text-transform:uppercase; letter-spacing:0.5px;">Professional Profile</div>
+                        <div style="font-size:4.8px; color:#475569; line-height:1.6;">5+ years delivering cloud-native solutions on AWS & Azure for Fortune 500 clients across fintech and healthcare. Certified Solutions Architect.</div>
+                    </div>
+                    <div>
+                        <div style="font-size:6px; font-weight:800; color:#0f172a; border-bottom:1.5px solid #e2e8f0; padding-bottom:1px; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.5px;">Core Experience</div>
+                        <div style="padding-left:6px; border-left:2px solid #e2e8f0;">
+                            <div style="display:flex;justify-content:space-between;align-items:baseline;">
+                                <div style="font-weight:700;font-size:5.5px;color:#0f172a;">Cloud Engineer — Accenture India</div>
+                                <div style="font-size:4.5px;color:#64748b;background:#f1f5f9;padding:0 3px;border-radius:2px;">2019–Present</div>
+                            </div>
+                            <div style="font-size:4.5px;color:#3b82f6;font-weight:600;margin:1px 0;">Villianur, Pondicherry · Full Time</div>
+                            <div style="font-size:4.5px;color:#475569;">Architected multi-region AWS solutions; cut infra cost by 30%. Led 4-member DevOps team.</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-size:6px; font-weight:800; color:#0f172a; border-bottom:1.5px solid #e2e8f0; padding-bottom:1px; margin-bottom:2px; text-transform:uppercase; letter-spacing:0.5px;">Education</div>
+                        <div style="font-weight:700;font-size:5.5px;color:#0f172a;">B.E. Information Technology — Pondicherry University</div>
+                        <div style="font-size:4.5px;color:#64748b;">2015–2019 · CGPA: 8.7 / 10</div>
+                    </div>
+                    <div>
+                        <div style="font-size:6px; font-weight:800; color:#0f172a; border-bottom:1.5px solid #e2e8f0; padding-bottom:1px; margin-bottom:2px; text-transform:uppercase; letter-spacing:0.5px;">Certifications</div>
+                        <div style="font-size:4.5px;color:#475569;line-height:1.6;">AWS Solutions Architect Professional &nbsp;·&nbsp; Azure DevOps Expert</div>
+                    </div>
+                </div>
+            </div>
+            <button class="overlay-btn">✦ Use This Template</button>
+        </div>
+        <div class="card-foot">
+            <div>
+                <div class="card-title">Modern CV</div>
+                <div class="card-desc">Structured timeline with dark header</div>
+            </div>
+            <div class="card-badges">
+                <span class="badge badge-cv">CV</span>
+                <span class="badge badge-ats">ATS ✓</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ⑦ Corporate CV -->
+    <div class="t-card" onclick="openTemplate('corporate')">
+        <div class="preview-wrap">
+            <div class="mini-paper">
+                <div style="padding:12px 14px;">
+                    <!-- accent left bar header -->
+                    <div style="display:flex; align-items:stretch; gap:8px; margin-bottom:8px;">
+                        <div style="width:4px; background:#059669; border-radius:4px; flex-shrink:0;"></div>
+                        <div>
+                            <div style="font-weight:900; font-size:12px; color:#064e3b; letter-spacing:0.3px;">NARMADHA S.</div>
+                            <div style="font-size:5.5px; color:#059669; font-weight:700;">Senior Software Architect</div>
+                            <div style="font-size:4.8px; color:#64748b; margin-top:2px;">narmadha.s@gmail.com · +91 98765 43210 · Thavalakuppam, Pondicherry</div>
+                        </div>
+                    </div>
+                    <!-- profile box -->
+                    <div style="background:#f0fdf4; border:0.5px solid #86efac; border-radius:3px; padding:5px 6px; margin-bottom:8px;">
+                        <div style="font-size:4.8px; color:#065f46; line-height:1.6;">Award-winning Software Architect with 8+ years designing enterprise systems at Infosys. Led 5 digital transformation projects serving 2M+ users. Specialised in Python, Cloud & AI integrations from Pondicherry.</div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 0.75fr; gap:8px;">
+                        <div>
+                            <div style="color:#059669; font-weight:800; font-size:5.5px; text-transform:uppercase; border-bottom:1px solid #059669; padding-bottom:1px; margin-bottom:3px; letter-spacing:0.5px;">Career History</div>
+                            <div style="font-weight:700;font-size:5.5px;color:#064e3b;">Software Architect · Infosys</div>
+                            <div style="display:flex;justify-content:space-between;font-size:4.5px;"><span style="color:#059669;">2020–Present</span><span style="color:#64748b;">Villianur, Pondicherry</span></div>
+                            <div style="font-size:4.5px;color:#475569;margin-bottom:4px;">Led 5 projects, $10M+ budget. Mentored 20 engineers across 3 cities.</div>
+                            <div style="font-weight:700;font-size:5.5px;color:#064e3b;">Senior Dev · TCS Digital</div>
+                            <div style="font-size:4.5px;color:#059669;margin-bottom:1px;">2018–2020 · Thavalakuppam</div>
+                            <div style="font-size:4.5px;color:#475569;margin-bottom:4px;">Built AI analytics platform for banking sector; 99.9% uptime.</div>
+                            <div style="color:#059669; font-weight:800; font-size:5.5px; text-transform:uppercase; border-bottom:1px solid #059669; padding-bottom:1px; margin-bottom:2px; letter-spacing:0.5px;">Education</div>
+                            <div style="font-weight:700;font-size:5px;color:#064e3b;">B.E. Computer Science</div>
+                            <div style="font-size:4.5px;color:#64748b;">Pondicherry University · 2018 · CGPA 9.0</div>
+                        </div>
+                        <div>
+                            <div style="color:#059669; font-weight:800; font-size:5.5px; text-transform:uppercase; border-bottom:1px solid #059669; padding-bottom:1px; margin-bottom:3px; letter-spacing:0.5px;">Core Skills</div>
+                            <div style="font-size:4.5px; color:#475569; line-height:1.8;">Python · Django<br>AWS · Azure · GCP<br>Docker · Kubernetes<br>PostgreSQL · Redis<br>System Design<br>Team Leadership</div>
+                            <div style="color:#059669; font-weight:800; font-size:5.5px; text-transform:uppercase; border-bottom:1px solid #059669; padding-bottom:1px; margin:5px 0 2px; letter-spacing:0.5px;">Awards</div>
+                            <div style="font-size:4.5px; color:#475569; line-height:1.8;">Best Architect 2023<br>Innovation Award 2022<br>Star Performer 2021</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="overlay-btn">✦ Use This Template</button>
+        </div>
+        <div class="card-foot">
+            <div>
+                <div class="card-title">Corporate CV</div>
+                <div class="card-desc">Executive-level CV with green accent for senior roles</div>
+            </div>
+            <div class="card-badges">
+                <span class="badge badge-cv">CV</span>
+                <span class="badge badge-new">New</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+function switchTab(type) {
+    document.querySelectorAll('.template-section').forEach(s => s.classList.remove('active'));
+    document.getElementById('sec-' + type).classList.add('active');
+    document.getElementById('tabResume').classList.toggle('active', type === 'resume');
+    document.getElementById('tabCv').classList.toggle('active', type === 'cv');
+}
+function openTemplate(templateId) {
+    window.location.href = "{% url 'resume_studio:resume_builder' %}?template=" + templateId;
+}
+</script>
+{% endblock %}

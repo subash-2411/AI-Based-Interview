@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Sign Up" %} - AI Interview Pro{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="glass-card">
+        <h2 class="hero-title" style="font-size: 2.5rem; margin-bottom: 0.5rem;">{% trans "Complete Sign Up" %}</h2>
+        <p class="hero-subtitle" style="margin-bottom: 2rem;">
+            {% blocktrans with provider_name=account.get_provider.name site_name=site.name %}You are about to use your {{provider_name}} account to login to {{site_name}}. As a final step, please complete the following form:{% endblocktrans %}
+        </p>
+
+        <form id="signup_form" method="post" action="{% url 'socialaccount_signup' %}">
+            {% csrf_token %}
+            
+            {% for field in form %}
+                <div class="input-group">
+                    <label for="{{ field.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">{{ field.label }}</label>
+                    <input type="{{ field.field.widget.input_type }}" 
+                           name="{{ field.name }}" 
+                           placeholder="{{ field.label }}" 
+                           class="input-field" 
+                           {% if field.field.required %}required{% endif %} 
+                           id="{{ field.id_for_label }}"
+                           value="{{ field.value|default:'' }}">
+                    {% if field.errors %}
+                        <div class="alert alert-error" style="padding: 0.5rem; margin-top: 0.5rem; font-size: 0.8rem;">
+                            {{ field.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            {% if redirect_field_value %}
+                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+            {% endif %}
+
+            <button class="btn-primary" type="submit" style="width: 100%; margin-top: 1.5rem; padding: 1rem; font-size: 1.1rem; border-radius: 16px;">
+                {% trans "Complete Sign Up" %}
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

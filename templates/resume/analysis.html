@@ -1,0 +1,402 @@
+{% extends 'base.html' %}
+
+{% block title %}Resume Analysis - AI Interview Pro{% endblock %}
+
+{% block extra_head %}
+<style>
+    .analysis-container {
+        padding: 2rem 1rem;
+        animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes fadeInUp {
+        from { transform: translateY(30px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+    .premium-panel {
+        background: rgba(15, 23, 42, 0.65);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 32px;
+        padding: 2.5rem;
+        box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .glow-blob {
+        position: absolute;
+        width: 350px;
+        height: 350px;
+        border-radius: 50%;
+        filter: blur(100px);
+        pointer-events: none;
+        z-index: -1;
+        opacity: 0.12;
+    }
+    .blob-1 {
+        background: var(--primary);
+        top: -80px;
+        left: -80px;
+    }
+    .blob-2 {
+        background: var(--secondary);
+        bottom: -100px;
+        right: -100px;
+    }
+
+    .score-circle-premium {
+        position: relative;
+        width: 170px;
+        height: 170px;
+        margin: 0 auto;
+    }
+
+    .score-circle-premium svg {
+        transform: rotate(-90deg);
+    }
+
+    .score-value {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+
+    .score-number {
+        font-size: 3.25rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #fff, #a78bfa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        line-height: 1;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .skill-badge {
+        background: rgba(139, 92, 246, 0.06);
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #c4b5fd;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        display: inline-flex;
+        align-items: center; 
+        gap: 0.4rem;
+    }
+
+    .skill-badge:hover {
+        background: rgba(139, 92, 246, 0.15);
+        border-color: rgba(139, 92, 246, 0.45);
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(139, 92, 246, 0.15);
+    }
+
+    .metric-bar {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 0.75rem 0;
+    }
+
+    .metric-fill {
+        height: 100%;
+        border-radius: 10px;
+        transition: 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+        width: 0;
+    }
+
+    .info-card {
+        background: rgba(2, 6, 23, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 20px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .info-card:hover {
+        border-color: rgba(255, 255, 255, 0.12);
+        background: rgba(2, 6, 23, 0.55);
+        transform: translateY(-2px);
+    }
+
+    .check-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.85rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-action {
+        padding: 0.9rem 2.25rem;
+        border-radius: 16px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 0.95rem;
+    }
+
+    .btn-gradient {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: #fff;
+        box-shadow: 0 10px 20px rgba(139, 92, 246, 0.25);
+    }
+
+    .btn-gradient:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px rgba(139, 92, 246, 0.45);
+    }
+
+    .btn-secondary-glass {
+        background: rgba(255, 255, 255, 0.04);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .btn-secondary-glass:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 900px) {
+        .grid-custom { grid-template-columns: 1fr !important; }
+        .info-metrics { grid-template-columns: 1fr !important; }
+        .details-grid { grid-template-columns: 1fr !important; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="analysis-container" style="max-width: 1200px; margin: 0 auto;">
+    
+    <!-- Header -->
+    <div style="text-align: center; margin-bottom: 4rem;">
+        <span style="text-transform: uppercase; letter-spacing: 4px; color: #fb7185; font-weight: 800; font-size: 0.85rem;">Intelligence Report</span>
+        <h1 style="font-family: 'Outfit', sans-serif; font-size: 3.5rem; font-weight: 900; margin-top: 0.5rem; background: linear-gradient(to right, #fff, #cbd5e1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Profile Insight</h1>
+        <p style="color: #94a3b8; font-size: 1.1rem; max-width: 600px; margin: 0.5rem auto 0 auto;">Our AI has parsed and structured your resume. Here is your competitive candidate report.</p>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid-custom" style="display: grid; grid-template-columns: 1fr 2.3fr; gap: 2rem; align-items: start;">
+        
+        <!-- Sidebar: ATS Score -->
+        <div class="sidebar">
+            <div class="premium-panel" style="text-align: center; padding: 2.5rem 1.5rem;">
+                <div class="glow-blob blob-1"></div>
+                <h3 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #94a3b8; margin-bottom: 1.5rem;">ATS Match Score</h3>
+                
+                <div class="score-circle-premium">
+                    <svg width="170" height="170" viewBox="0 0 170 170">
+                        <circle cx="85" cy="85" r="77" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="10"></circle>
+                        <circle cx="85" cy="85" r="77" fill="none" stroke="url(#scoreGrad)" stroke-width="10" 
+                                stroke-dasharray="484" stroke-dashoffset="484" id="score-ring"
+                                style="filter: drop-shadow(0 0 12px rgba(139, 92, 246, 0.4)); transition: 1.5s cubic-bezier(0.16, 1, 0.3, 1);"></circle>
+                        <defs>
+                            <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#8b5cf6" />
+                                <stop offset="100%" stop-color="#06b6d4" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="score-value">
+                        <span class="score-number">{{ resume.ats_score|floatformat:0 }}</span>
+                        <span style="display: block; font-size: 0.75rem; font-weight: 800; color: #a78bfa; letter-spacing: 1px;">PERCENT</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2.5rem;">
+                    <h4 style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1.25rem; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 0.5rem;">Core Expertise Detected</h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center;">
+                        {% for skill in resume.skills %}
+                            <div class="skill-badge">
+                                <i class="fas fa-circle" style="font-size: 0.35rem; color: #a78bfa;"></i>
+                                {{ skill }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Details Area -->
+        <div class="main-details">
+            <div class="premium-panel">
+                <div class="glow-blob blob-2"></div>
+
+                <!-- Bio Header -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h2 style="font-family: 'Outfit', sans-serif; font-size: 2.25rem; font-weight: 800; color: #fff;">{{ resume.analysis_results.name }}</h2>
+                        <div style="display: flex; gap: 1rem; margin-top: 0.5rem; flex-wrap: wrap; font-size: 0.95rem;">
+                            <span style="color: #cbd5e1;"><i class="fas fa-envelope" style="color: #a78bfa; margin-right: 0.25rem;"></i> {{ resume.analysis_results.email }}</span>
+                            <span style="color: rgba(255,255,255,0.15)">|</span>
+                            <span style="color: #cbd5e1;"><i class="fas fa-phone" style="color: #06b6d4; margin-right: 0.25rem;"></i> {{ resume.analysis_results.phone }}</span>
+                        </div>
+                    </div>
+                    <div>
+                        {% if resume.analysis_results.is_fresher %}
+                            <span style="background: linear-gradient(135deg, #10b981, #059669); color: #fff; padding: 0.4rem 1rem; border-radius: 50px; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">
+                                <i class="fas fa-star" style="margin-right: 0.25rem;"></i> Entry Level
+                            </span>
+                        {% else %}
+                            <span style="background: linear-gradient(135deg, #8b5cf6, #3b82f6); color: #fff; padding: 0.4rem 1rem; border-radius: 50px; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">
+                                <i class="fas fa-briefcase" style="margin-right: 0.25rem;"></i> {{ resume.analysis_results.exp_years }}+ Yrs Exp
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- ATS Feedback Banner -->
+                {% if resume.ats_score < 55 %}
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 20px; padding: 1.25rem 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem;">
+                    <div style="width: 42px; height: 42px; border-radius: 50%; background: rgba(239, 68, 68, 0.2); display: flex; align-items: center; justify-content: center; color: #ef4444; font-size: 1.2rem; flex-shrink: 0;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div>
+                        <h4 style="margin: 0; color: #fca5a5; font-size: 0.95rem; font-weight: 700;">Critical Improvements Needed</h4>
+                        <p style="margin: 0.2rem 0 0 0; color: #f87171; font-size: 0.85rem; line-height: 1.4;">Your ATS Match Score is quite low. Please address the missing sections, add more industry-relevant skills, and include proper contact information below to improve your score.</p>
+                    </div>
+                </div>
+                {% elif resume.ats_score < 80 %}
+                <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 20px; padding: 1.25rem 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem;">
+                    <div style="width: 42px; height: 42px; border-radius: 50%; background: rgba(245, 158, 11, 0.2); display: flex; align-items: center; justify-content: center; color: #f59e0b; font-size: 1.2rem; flex-shrink: 0;">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <div>
+                        <h4 style="margin: 0; color: #fde047; font-size: 0.95rem; font-weight: 700;">Good Foundation - Optimize Further</h4>
+                        <p style="margin: 0.2rem 0 0 0; color: #fef08a; font-size: 0.85rem; line-height: 1.4;">Your resume is on the right track! Review the AI recommendations below, add any missing keywords, and quantify your achievements to boost your score above 80%.</p>
+                    </div>
+                </div>
+                {% else %}
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 20px; padding: 1.25rem 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem;">
+                    <div style="width: 42px; height: 42px; border-radius: 50%; background: rgba(16, 185, 129, 0.2); display: flex; align-items: center; justify-content: center; color: #10b981; font-size: 1.2rem; flex-shrink: 0;">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div>
+                        <h4 style="margin: 0; color: #a7f3d0; font-size: 0.95rem; font-weight: 700;">Excellent Resume - Match Ready!</h4>
+                        <p style="margin: 0.2rem 0 0 0; color: #6ee7b7; font-size: 0.85rem; line-height: 1.4;">Congratulations! Your resume is highly optimized, complete with essential sections and relevant technical skills. You are ready to ace your AI Interview!</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Career Objective -->
+                <div class="info-card" style="margin-bottom: 2rem; border-left: 4px solid #8b5cf6; background: rgba(139, 92, 246, 0.02);">
+                    <h4 style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: #a78bfa; margin-bottom: 0.5rem; font-weight: 800;">Career Mission</h4>
+                    <p style="font-size: 1.05rem; line-height: 1.6; font-style: italic; color: #e2e8f0;">
+                        "{{ resume.analysis_results.objective }}"
+                    </p>
+                </div>
+
+                <!-- Metrics Dashboard Grid -->
+                <div class="info-metrics" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-bottom: 2.5rem;">
+                    <div class="info-card">
+                        <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Formatting</span>
+                        <div class="metric-bar"><div class="metric-fill" data-value="{{ resume.analysis_results.formatting_score }}" style="background: linear-gradient(90deg, #8b5cf6, #a855f7);"></div></div>
+                        <span style="font-size: 1.4rem; font-weight: 800; color: #fff;">{{ resume.analysis_results.formatting_score }}%</span>
+                    </div>
+                    <div class="info-card">
+                        <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Impact</span>
+                        <div class="metric-bar"><div class="metric-fill" data-value="{{ resume.analysis_results.impact_score }}" style="background: linear-gradient(90deg, #06b6d4, #3b82f6);"></div></div>
+                        <span style="font-size: 1.4rem; font-weight: 800; color: #fff;">{{ resume.analysis_results.impact_score }}%</span>
+                    </div>
+                    <div class="info-card">
+                        <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Clarity</span>
+                        <div class="metric-bar"><div class="metric-fill" data-value="{{ resume.analysis_results.clarity_score }}" style="background: linear-gradient(90deg, #ec4899, #f43f5e);"></div></div>
+                        <span style="font-size: 1.4rem; font-weight: 800; color: #fff;">{{ resume.analysis_results.clarity_score }}%</span>
+                    </div>
+                </div>
+
+                <!-- Section Audit & Recommendations -->
+                <div class="details-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div>
+                        <h4 style="margin-bottom: 1rem; font-weight: 800; font-size: 1.1rem; color: #fff;"><i class="fas fa-tasks" style="color: #06b6d4; margin-right: 0.5rem;"></i> Section Audit</h4>
+                        <div style="background: rgba(0,0,0,0.15); padding: 0.5rem 1.25rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.03);">
+                            {% for section, present in resume.analysis_results.sections.items %}
+                                <div class="check-item" {% if forloop.last %}style="border-bottom: none;"{% endif %}>
+                                    <span style="font-weight: 600; font-size: 0.95rem; color: #cbd5e1;">{{ section }}</span>
+                                    {% if present %}
+                                        <i class="fas fa-check-circle" style="color: #10b981; font-size: 1.1rem;"></i>
+                                    {% else %}
+                                        <i class="fas fa-exclamation-triangle" style="color: #f59e0b; font-size: 1.1rem;"></i>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="margin-bottom: 1rem; font-weight: 800; font-size: 1.1rem; color: #fff;"><i class="fas fa-lightbulb" style="color: #f43f5e; margin-right: 0.5rem;"></i> AI Recommendations</h4>
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.75rem;">
+                            {% for rec in resume.analysis_results.recommendations %}
+                                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.04); padding: 0.9rem 1.1rem; border-radius: 16px; font-size: 0.9rem; display: flex; gap: 0.75rem; align-items: flex-start;">
+                                    <i class="fas fa-rocket" style="color: #8b5cf6; margin-top: 0.2rem; font-size: 0.95rem;"></i>
+                                    <span style="color: #cbd5e1; line-height: 1.45;">{{ rec }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <h4 style="margin-bottom: 1rem; font-weight: 800; font-size: 1.1rem; color: #fff;"><i class="fas fa-plus-circle" style="color: #06b6d4; margin-right: 0.5rem;"></i> Real-World Skill Additions</h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.6rem; background: rgba(0,0,0,0.15); padding: 1.1rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.03);">
+                            {% for kw in resume.analysis_results.missing_keywords %}
+                                <div class="skill-badge" style="background: rgba(6, 182, 212, 0.06); border-color: rgba(6, 182, 212, 0.25); color: #67e8f9;">
+                                    <i class="fas fa-plus" style="font-size: 0.65rem; color: #06b6d4;"></i>
+                                    {{ kw }}
+                                </div>
+                            {% empty %}
+                                <div style="color: #64748b; font-size: 0.9rem; font-style: italic;">No critical keywords missing! You are job ready!</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Final Call to Action -->
+    <div style="text-align: center; margin-top: 4.5rem; padding-bottom: 3rem;">
+        <h2 style="font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 800; color: #fff;">Next Level Awaits</h2>
+        <p style="color: #94a3b8; font-size: 1.05rem; margin-top: 0.5rem;">Launch a personalized mock interview based on the skills detected in your resume.</p>
+        <div style="display: flex; justify-content: center; gap: 1.25rem; margin-top: 2.25rem; flex-wrap: wrap;">
+            <a href="{% url 'dashboard' %}" class="btn-action btn-secondary-glass">
+                <i class="fas fa-chart-pie"></i> Dashboard
+            </a>
+            <a href="{% url 'interview:start_interview' %}" class="btn-action btn-gradient">
+                <i class="fas fa-play"></i> Start AI Interview
+            </a>
+            <a href="{% url 'resume:resume_builder' %}" class="btn-action btn-secondary-glass">
+                <i class="fas fa-edit"></i> Edit Resume
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.addEventListener('load', () => {
+        const ring = document.getElementById('score-ring');
+        const score = {{ resume.ats_score|default:0 }};
+        const offset = 484 - (484 * score / 100);
+        setTimeout(() => {
+            ring.style.strokeDashoffset = offset;
+        }, 300);
+
+        const bars = document.querySelectorAll('.metric-fill');
+        bars.forEach(bar => {
+            const val = bar.getAttribute('data-value');
+            setTimeout(() => {
+                bar.style.width = val + '%';
+            }, 500);
+        });
+    });
+</script>
+{% endblock %}

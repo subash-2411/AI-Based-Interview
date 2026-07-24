@@ -1,0 +1,756 @@
+{% extends 'base.html' %}
+
+{% block title %}Job Portal - AI Ecosystem{% endblock %}
+
+{% block extra_head %}
+<style>
+    .job-layout {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .job-card {
+        background: rgba(15, 23, 42, 0.4);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        padding: 1.5rem;
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+        transition: 0.3s;
+        cursor: pointer;
+    }
+
+    .job-card:hover {
+        transform: translateY(-3px);
+        border-color: #3b82f6;
+        box-shadow: 0 10px 30px rgba(59, 130, 246, 0.1);
+    }
+
+    .company-logo {
+        width: 60px; height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        flex-shrink: 0;
+    }
+
+    .job-badge {
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        background: rgba(255,255,255,0.05);
+        color: #94a3b8;
+    }
+
+    .match-high { color: #10b981; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); }
+    .match-med { color: #f59e0b; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); }
+
+    .sidebar-widget {
+        background: rgba(15, 23, 42, 0.4);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .tracker-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px dashed rgba(255,255,255,0.1);
+    }
+    .tracker-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    
+    .status-dot {
+        width: 10px; height: 10px; border-radius: 50%;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(5px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+    .modal-content {
+        background: #0f172a;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 24px;
+        width: 90%; max-width: 600px;
+        padding: 2rem;
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-end;">
+    <div>
+        <span style="text-transform: uppercase; letter-spacing: 4px; color: #3b82f6; font-weight: 800; font-size: 0.8rem;"><i class="fas fa-briefcase"></i> Job Portal</span>
+        <h1 style="font-size: 3rem; font-weight: 900; margin: 0.5rem 0; color: #fff;">AI Job Matcher</h1>
+        <p style="color: #94a3b8; font-size: 1.1rem;">Discover jobs that perfectly align with your resume and get AI-driven preparation strategies.</p>
+    </div>
+    <div style="display: flex; gap: 1rem;">
+        <input type="text" id="jobSearchInput" oninput="filterJobs()" placeholder="Search Roles..." style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 0.8rem 1.5rem; border-radius: 12px; color: white; width: 250px;">
+    </div>
+</div>
+
+<div class="job-layout">
+    <!-- Left Column: Job Listings -->
+    <div>
+        <h3 style="color: #fff; margin-bottom: 1.5rem; font-size: 1.2rem;"><i class="fas fa-star" style="color: #f59e0b;"></i> Top Matches for You</h3>
+        
+        <div class="job-card" onclick="openJobModal('Google', 'Backend Software Engineer', 92)">
+            <div class="company-logo" style="background: #eef2ff; color: #4f46e5;"><i class="fab fa-google"></i></div>
+            <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <h4 style="color: #fff; margin: 0; font-size: 1.2rem; font-weight: 700;">Backend Software Engineer</h4>
+                    <span id="googleMatchBadge" class="job-badge match-high"><i class="fas fa-sync fa-spin"></i> Loading...</span>
+                </div>
+                <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 0.8rem;">Google • Mountain View, CA (Remote) • $150k - $220k</div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <span class="job-badge">Python</span>
+                    <span class="job-badge">Django</span>
+                    <span class="job-badge">System Design</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="job-card" onclick="openJobModal('Amazon', 'AWS Cloud Architect', 85)">
+            <div class="company-logo" style="background: #fffbeb; color: #f59e0b;"><i class="fab fa-aws"></i></div>
+            <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <h4 style="color: #fff; margin: 0; font-size: 1.2rem; font-weight: 700;">AWS Cloud Architect</h4>
+                    <span id="amazonMatchBadge" class="job-badge match-high"><i class="fas fa-sync fa-spin"></i> Loading...</span>
+                </div>
+                <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 0.8rem;">Amazon • Seattle, WA • $160k - $200k</div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <span class="job-badge">AWS</span>
+                    <span class="job-badge">Microservices</span>
+                    <span class="job-badge">Python</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="job-card" onclick="openJobModal('Microsoft', 'Full Stack Developer', 74)">
+            <div class="company-logo" style="background: #f0fdf4; color: #10b981;"><i class="fab fa-microsoft"></i></div>
+            <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <h4 style="color: #fff; margin: 0; font-size: 1.2rem; font-weight: 700;">Full Stack Developer</h4>
+                    <span id="microsoftMatchBadge" class="job-badge match-med"><i class="fas fa-sync fa-spin"></i> Loading...</span>
+                </div>
+                <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 0.8rem;">Microsoft • Redmond, WA • $130k - $180k</div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <span class="job-badge">C#</span>
+                    <span class="job-badge">React</span>
+                    <span class="job-badge">Azure</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Trackers & Tools -->
+    <div>
+        <!-- Active Resume / Profile Editor -->
+        <div class="sidebar-widget" style="border-color: rgba(59,130,246,0.25);">
+            <h4 style="color: #fff; margin-bottom: 0.8rem; font-size: 1.1rem;"><i class="fas fa-file-alt" style="color: #3b82f6;"></i> Job Match Resume</h4>
+            <div style="background: rgba(30,41,59,0.5); padding: 0.8rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 1rem;">
+                <span id="resumeStatusText" style="display: block; color: #e2e8f0; font-size: 0.82rem; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                    <i class="fas fa-check-circle" style="color: #10b981; margin-right: 0.3rem;"></i> Active: Main Resume Profile
+                </span>
+                <span id="resumeWordCount" style="display: block; color: #94a3b8; font-size: 0.75rem; margin-top: 0.2rem;"></span>
+            </div>
+            
+            <!-- Select Dropdown -->
+            <select id="resumeSelect" onchange="changeActiveResume()" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 0.6rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 0.8rem; outline: none; cursor: pointer;">
+                {% for r in resumes %}
+                    <option value="{{ r.id }}" data-text="{{ r.extracted_text|escapejs }}" {% if forloop.first %}selected{% endif %}>{{ r }}</option>
+                {% empty %}
+                    <option value="" disabled selected>No resumes uploaded</option>
+                {% endfor %}
+            </select>
+            
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <button onclick="document.getElementById('jobsResumeUpload').click()" class="btn-primary" style="flex: 1; font-size: 0.82rem; padding: 0.6rem; white-space: nowrap;"><i class="fas fa-upload"></i> Upload</button>
+                <button onclick="openCustomResumeModal()" class="btn-secondary" style="flex: 1; font-size: 0.82rem; padding: 0.6rem; white-space: nowrap;"><i class="fas fa-edit"></i> Paste Text</button>
+            </div>
+            <input type="file" id="jobsResumeUpload" style="display: none;" accept=".pdf,.docx,.txt" onchange="uploadNewResume(this)">
+            <button onclick="clearCustomResume()" class="btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 0.6rem;"><i class="fas fa-trash-alt"></i> Reset to Default</button>
+        </div>
+
+        <!-- Salary Predictor -->
+        <div class="sidebar-widget">
+            <h4 style="color: #fff; margin-bottom: 1rem; font-size: 1.1rem;"><i class="fas fa-wallet" style="color: #10b981;"></i> Salary Predictor</h4>
+            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem;">Based on your Resume Strength, Skills, and Experience level.</p>
+            
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.8rem;">
+                <select id="salaryExp" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 0.5rem; border-radius: 8px; font-size: 0.8rem; outline: none; cursor: pointer;">
+                    <option value="1">1 Year Exp</option>
+                    <option value="3" selected>3 Years Exp</option>
+                    <option value="5">5 Years Exp</option>
+                    <option value="8">8+ Years Exp</option>
+                </select>
+                <select id="salaryLoc" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 0.5rem; border-radius: 8px; font-size: 0.8rem; outline: none; cursor: pointer;">
+                    <option value="India" selected>India</option>
+                    <option value="USA">USA</option>
+                    <option value="Remote">Remote</option>
+                </select>
+            </div>
+
+            <div style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); border-radius: 12px; padding: 1.5rem; text-align: center;">
+                <span style="display: block; color: #10b981; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.5rem;">Expected Range</span>
+                <span style="font-size: 1.8rem; font-weight: 900; color: #fff;" id="salaryRange">₹12 LPA - ₹18 LPA</span>
+            </div>
+            <button onclick="predictSalary()" class="btn-secondary" style="width: 100%; margin-top: 1rem; padding: 0.6rem; font-size: 0.85rem;"><i class="fas fa-sync"></i> Re-Calculate</button>
+        </div>
+
+        <!-- Application Tracker -->
+        <div class="sidebar-widget">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h4 style="color: #fff; font-size: 1.1rem; margin:0;"><i class="fas fa-tasks" style="color: #8b5cf6;"></i> Application Tracker</h4>
+                <button class="btn-primary" style="padding: 0.3rem 0.8rem; font-size: 0.8rem; border-radius: 8px;"><i class="fas fa-plus"></i></button>
+            </div>
+            
+            <div class="tracker-item">
+                <div class="status-dot" style="background: #3b82f6; box-shadow: 0 0 10px #3b82f6;"></div>
+                <div style="flex: 1;">
+                    <span style="display: block; color: #fff; font-weight: 700; font-size: 0.95rem;">Zoho</span>
+                    <span style="color: #94a3b8; font-size: 0.8rem;">Technical Round</span>
+                </div>
+            </div>
+            <div class="tracker-item">
+                <div class="status-dot" style="background: #f59e0b; box-shadow: 0 0 10px #f59e0b;"></div>
+                <div style="flex: 1;">
+                    <span style="display: block; color: #fff; font-weight: 700; font-size: 0.95rem;">TCS Digital</span>
+                    <span style="color: #94a3b8; font-size: 0.8rem;">Shortlisted</span>
+                </div>
+            </div>
+            <div class="tracker-item">
+                <div class="status-dot" style="background: #10b981; box-shadow: 0 0 10px #10b981;"></div>
+                <div style="flex: 1;">
+                    <span style="display: block; color: #fff; font-weight: 700; font-size: 0.95rem;">Infosys</span>
+                    <span style="color: #94a3b8; font-size: 0.8rem;">Selected</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Company Prep Guide -->
+        <div class="sidebar-widget">
+            <h4 style="color: #fff; margin-bottom: 1rem; font-size: 1.1rem;"><i class="fas fa-building" style="color: #ec4899;"></i> Company Prep Guide</h4>
+            <select id="companySelect" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 0.8rem; border-radius: 8px; margin-bottom: 1rem;">
+                <option value="Zoho">Zoho</option>
+                <option value="TCS">TCS</option>
+                <option value="Amazon">Amazon</option>
+                <option value="Google">Google</option>
+            </select>
+            <button onclick="getPrepGuide()" class="btn-primary" style="width: 100%;"><i class="fas fa-book"></i> Generate Guide</button>
+        </div>
+    </div>
+</div>
+
+<!-- Job Match Modal -->
+<div class="modal-overlay" id="jobModal">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="color: #fff; margin: 0; font-size: 1.5rem;" id="modalCompanyRole">Google - Backend Engineer</h2>
+            <button onclick="closeModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer;"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div id="modalContentLoader" style="display: none; text-align: center; padding: 2rem 0; color: #94a3b8;">
+            <i class="fas fa-circle-notch fa-2x spin" style="color: #3b82f6;"></i>
+            <p style="margin-top: 0.5rem;">Running AI Resume matching profile check...</p>
+        </div>
+
+        <div id="modalBodyContent">
+            <div style="display: flex; gap: 2rem; margin-bottom: 2rem;">
+                <div style="text-align: center;">
+                    <div style="width: 80px; height: 80px; border-radius: 50%; border: 4px solid #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; color: #10b981; margin-bottom: 0.5rem;" id="modalScore">92%</div>
+                    <span style="color: #94a3b8; font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Match Score</span>
+                </div>
+                <div style="flex: 1;">
+                    <h4 style="color: #fff; font-size: 0.95rem; margin-bottom: 0.5rem;">ATS Compatibility</h4>
+                    <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-bottom: 1rem;">
+                        <div id="modalAtsProgress" style="width: 90%; height: 100%; background: #10b981; border-radius: 4px;"></div>
+                    </div>
+                    <h4 style="color: #fff; font-size: 0.95rem; margin-bottom: 0.5rem;">Missing Skills</h4>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;" id="modalMissing"></div>
+                </div>
+            </div>
+
+            <div style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                <h4 style="color: #3b82f6; font-size: 0.9rem; margin-bottom: 0.5rem;"><i class="fas fa-lightbulb"></i> AI Suggestion</h4>
+                <p style="color: #e2e8f0; font-size: 0.9rem; line-height: 1.5;" id="modalSuggestion"></p>
+            </div>
+
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn-primary" style="flex: 1;" onclick="closeModal()"><i class="fas fa-paper-plane"></i> Apply Now</button>
+                <button class="btn-secondary" style="flex: 1;" onclick="closeModal()"><i class="fas fa-bookmark"></i> Save Job</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Company Prep Modal -->
+<div class="modal-overlay" id="prepModal">
+    <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="color: #fff; margin: 0; font-size: 1.5rem;" id="prepModalTitle">Zoho Prep Guide</h2>
+            <button onclick="closePrepModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer;"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div id="prepModalLoader" style="text-align: center; padding: 2rem 0; color: #94a3b8;">
+            <i class="fas fa-circle-notch fa-2x spin" style="color: #a855f7;"></i>
+            <p style="margin-top: 0.5rem;">Analyzing prep blueprint with AI...</p>
+        </div>
+        
+        <div id="prepModalBody" style="display: none;">
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="color: #a855f7; font-size: 0.95rem; margin-bottom: 0.5rem;"><i class="fas fa-network-wired"></i> Interview Pattern</h4>
+                <p id="prepPattern" style="color: #e2e8f0; font-size: 0.9rem; line-height: 1.5; background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);"></p>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="color: #10b981; font-size: 0.95rem; margin-bottom: 0.5rem;"><i class="fas fa-tools"></i> Top Required Skills</h4>
+                <div id="prepSkills" style="display: flex; gap: 0.5rem; flex-wrap: wrap;"></div>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="color: #ec4899; font-size: 0.95rem; margin-bottom: 0.5rem;"><i class="fas fa-question-circle"></i> Frequently Asked Questions</h4>
+                <ul id="prepFaqs" style="color: #e2e8f0; font-size: 0.9rem; line-height: 1.6; padding-left: 1.2rem;"></ul>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="color: #f59e0b; font-size: 0.95rem; margin-bottom: 0.5rem;"><i class="fas fa-lightbulb"></i> Prep Tips</h4>
+                <ul id="prepTips" style="color: #e2e8f0; font-size: 0.9rem; line-height: 1.6; padding-left: 1.2rem;"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Resume Input Modal -->
+<div class="modal-overlay" id="customResumeModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(5px); z-index:1000; align-items:center; justify-content:center;">
+    <div class="modal-content" style="background:#0f172a; border:1px solid rgba(255,255,255,0.1); border-radius:24px; width:90%; max-width:550px; padding:2rem; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="color: #fff; margin: 0; font-size: 1.3rem;"><i class="fas fa-paste" style="color:#3b82f6; margin-right: 0.5rem;"></i> Paste Target Resume Text</h2>
+            <button onclick="closeCustomResumeModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer;"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem; line-height: 1.4;">Paste your current resume contents (skills, projects, work experience) below. The AI Job Matcher will instantly evaluate and calculate your match percentage for all positions.</p>
+        
+        <textarea id="customResumeTextarea" rows="8" placeholder="Paste your resume text here..." style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; padding: 0.8rem 1rem; font-size: 0.9rem; outline: none; resize: vertical; margin-bottom: 1.5rem; font-family: inherit; line-height: 1.5;"></textarea>
+
+        <div style="display: flex; gap: 1rem;">
+            <button onclick="saveCustomResume()" class="btn-primary" style="flex: 1; padding: 0.7rem; border-radius: 8px; font-weight: bold;"><i class="fas fa-save"></i> Save & Recalculate</button>
+            <button onclick="closeCustomResumeModal()" class="btn-secondary" style="flex: 1; padding: 0.7rem; border-radius: 8px;">Cancel</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // User profile data
+    const userResumeText = "{{ resume_text|escapejs }}";
+    const userSkillsStr  = "{{ skills_str|escapejs }}";
+
+    // Job description mapping
+    const jobDescriptions = {
+        'Google': 'Backend Software Engineer. Requirements: Python, Django, System Design, REST APIs, Scalability, Databases, and backend architecture.',
+        'Amazon': 'AWS Cloud Architect. Requirements: AWS, Microservices, Python, CloudFormation, Terraform, Kubernetes, and cloud security.',
+        'Microsoft': 'Full Stack Developer. Requirements: React, TypeScript, C#, .NET, Azure, Frontend development, SQL Server, and UI design.'
+    };
+
+    const csrftoken = '{{ csrf_token }}';
+
+    // Custom Resume session variables
+    let activeResumeText = userResumeText;
+    let isCustomResume = false;
+
+    // Filter jobs search input
+    function filterJobs() {
+        const query = document.getElementById('jobSearchInput').value.toLowerCase().trim();
+        const cards = document.querySelectorAll('.job-card');
+        cards.forEach(card => {
+            const text = card.innerText.toLowerCase();
+            if (text.includes(query)) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    // Change active resume from select dropdown
+    function changeActiveResume() {
+        const select = document.getElementById('resumeSelect');
+        const selectedOption = select.options[select.selectedIndex];
+        if (selectedOption && selectedOption.value) {
+            const text = selectedOption.getAttribute('data-text');
+            activeResumeText = text;
+            isCustomResume = false;
+            
+            document.getElementById('resumeStatusText').innerHTML = `<i class="fas fa-check-circle" style="color: #10b981; margin-right: 0.3rem;"></i> Active: ${selectedOption.text}`;
+            const wc = text ? text.split(/\s+/).length : 0;
+            document.getElementById('resumeWordCount').innerText = text ? `${wc} words parsed` : 'Empty Resume';
+            
+            evaluateAllJobMatches();
+        }
+    }
+
+    // Upload new resume
+    async function uploadNewResume(input) {
+        if (!input.files || input.files.length === 0) return;
+        const file = input.files[0];
+        
+        const formData = new FormData();
+        formData.append('resume', file);
+        
+        const statusText = document.getElementById('resumeStatusText');
+        const wordCount = document.getElementById('resumeWordCount');
+        
+        const oldStatus = statusText.innerHTML;
+        const oldWordCount = wordCount.innerText;
+        
+        statusText.innerHTML = `<i class="fas fa-sync fa-spin" style="color: #3b82f6; margin-right: 0.3rem;"></i> Uploading...`;
+        wordCount.innerText = "Parsing text...";
+        
+        try {
+            const response = await fetch('/api/career-coach-upload/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken
+                },
+                body: formData
+            });
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                const select = document.getElementById('resumeSelect');
+                
+                // Remove placeholder if it was empty
+                if (select.options.length > 0 && select.options[0].value === "") {
+                    select.remove(0);
+                }
+                
+                // Create option
+                const newOpt = document.createElement('option');
+                newOpt.value = data.resume_id;
+                newOpt.text = data.filename;
+                newOpt.setAttribute('data-text', data.extracted_text);
+                select.appendChild(newOpt);
+                select.value = data.resume_id;
+                
+                // Select & Set Active
+                activeResumeText = data.extracted_text;
+                isCustomResume = false;
+                
+                statusText.innerHTML = `<i class="fas fa-check-circle" style="color: #10b981; margin-right: 0.3rem;"></i> Active: ${data.filename}`;
+                const wc = data.extracted_text ? data.extracted_text.split(/\s+/).length : 0;
+                wordCount.innerText = `${wc} words parsed`;
+                
+                evaluateAllJobMatches();
+            } else {
+                alert(data.message || 'Failed to upload/parse resume.');
+                statusText.innerHTML = oldStatus;
+                wordCount.innerText = oldWordCount;
+            }
+        } catch(e) {
+            console.error(e);
+            alert('Something went wrong during upload.');
+            statusText.innerHTML = oldStatus;
+            wordCount.innerText = oldWordCount;
+        } finally {
+            input.value = '';
+        }
+    }
+
+    // Custom Resume Modals
+    function openCustomResumeModal() {
+        document.getElementById('customResumeModal').style.display = 'flex';
+        document.getElementById('customResumeTextarea').value = activeResumeText;
+    }
+    function closeCustomResumeModal() {
+        document.getElementById('customResumeModal').style.display = 'none';
+    }
+    function saveCustomResume() {
+        const text = document.getElementById('customResumeTextarea').value.trim();
+        if (!text) {
+            alert('Please paste some resume text first!');
+            return;
+        }
+        activeResumeText = text;
+        isCustomResume = true;
+
+        // Update UI
+        document.getElementById('resumeStatusText').innerHTML = `<i class="fas fa-check-circle" style="color: #10b981; margin-right: 0.3rem;"></i> Active: Custom Pasted Resume`;
+        const words = text.split(/\s+/).length;
+        document.getElementById('resumeWordCount').innerText = `${words} words parsed`;
+
+        closeCustomResumeModal();
+        evaluateAllJobMatches();
+    }
+    function clearCustomResume() {
+        const select = document.getElementById('resumeSelect');
+        if (select.options.length > 0 && select.options[0].value !== "") {
+            select.selectedIndex = 0;
+            changeActiveResume();
+        } else {
+            activeResumeText = userResumeText;
+            isCustomResume = false;
+
+            document.getElementById('resumeStatusText').innerHTML = userResumeText ? 
+                `<i class="fas fa-check-circle" style="color: #10b981; margin-right: 0.3rem;"></i> Active: Main Resume Profile` :
+                `<i class="fas fa-exclamation-triangle" style="color: #ef4444; margin-right: 0.3rem;"></i> No Profile Resume`;
+            
+            document.getElementById('resumeWordCount').innerText = userResumeText ? `${userResumeText.split(/\s+/).length} words parsed` : 'Upload profile to begin';
+
+            evaluateAllJobMatches();
+        }
+    }
+
+    async function evaluateAllJobMatches() {
+        const jobs = [
+            { id: 'googleMatchBadge', company: 'Google', fallback: 92 },
+            { id: 'amazonMatchBadge', company: 'Amazon', fallback: 85 },
+            { id: 'microsoftMatchBadge', company: 'Microsoft', fallback: 74 }
+        ];
+
+        for (const job of jobs) {
+            const badge = document.getElementById(job.id);
+            if (!badge) continue;
+
+            badge.innerHTML = `<i class="fas fa-sync fa-spin"></i> Calculating...`;
+            badge.className = 'job-badge';
+
+            if (!activeResumeText) {
+                badge.innerHTML = `<i class="fas fa-exclamation-triangle"></i> 0% Match`;
+                badge.className = 'job-badge match-low';
+                continue;
+            }
+
+            try {
+                const desc = jobDescriptions[job.company] || '';
+                const res = await fetch('/api/job-match/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+                    body: JSON.stringify({ resume_text: activeResumeText, job_desc: desc })
+                });
+                const d = await res.json();
+                const score = d.match_percentage || job.fallback;
+
+                badge.innerHTML = `<i class="fas fa-check-circle"></i> ${score}% Match`;
+                if (score >= 80) {
+                    badge.className = 'job-badge match-high';
+                } else if (score >= 60) {
+                    badge.className = 'job-badge match-med';
+                } else {
+                    badge.className = 'job-badge match-low';
+                }
+            } catch (e) {
+                console.error(e);
+                badge.innerHTML = `<i class="fas fa-check-circle"></i> ${job.fallback}% Match`;
+                badge.className = 'job-badge match-med';
+            }
+        }
+    }
+
+    async function openJobModal(company, role, fallbackScore) {
+        document.getElementById('modalCompanyRole').innerText = company + ' - ' + role;
+        document.getElementById('jobModal').style.display = 'flex';
+        
+        const loader = document.getElementById('modalContentLoader');
+        const body = document.getElementById('modalBodyContent');
+        
+        if (!activeResumeText) {
+            // No resume uploaded
+            document.getElementById('modalScore').innerText = '0%';
+            document.getElementById('modalScore').style.borderColor = '#ef4444';
+            document.getElementById('modalScore').style.color = '#ef4444';
+            document.getElementById('modalAtsProgress').style.width = '0%';
+            document.getElementById('modalAtsProgress').style.background = '#ef4444';
+            document.getElementById('modalMissing').innerHTML = `<span class="job-badge" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2);">No Resume</span>`;
+            document.getElementById('modalSuggestion').innerText = 'Resume text setup pannalana, job matching calculate panna mudiyathu. Side panels valiya edit / paste panni try pannunga.';
+            return;
+        }
+
+        // Show loading state
+        loader.style.display = 'block';
+        body.style.display = 'none';
+
+        try {
+            const desc = jobDescriptions[company] || (role + ' position requirements.');
+            const res = await fetch('/api/job-match/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+                body: JSON.stringify({ resume_text: activeResumeText, job_desc: desc })
+            });
+            const d = await res.json();
+            
+            loader.style.display = 'none';
+            body.style.display = 'block';
+
+            const score = d.match_percentage || fallbackScore;
+            document.getElementById('modalScore').innerText = score + '%';
+            
+            // Dynamic color
+            const color = score >= 80 ? '#10b981' : (score >= 60 ? '#f59e0b' : '#ef4444');
+            document.getElementById('modalScore').style.borderColor = color;
+            document.getElementById('modalScore').style.color = color;
+            
+            // Progress
+            document.getElementById('modalAtsProgress').style.width = score + '%';
+            document.getElementById('modalAtsProgress').style.background = color;
+
+            // Missing skills
+            const missingDiv = document.getElementById('modalMissing');
+            missingDiv.innerHTML = '';
+            if (d.missing_skills && d.missing_skills.length > 0) {
+                d.missing_skills.forEach(s => {
+                    missingDiv.innerHTML += `<span class="job-badge" style="background:rgba(244,63,94,0.1);color:#f43f5e;border:1px solid rgba(244,63,94,0.2);">${s}</span>`;
+                });
+            } else {
+                missingDiv.innerHTML = `<span class="job-badge" style="background:rgba(16,185,129,0.1);color:#10b981;border:1px solid rgba(16,185,129,0.2);">No gaps! Fits perfectly</span>`;
+            }
+
+            // Suggestion
+            document.getElementById('modalSuggestion').innerText = d.suggestions ? 
+                (Array.isArray(d.suggestions) ? d.suggestions.join(' ') : d.suggestions) : 
+                'Your profile is a solid match. Tailor your projects to highlight these core frameworks.';
+
+        } catch (e) {
+            console.error(e);
+            loader.style.display = 'none';
+            body.style.display = 'block';
+            
+            // Fallback display
+            document.getElementById('modalScore').innerText = fallbackScore + '%';
+            document.getElementById('modalScore').style.borderColor = '#f59e0b';
+            document.getElementById('modalScore').style.color = '#f59e0b';
+            document.getElementById('modalAtsProgress').style.width = fallbackScore + '%';
+            document.getElementById('modalAtsProgress').style.background = '#f59e0b';
+            document.getElementById('modalMissing').innerHTML = `<span class="job-badge" style="background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.2);">Connection issue fallback</span>`;
+            document.getElementById('modalSuggestion').innerText = 'Please verify your internet connection. We loaded baseline static requirements for this matching score.';
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('jobModal').style.display = 'none';
+    }
+
+    async function predictSalary() {
+        const salaryRangeEl = document.getElementById('salaryRange');
+        salaryRangeEl.innerText = 'Calculating...';
+        
+        const exp = document.getElementById('salaryExp').value;
+        const loc = document.getElementById('salaryLoc').value;
+
+        try {
+            const res = await fetch('/api/salary-predict/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+                body: JSON.stringify({ 
+                    skills: isCustomResume ? activeResumeText : (userSkillsStr || 'Python, Django, SQL'), 
+                    experience: exp, 
+                    location: loc 
+                })
+            });
+            const data = await res.json();
+            salaryRangeEl.innerText = data.salary || '₹8 LPA - ₹12 LPA';
+        } catch (e) {
+            console.error(e);
+            salaryRangeEl.innerText = '₹12 LPA - ₹15 LPA';
+        }
+    }
+
+    async function getPrepGuide() {
+        const company = document.getElementById('companySelect').value;
+        
+        // Show modal & loader
+        document.getElementById('prepModalTitle').innerText = company + ' Interview Prep Guide';
+        document.getElementById('prepModal').style.display = 'flex';
+        document.getElementById('prepModalLoader').style.display = 'block';
+        document.getElementById('prepModalBody').style.display = 'none';
+
+        try {
+            const r = await fetch(`/api/company-prep/?company=${encodeURIComponent(company)}`);
+            const d = await r.json();
+            
+            document.getElementById('prepModalLoader').style.display = 'none';
+            document.getElementById('prepModalBody').style.display = 'block';
+
+            // Set Pattern
+            document.getElementById('prepPattern').innerText = d.pattern || 'Standard rounds apply.';
+
+            // Set Skills
+            const skillsDiv = document.getElementById('prepSkills');
+            skillsDiv.innerHTML = '';
+            if (d.skills && d.skills.length > 0) {
+                d.skills.forEach(s => {
+                    skillsDiv.innerHTML += `<span class="job-badge">${s}</span>`;
+                });
+            } else {
+                skillsDiv.innerHTML = `<span class="job-badge">General Programming</span>`;
+            }
+
+            // Set FAQs
+            const faqsUl = document.getElementById('prepFaqs');
+            faqsUl.innerHTML = '';
+            if (d.faqs && d.faqs.length > 0) {
+                d.faqs.forEach(q => {
+                    faqsUl.innerHTML += `<li style="margin-bottom:0.5rem;">${q}</li>`;
+                });
+            } else {
+                faqsUl.innerHTML = `<li>No sample FAQs generated yet.</li>`;
+            }
+
+            // Set Tips
+            const tipsUl = document.getElementById('prepTips');
+            tipsUl.innerHTML = '';
+            if (d.tips && d.tips.length > 0) {
+                d.tips.forEach(t => {
+                    tipsUl.innerHTML += `<li style="margin-bottom:0.5rem;">${t}</li>`;
+                });
+            } else {
+                tipsUl.innerHTML = `<li>Review data structures and system architecture.</li>`;
+            }
+
+        } catch (e) {
+            console.error(e);
+            document.getElementById('prepModalLoader').style.display = 'none';
+            document.getElementById('prepModalBody').style.display = 'block';
+            document.getElementById('prepPattern').innerText = 'Failed to load details. Please try again.';
+        }
+    }
+
+    function closePrepModal() {
+        document.getElementById('prepModal').style.display = 'none';
+    }
+
+    // Initialize background evaluations
+    window.addEventListener('DOMContentLoaded', () => {
+        // Render word counts
+        const wc = activeResumeText ? activeResumeText.split(/\s+/).length : 0;
+        document.getElementById('resumeWordCount').innerText = activeResumeText ? `${wc} words parsed` : 'Upload profile to begin';
+        
+        if (!activeResumeText) {
+            document.getElementById('resumeStatusText').innerHTML = `<i class="fas fa-exclamation-triangle" style="color: #ef4444; margin-right: 0.3rem;"></i> No Profile Resume`;
+        }
+
+        evaluateAllJobMatches();
+    });
+</script>
+{% endblock %}

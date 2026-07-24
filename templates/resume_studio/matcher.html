@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}Resume Matcher - AI Resume Studio{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto;">
+    <h2 style="text-align: center;"><i class="fas fa-bullseye" style="color: #a855f7;"></i> Resume vs Job Description Matcher</h2>
+    <p style="text-align: center; color: #94a3b8; margin-bottom: 3rem;">Find out if your resume matches the job you are applying for.</p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+        <div class="glass-card" style="padding: 2rem;">
+            <h3>1. Select Resume</h3>
+            <select id="resumeSelect" class="form-control" style="background: rgba(255,255,255,0.1); color: white; border: none; padding: 1rem; border-radius: 10px; width: 100%; margin-top: 1rem;">
+                {% for resume in resumes %}
+                    <option value="{{ resume.id }}">{{ resume }}</option>
+                {% empty %}
+                    <option value="">No resumes uploaded yet.</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="glass-card" style="padding: 2rem;">
+            <h3>2. Paste Job Description</h3>
+            <textarea id="jobDesc" class="form-control" rows="5" style="background: rgba(255,255,255,0.1); color: white; border: none; padding: 1rem; border-radius: 10px; width: 100%; margin-top: 1rem; resize: none;" placeholder="Paste the job description here..."></textarea>
+        </div>
+    </div>
+    
+    <div style="text-align: center; margin-top: 3rem;">
+        <button id="matchBtn" class="btn-primary" style="padding: 1rem 3rem; font-size: 1.2rem;" onclick="performMatch()" {% if not resumes %}disabled{% endif %}>Calculate Match Score</button>
+    </div>
+
+    <!-- Match Results -->
+    <div class="glass-card mt-5" style="padding: 2rem; text-align: center; display: none; transform: translateY(20px); transition: all 0.5s ease;" id="matchResults">
+        <h2 style="font-size: 3rem; color: #22c55e; margin-bottom: 0;" id="matchScoreVal">87%</h2>
+        <p style="color: #94a3b8; font-weight: bold; text-transform: uppercase; letter-spacing: 2px;" id="matchLabel">Excellent Match</p>
+        
+        <hr style="border-color: rgba(255,255,255,0.1); margin: 2rem 0;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; text-align: left;">
+            <div>
+                <h4 style="color: #a855f7;"><i class="fas fa-check"></i> Matching Skills / Keywords</h4>
+                <ul style="color: #94a3b8; margin-top: 1rem; line-height: 1.8;" id="matchingSkillsArea">
+                    <!-- Dynamic -->
+                </ul>
+            </div>
+            <div>
+                <h4 style="color: #ef4444;"><i class="fas fa-times"></i> Missing Skills / Keywords</h4>
+                <ul style="color: #94a3b8; margin-top: 1rem; line-height: 1.8;" id="missingSkillsArea">
+                    <!-- Dynamic -->
+                </ul>
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem; text-align: left; background: rgba(255,255,255,0.02); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);" id="suggestionsArea">
+            <!-- Dynamic suggestions -->
+        </div>
+    </div>
+</div>
+
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    async function performMatch() {
+        const resumeId = document.getElementById('resumeSelect').value;
+        const jobDesc = document.getElementById('jobDesc').value.trim();
+        
+        if (!resumeId || !jobDesc) {
+            alert('Please select a resume and paste a job description.');
+            return;
+        }
+
+        const btn = document.getElementById('matchBtn');
+        const results = document.getElementById('matchResults');
+        
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calculating Match...';
+        btn.disabled = true;
+        
+        try {
+            const response = await fetch('', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    resume_id: resumeId,
+                    job_desc: jobDesc
+                })
+            });
+            const data = await response.json();
+            
+            if (data.match_percentage !== undefined) {
+                const pct = data.match_percentage;
+                const scoreVal = document.getElementById('matchScoreVal');
+                scoreVal.innerText = pct + '%';
+                
+                // Color based on percentage
+                if (pct >= 80) {
+                    scoreVal.style.color = '#22c55e';
+                    document.getElementById('matchLabel').innerText = 'Excellent Match';
+                } else if (pct >= 50) {
+                    scoreVal.style.color = '#eab308';
+                    document.getElementById('matchLabel').innerText = 'Average Match';
+                } else {
+                    scoreVal.style.color = '#ef4444';
+                    document.getElementById('matchLabel').innerText = 'Low Match';
+                }
+
+                // Matching skills list
+                const matchingArea = document.getElementById('matchingSkillsArea');
+                matchingArea.innerHTML = '';
+                if (data.matching_skills && data.matching_skills.length > 0) {
+                    data.matching_skills.forEach(s => {
+                        matchingArea.innerHTML += `<li>${s}</li>`;
+                    });
+                } else {
+                    matchingArea.innerHTML = '<li>None detected</li>';
+                }
+
+                // Missing skills list
+                const missingArea = document.getElementById('missingSkillsArea');
+                missingArea.innerHTML = '';
+                if (data.missing_skills && data.missing_skills.length > 0) {
+                    data.missing_skills.forEach(s => {
+                        missingArea.innerHTML += `<li>${s}</li>`;
+                    });
+                } else {
+                    missingArea.innerHTML = '<li>None</li>';
+                }
+
+                // Suggestions
+                const suggestionsArea = document.getElementById('suggestionsArea');
+                suggestionsArea.innerHTML = '<h4 style="color:#a855f7; margin-bottom:0.5rem;"><i class="fas fa-lightbulb"></i> Optimization Suggestions</h4>';
+                if (Array.isArray(data.suggestions)) {
+                    data.suggestions.forEach(s => {
+                        suggestionsArea.innerHTML += `<p style="color:#94a3b8; font-size:0.95rem; margin-bottom:0.4rem;"><i class="fas fa-arrow-right"></i> ${s}</p>`;
+                    });
+                } else {
+                    suggestionsArea.innerHTML += `<p style="color:#94a3b8; font-size:0.95rem;">${data.suggestions || 'No specific suggestions.'}</p>`;
+                }
+                
+                results.style.display = 'block';
+                setTimeout(() => {
+                    results.style.transform = 'translateY(0)';
+                }, 50);
+            } else {
+                alert(data.error || 'Failed to match.');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Something went wrong during matching.');
+        } finally {
+            btn.innerHTML = 'Calculate Match Score';
+            btn.disabled = false;
+        }
+    }
+</script>
+{% endblock %}
+

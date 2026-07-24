@@ -1,0 +1,1327 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Learning Hub — AI Interview Pro{% endblock %}
+
+{% block extra_head %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+* { box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; }
+
+.hub-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 1.5rem;
+    height: calc(100vh - 100px);
+    margin-top: 0.5rem;
+}
+
+/* ─── SIDEBAR ─── */
+.hub-sidebar {
+    background: rgba(15,23,42,0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    overflow-y: auto;
+}
+.hub-sidebar-title {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 0 0.8rem;
+    margin-bottom: 0.5rem;
+}
+.nav-item {
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    transition: all 0.2s ease;
+    position: relative;
+}
+.nav-item i { width: 18px; text-align: center; font-size: 0.9rem; }
+.nav-item:hover { background: rgba(255,255,255,0.05); color: #e2e8f0; }
+.nav-item.active {
+    background: linear-gradient(90deg, rgba(139,92,246,0.2), rgba(6,182,212,0.05));
+    color: #fff;
+    border-left: 3px solid #a855f7;
+}
+.nav-item .badge-xp {
+    margin-left: auto;
+    background: rgba(168,85,247,0.2);
+    color: #c4b5fd;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.15rem 0.45rem;
+    border-radius: 10px;
+}
+
+/* ─── CONTENT AREA ─── */
+.hub-content {
+    background: rgba(15,23,42,0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+.tab-pane { display: none; padding: 2rem; height: 100%; }
+.tab-pane.active { display: flex; flex-direction: column; }
+
+/* ─── SHARED COMPONENTS ─── */
+.section-head {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.8rem;
+    padding-bottom: 1.2rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.section-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+.section-head h2 { color: #f1f5f9; font-size: 1.4rem; font-weight: 800; margin: 0 0 0.2rem; }
+.section-head p  { color: #64748b; font-size: 0.88rem; margin: 0; }
+
+/* ─── SHARED INPUT ─── */
+.hub-input {
+    width: 100%;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    color: #f1f5f9;
+    padding: 0.85rem 1.1rem;
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.hub-input:focus { border-color: #a855f7; box-shadow: 0 0 0 3px rgba(168,85,247,0.15); }
+.hub-input option { background: #1e293b; }
+
+.hub-btn {
+    padding: 0.85rem 1.8rem;
+    border-radius: 10px;
+    border: none;
+    font-weight: 700;
+    font-size: 0.92rem;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+}
+.hub-btn-primary {
+    background: linear-gradient(135deg, #7c3aed, #0891b2);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(124,58,237,0.3);
+}
+.hub-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(124,58,237,0.45); }
+.hub-btn-outline {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #94a3b8;
+}
+.hub-btn-outline:hover { background: rgba(255,255,255,0.05); color: #f1f5f9; }
+
+/* Loader */
+.loading-state { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; flex: 1; }
+.loading-state i { color: #a855f7; }
+.loading-state p { color: #64748b; font-size: 0.92rem; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 1s linear infinite; }
+
+/* ═══════════════════════════════
+   1. AI TUTOR
+═══════════════════════════════ */
+.chat-area {
+    flex: 1;
+    background: rgba(0,0,0,0.3);
+    border-radius: 12px;
+    padding: 1.2rem;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-height: 0;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+.msg {
+    max-width: 88%;
+    padding: 1rem 1.2rem;
+    border-radius: 14px;
+    line-height: 1.65;
+    font-size: 0.95rem;
+}
+.msg-ai {
+    align-self: flex-start;
+    background: rgba(139,92,246,0.1);
+    border: 1px solid rgba(139,92,246,0.2);
+    color: #e2e8f0;
+    border-bottom-left-radius: 4px;
+}
+.msg-user {
+    align-self: flex-end;
+    background: rgba(14,165,233,0.12);
+    border: 1px solid rgba(14,165,233,0.25);
+    color: #f8fafc;
+    border-bottom-right-radius: 4px;
+}
+.msg-ai pre { background:#020617; border-radius:8px; padding:1rem; overflow-x:auto; margin:0.8rem 0; border:1px solid rgba(255,255,255,0.08); }
+.msg-ai code { font-family:'Fira Code',monospace; font-size:0.88em; }
+.msg-ai h1,.msg-ai h2,.msg-ai h3 { color:#a78bfa; margin:1rem 0 0.5rem; font-weight:700; }
+.msg-ai ul,.msg-ai ol { padding-left:1.4rem; margin:0.4rem 0; }
+.msg-ai strong { color:#c4b5fd; }
+
+.chat-row { display:flex; gap:0.8rem; }
+.chat-row input { flex:1; }
+.typing-dots span {
+    display:inline-block; width:7px; height:7px; background:#a78bfa; border-radius:50%; margin:0 2px;
+    animation:dot 1.2s ease-in-out infinite;
+}
+.typing-dots span:nth-child(2){animation-delay:.2s}
+.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes dot{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
+
+/* Suggested topics */
+.suggest-chips { display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem; }
+.chip {
+    background:rgba(168,85,247,0.1); border:1px solid rgba(168,85,247,0.25); color:#c4b5fd;
+    padding:0.35rem 0.85rem; border-radius:20px; font-size:0.8rem; font-weight:600;
+    cursor:pointer; transition:all 0.2s;
+}
+.chip:hover { background:rgba(168,85,247,0.25); }
+
+/* ═══════════════════════════════
+   2. NOTES GENERATOR
+═══════════════════════════════ */
+.notes-form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.2rem; }
+.notes-result {
+    flex:1; background:#020617; border-radius:12px; padding:2rem;
+    color:#e2e8f0; line-height:1.85; border:1px solid rgba(255,255,255,0.06);
+    overflow-y:auto; font-size:0.92rem;
+}
+.notes-result h1,.notes-result h2,.notes-result h3 { color:#a78bfa; margin:1.2rem 0 0.6rem; font-weight:800; }
+.notes-result h2 { font-size:1.15rem; border-bottom:1px solid rgba(255,255,255,0.07); padding-bottom:0.4rem; }
+.notes-result ul,.notes-result ol { padding-left:1.4rem; margin:0.5rem 0; }
+.notes-result li { margin-bottom:0.4rem; }
+.notes-result strong { color:#06b6d4; }
+.notes-result code { background:rgba(0,0,0,0.5); padding:0.15rem 0.4rem; border-radius:4px; color:#7dd3fc; font-family:monospace; font-size:0.88em; }
+.notes-result pre { background:#020617; border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:1rem; overflow-x:auto; margin:1rem 0; }
+.notes-placeholder {
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    color:#475569; text-align:center; gap:0.8rem;
+}
+.notes-placeholder i { font-size:3rem; color:#1e293b; }
+
+/* ═══════════════════════════════
+   3. AI QUIZZES
+═══════════════════════════════ */
+.quiz-setup { max-width:500px; }
+.quiz-setup .field { margin-bottom:1.2rem; }
+.quiz-setup label { color:#94a3b8; font-size:0.82rem; font-weight:600; display:block; margin-bottom:0.45rem; }
+
+.quiz-area { display:none; flex-direction:column; gap:1rem; }
+.quiz-progress-bar {
+    height:6px; background:rgba(255,255,255,0.08); border-radius:10px; overflow:hidden;
+}
+.quiz-progress-fill { height:100%; background:linear-gradient(to right,#a855f7,#06b6d4); border-radius:10px; transition:width 0.4s ease; }
+.q-card {
+    background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:1.5rem;
+}
+.q-card .q-num { color:#a855f7; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.6rem; }
+.q-card .q-text { color:#f1f5f9; font-size:1rem; font-weight:600; margin-bottom:1.2rem; line-height:1.5; }
+.q-options { display:flex; flex-direction:column; gap:0.6rem; }
+.q-option {
+    background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px;
+    padding:0.8rem 1rem; color:#cbd5e1; font-size:0.9rem; cursor:pointer; transition:all 0.2s;
+    display:flex; align-items:center; gap:0.8rem;
+}
+.q-option:hover:not(.locked) { background:rgba(168,85,247,0.1); border-color:rgba(168,85,247,0.35); color:#fff; }
+.q-option.correct { background:rgba(16,185,129,0.12); border-color:#10b981; color:#10b981; }
+.q-option.wrong   { background:rgba(239,68,68,0.1); border-color:#ef4444; color:#ef4444; }
+.q-option .q-letter {
+    width:26px; height:26px; border-radius:50%; background:rgba(255,255,255,0.08);
+    display:flex; align-items:center; justify-content:center; font-size:0.78rem; font-weight:700; flex-shrink:0;
+}
+.q-explanation { display:none; background:rgba(168,85,247,0.08); border:1px solid rgba(168,85,247,0.2); border-radius:8px; padding:0.9rem 1rem; color:#c4b5fd; font-size:0.88rem; line-height:1.5; margin-top:0.8rem; }
+.quiz-result-card {
+    display:none; background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.25);
+    border-radius:14px; padding:2rem; text-align:center;
+}
+.quiz-result-card .score-big { font-size:3.5rem; font-weight:900; color:#a855f7; }
+
+/* ═══════════════════════════════
+   4. DAILY CHALLENGES
+═══════════════════════════════ */
+.challenge-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem; }
+.ch-card {
+    background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:1.4rem;
+    transition:all 0.25s;
+}
+.ch-card:hover { transform:translateY(-3px); }
+.ch-card .ch-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem; }
+.ch-card .ch-title { color:#f1f5f9; font-weight:700; font-size:0.95rem; display:flex; align-items:center; gap:0.5rem; }
+.ch-card .xp-badge { font-size:0.7rem; font-weight:700; padding:0.2rem 0.55rem; border-radius:12px; }
+.ch-card .ch-desc { color:#94a3b8; font-size:0.85rem; line-height:1.55; margin-bottom:1.2rem; }
+.ch-card .ch-meta { display:flex; align-items:center; gap:0.5rem; color:#64748b; font-size:0.78rem; margin-bottom:1rem; }
+
+.daily-streak { background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(239,68,68,0.05)); border:1px solid rgba(245,158,11,0.2); border-radius:14px; padding:1.2rem 1.5rem; display:flex; align-items:center; gap:1.5rem; margin-bottom:1.5rem; }
+.streak-flame { font-size:2.5rem; }
+.streak-info h3 { color:#f59e0b; font-weight:800; font-size:1.2rem; margin:0 0 0.2rem; }
+.streak-info p  { color:#94a3b8; font-size:0.82rem; margin:0; }
+.streak-count   { margin-left:auto; font-size:2.8rem; font-weight:900; color:#f59e0b; }
+
+/* ═══════════════════════════════
+   5. MY PROGRESS
+═══════════════════════════════ */
+.progress-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem; }
+.stat-card {
+    background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:1.3rem;
+}
+.stat-card .stat-label { color:#64748b; font-size:0.78rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.5rem; }
+.stat-card .stat-val { font-size:2rem; font-weight:900; color:#f1f5f9; }
+.stat-card .stat-sub { color:#475569; font-size:0.78rem; margin-top:0.3rem; }
+.stat-card .stat-icon { float:right; font-size:1.8rem; margin-top:-2.5rem; opacity:0.3; }
+
+.chart-box { background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); border-radius:14px; padding:1.5rem; margin-bottom:1rem; }
+.chart-box h4 { color:#e2e8f0; font-weight:700; margin-bottom:1rem; font-size:0.92rem; }
+
+.skills-progress-list { display:flex; flex-direction:column; gap:0.8rem; }
+.skill-row { display:flex; flex-direction:column; gap:0.4rem; }
+.skill-row-top { display:flex; justify-content:space-between; align-items:center; }
+.skill-name { color:#e2e8f0; font-size:0.85rem; font-weight:600; }
+.skill-pct  { color:#a855f7; font-size:0.82rem; font-weight:700; }
+.skill-bar  { height:6px; background:rgba(255,255,255,0.07); border-radius:10px; overflow:hidden; }
+.skill-fill { height:100%; border-radius:10px; }
+
+.roadmap-section { margin-top:1rem; }
+.roadmap-step { display:flex; gap:1rem; margin-bottom:1rem; align-items:flex-start; }
+.roadmap-dot {
+    width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:0.85rem; flex-shrink:0; margin-top:2px;
+}
+.roadmap-step-content h5 { color:#f1f5f9; font-weight:700; font-size:0.9rem; margin:0 0 0.2rem; }
+.roadmap-step-content p  { color:#64748b; font-size:0.82rem; margin:0; line-height:1.5; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hub-layout">
+
+    <!-- ═══ SIDEBAR ═══ -->
+    <div class="hub-sidebar">
+        <div class="hub-sidebar-title"><i class="fas fa-graduation-cap"></i> &nbsp;Learning Hub</div>
+
+        <div class="nav-item active" onclick="showTab('tutor', this)">
+            <i class="fas fa-robot" style="color:#a855f7;"></i> AI Tutor
+        </div>
+        <div class="nav-item" onclick="showTab('notes', this)">
+            <i class="fas fa-book-open" style="color:#06b6d4;"></i> Notes Generator
+        </div>
+        <div class="nav-item" onclick="showTab('quiz', this)">
+            <i class="fas fa-question-circle" style="color:#f59e0b;"></i> AI Quizzes
+            <span class="badge-xp">Live</span>
+        </div>
+        <div class="nav-item" onclick="showTab('challenges', this)">
+            <i class="fas fa-fire" style="color:#ef4444;"></i> Daily Challenges
+        </div>
+        <div class="nav-item" onclick="showTab('progress', this)">
+            <i class="fas fa-chart-line" style="color:#10b981;"></i> My Progress
+        </div>
+
+        <div style="margin-top:auto; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.05);">
+            <div style="background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.15); border-radius:10px; padding:0.9rem; text-align:center;">
+                <div style="font-size:0.72rem; color:#334155; font-weight:600; margin-bottom:0.2rem;">✦ AI-Powered Learning</div>
+                <div style="font-size:0.8rem; color:#6ee7b7; font-weight:700;">All features are live</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ CONTENT ═══ -->
+    <div class="hub-content">
+
+        <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+             1. AI TUTOR
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+        <div class="tab-pane active" id="pane-tutor">
+            <div class="section-head">
+                <div class="section-icon" style="background:rgba(139,92,246,0.15);">🧠</div>
+                <div>
+                    <h2>AI Technical Tutor</h2>
+                    <p>Ask any concept — get rich explanations with code examples & interview context.</p>
+                </div>
+            </div>
+
+            <div class="suggest-chips">
+                <div class="chip" onclick="askTutor('Explain Python decorators with examples')">Python Decorators</div>
+                <div class="chip" onclick="askTutor('How does React Virtual DOM work?')">React Virtual DOM</div>
+                <div class="chip" onclick="askTutor('Explain Django ORM with examples')">Django ORM</div>
+                <div class="chip" onclick="askTutor('What is Docker and how does it work?')">Docker Basics</div>
+                <div class="chip" onclick="askTutor('Explain REST API best practices')">REST APIs</div>
+                <div class="chip" onclick="askTutor('What is Big O notation?')">Big O Notation</div>
+            </div>
+
+            <div class="chat-area" id="chatBox">
+                <div class="msg msg-ai">
+                    Hello <strong>{{ user.first_name|default:user.username }}</strong>! 👋 I'm your AI Technical Tutor powered by Gemini. Ask me to explain any concept, give examples, or help you prepare for interviews.<br><br>
+                    Try: <em>"Explain closures in JavaScript"</em> or <em>"What is database indexing?"</em>
+                </div>
+            </div>
+
+            <div class="chat-row">
+                <input id="tutorInput" class="hub-input" placeholder="Ask anything... e.g. 'How does async/await work in Python?'" autocomplete="off">
+                <button class="hub-btn hub-btn-primary" onclick="sendTutorMsg()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+             2. NOTES GENERATOR
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+        <div class="tab-pane" id="pane-notes">
+            <div class="section-head">
+                <div class="section-icon" style="background:rgba(6,182,212,0.15);">📝</div>
+                <div>
+                    <h2>AI Notes Generator</h2>
+                    <p>Generate rich, formatted study material instantly. Download as PDF for offline revision.</p>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:1rem; margin-bottom:1rem; flex-wrap:wrap; align-items:flex-end;">
+                <div style="flex:1; min-width:200px;">
+                    <label style="color:#94a3b8; font-size:0.8rem; font-weight:600; display:block; margin-bottom:0.4rem;">Topic / Technology</label>
+                    <input id="noteTopic" class="hub-input" placeholder="e.g. Docker Fundamentals, Python OOP, React Hooks...">
+                </div>
+                <div style="min-width:200px;">
+                    <label style="color:#94a3b8; font-size:0.8rem; font-weight:600; display:block; margin-bottom:0.4rem;">Format Type</label>
+                    <select id="noteType" class="hub-input">
+                        <option value="Short Summary">⚡ Short Summary (Quick Read)</option>
+                        <option value="Detailed Notes">📚 Detailed Notes (In-depth)</option>
+                        <option value="Interview Q&A">🎯 Interview Q&A (Preparation)</option>
+                        <option value="Cheat Sheet">📋 Cheat Sheet (Key Points)</option>
+                    </select>
+                </div>
+                <div style="display:flex; gap:0.6rem;">
+                    <button class="hub-btn hub-btn-primary" onclick="generateNotes()">
+                        <i class="fas fa-bolt"></i> Generate Notes
+                    </button>
+                    <button class="hub-btn hub-btn-outline" id="notesDownloadBtn" onclick="downloadNotesPDF()" style="display:none;">
+                        <i class="fas fa-download"></i> PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loader -->
+            <div class="loading-state" id="notesLoader">
+                <i class="fas fa-circle-notch fa-3x spin"></i>
+                <p>Synthesizing professional notes with Gemini AI...</p>
+            </div>
+
+            <!-- Notes Result -->
+            <div class="notes-result" id="notesResult" style="display:none;"></div>
+
+            <!-- Placeholder -->
+            <div class="notes-placeholder" id="notesPlaceholder">
+                <i class="fas fa-file-alt"></i>
+                <p style="color:#475569; font-size:0.9rem;">Enter a topic above and click <strong style="color:#a855f7;">Generate Notes</strong> to create formatted study material instantly.</p>
+            </div>
+        </div>
+
+        <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+             3. AI QUIZZES
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+        <div class="tab-pane" id="pane-quiz">
+            <div class="section-head">
+                <div class="section-icon" style="background:rgba(245,158,11,0.15);">🧩</div>
+                <div>
+                    <h2>AI Quizzes</h2>
+                    <p>Generate instant 5-question quizzes on any topic. Test your knowledge in real time.</p>
+                </div>
+            </div>
+
+            <!-- Quiz Setup -->
+            <div class="quiz-setup" id="quizSetup">
+                <div class="field">
+                    <label style="color:#94a3b8; font-size:0.82rem; font-weight:600; display:block; margin-bottom:0.4rem;">Quiz Topic</label>
+                    <input id="quizTopic" class="hub-input" placeholder="e.g. Python OOP, REST APIs, SQL Joins..." style="margin-bottom:0.8rem;">
+                </div>
+                <div class="field">
+                    <label style="color:#94a3b8; font-size:0.82rem; font-weight:600; display:block; margin-bottom:0.4rem;">Level</label>
+                    <select id="quizDiff" class="hub-input" style="margin-bottom:1.2rem;">
+                        <option value="beginner" selected>🟢 Beginner</option>
+                        <option value="intermediate">🟡 Intermediate</option>
+                        <option value="advanced">🔴 Advanced</option>
+                    </select>
+                </div>
+                <button class="hub-btn hub-btn-primary" onclick="startQuiz()" style="width:100%;">
+                    <i class="fas fa-play"></i> Generate Quiz
+                </button>
+            </div>
+
+            <!-- Quiz Loading -->
+            <div class="loading-state" id="quizLoader">
+                <i class="fas fa-circle-notch fa-3x spin"></i>
+                <p>Generating your quiz with Gemini AI...</p>
+            </div>
+
+            <!-- Quiz Active -->
+            <div class="quiz-area" id="quizArea">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+                    <div id="quizStatus" style="color:#94a3b8; font-size:0.85rem; font-weight:600;"></div>
+                    <div id="quizScore" style="color:#a855f7; font-size:0.85rem; font-weight:700;"></div>
+                </div>
+                <div class="quiz-progress-bar" style="margin-bottom:1.2rem;">
+                    <div class="quiz-progress-fill" id="quizBar" style="width:0%"></div>
+                </div>
+                <div id="quizCard"></div>
+                <div style="display:flex; justify-content:space-between; gap:1rem; margin-top:0.8rem;">
+                    <button class="hub-btn hub-btn-outline" onclick="resetQuiz()"><i class="fas fa-redo"></i> New Quiz</button>
+                    <button class="hub-btn hub-btn-primary" id="nextBtn" onclick="nextQuestion()" style="display:none;"><i class="fas fa-arrow-right"></i> Next</button>
+                </div>
+            </div>
+
+            <!-- Quiz Result -->
+            <div class="quiz-result-card" id="quizResult">
+                <div class="score-big" id="finalScore"></div>
+                <div style="color:#e2e8f0; font-size:1.1rem; font-weight:600; margin:0.5rem 0;" id="resultMsg"></div>
+                <div style="color:#64748b; font-size:0.88rem; margin-bottom:1.5rem;" id="resultSub"></div>
+                <div style="display:flex; gap:0.8rem; justify-content:center;">
+                    <button class="hub-btn hub-btn-primary" onclick="resetQuiz()"><i class="fas fa-redo"></i> Try Again</button>
+                    <button class="hub-btn hub-btn-outline" onclick="showTab('notes', null)"><i class="fas fa-book-open"></i> Study Notes</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+             4. DAILY CHALLENGES
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+        <div class="tab-pane" id="pane-challenges">
+            <div class="section-head">
+                <div class="section-icon" style="background:rgba(239,68,68,0.15);">🔥</div>
+                <div>
+                    <h2>Daily Challenges</h2>
+                    <p>Complete daily tasks to earn XP and maintain your learning streak!</p>
+                </div>
+            </div>
+
+            <!-- Streak -->
+            <div class="daily-streak">
+                <div class="streak-flame">🔥</div>
+                <div class="streak-info">
+                    <h3>Current Streak</h3>
+                    <p>Keep going! Complete today's challenges to maintain your streak.</p>
+                </div>
+                <div class="streak-count" id="streakCount">3</div>
+            </div>
+
+            <!-- Language Selector -->
+            <div style="margin-bottom: 1.5rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); padding: 1rem 1.5rem; border-radius: 16px; display: flex; flex-direction: column; gap: 0.5rem; width: 100%;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; width: 100%;">
+                    <div style="color: #cbd5e1; font-size: 0.9rem; font-weight: 600;">
+                        <i class="fas fa-filter" style="color: #a855f7; margin-right: 0.5rem;"></i> Select Challenge Topic/Language:
+                    </div>
+                    <select id="challengeLangSelect" onchange="changeChallengeLanguage()" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; padding: 0.5rem 1rem; font-size: 0.88rem; font-weight: 600; outline: none; cursor: pointer; min-width: 180px;">
+                        <option value="python">Python</option>
+                        <option value="sql">SQL</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="java">Java</option>
+                        <option value="other">Other (Type manually)...</option>
+                    </select>
+                </div>
+                <input id="challengeCustomInput" type="text" oninput="submitCustomChallengeLanguage()" placeholder="Type custom language/topic, e.g. C++, HTML, PHP, Rust..." style="display: none; width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; padding: 0.8rem 1rem; font-size: 0.9rem; font-weight: 600; outline: none; margin-top: 0.5rem;">
+            </div>
+
+            <!-- Validation Error Box -->
+            <div id="challengeErrorBox" style="display: none; background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.2); padding: 1.5rem; border-radius: 16px; text-align: center; color: #fca5a5; margin: 1rem 0; width: 100%;">
+                <i class="fas fa-exclamation-circle" style="color: #f43f5e; margin-bottom: 0.5rem; display: block; font-size: 1.8rem;"></i>
+                <span id="challengeErrorText" style="font-size: 0.95rem; font-weight: 600; line-height: 1.4;"></span>
+            </div>
+
+            <div id="challengeCardsGrid" class="challenge-grid">
+                <!-- Coding Challenge -->
+                <div class="ch-card" style="border-color:rgba(16,185,129,0.2);">
+                    <div class="ch-top">
+                        <div class="ch-title"><i class="fas fa-code" style="color:#10b981;"></i> Coding Challenge</div>
+                        <span class="xp-badge" style="background:rgba(16,185,129,0.15);color:#10b981;">+25 XP</span>
+                    </div>
+                    <div class="ch-desc" id="chCodingDesc">
+                        Write a Python function to find the <strong style="color:#e2e8f0;">longest common prefix</strong> among an array of strings. Handle edge cases for empty arrays.
+                    </div>
+                    <div class="ch-meta" id="chCodingMeta"><i class="fas fa-clock"></i> ~20 min &nbsp;|&nbsp; <i class="fas fa-signal"></i> Medium</div>
+                    <button id="chCodingBtn" onclick="openCodingModal('Python')" class="hub-btn hub-btn-primary" style="width:100%; justify-content:center; text-decoration:none; font-size:0.85rem; padding:0.7rem; border:none; cursor:pointer;">
+                        <i class="fas fa-terminal"></i> Open Code Editor
+                    </button>
+                </div>
+
+                <!-- AI Quiz Challenge -->
+                <div class="ch-card" style="border-color:rgba(139,92,246,0.2);">
+                    <div class="ch-top">
+                        <div class="ch-title"><i class="fas fa-brain" style="color:#a855f7;"></i> Knowledge Quiz</div>
+                        <span class="xp-badge" style="background:rgba(139,92,246,0.15);color:#a855f7;">+15 XP</span>
+                    </div>
+                    <div class="ch-desc" id="chQuizDesc">
+                        Today's topic: <strong style="color:#e2e8f0;">Python Basics</strong>. Take a 5-question quiz to test your understanding of data structures, control flows, and syntax.
+                    </div>
+                    <div class="ch-meta" id="chQuizMeta"><i class="fas fa-clock"></i> ~5 min &nbsp;|&nbsp; <i class="fas fa-signal"></i> Beginner</div>
+                    <button id="chQuizBtn" class="hub-btn hub-btn-primary" onclick="quickQuiz('Python Basics')" style="width:100%; font-size:0.85rem; padding:0.7rem; background:linear-gradient(135deg,#7c3aed,#a855f7);">
+                        <i class="fas fa-play"></i> Take Quiz Now
+                    </button>
+                </div>
+
+                <!-- Study Notes Challenge -->
+                <div class="ch-card" style="border-color:rgba(6,182,212,0.2);">
+                    <div class="ch-top">
+                        <div class="ch-title"><i class="fas fa-book" style="color:#06b6d4;"></i> Study Session</div>
+                        <span class="xp-badge" style="background:rgba(6,182,212,0.15);color:#06b6d4;">+10 XP</span>
+                    </div>
+                    <div class="ch-desc" id="chNotesDesc">
+                        Generate and read study notes on <strong style="color:#e2e8f0;">Python Advanced Features</strong>. Spend 15 minutes reviewing decorators, generators, and OOP.
+                    </div>
+                    <div class="ch-meta" id="chNotesMeta"><i class="fas fa-clock"></i> ~15 min &nbsp;|&nbsp; <i class="fas fa-signal"></i> Easy</div>
+                    <button id="chNotesBtn" class="hub-btn hub-btn-primary" onclick="quickNotes('Python Advanced Features')" style="width:100%; font-size:0.85rem; padding:0.7rem; background:linear-gradient(135deg,#0891b2,#06b6d4);">
+                        <i class="fas fa-file-alt"></i> Generate Notes
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+             5. MY PROGRESS
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+        <div class="tab-pane" id="pane-progress">
+            <div class="section-head">
+                <div class="section-icon" style="background:rgba(16,185,129,0.15);">📊</div>
+                <div>
+                    <h2>My Progress</h2>
+                    <p>Track your learning journey, skill growth, and interview readiness.</p>
+                </div>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="progress-grid">
+                <div class="stat-card">
+                    <div class="stat-label"><i class="fas fa-trophy"></i> &nbsp;Total XP Earned</div>
+                    <div class="stat-val" style="color:#f59e0b;">{{ history.xp|default:"0" }}<span style="font-size:1rem;color:#64748b;"> pts</span></div>
+                    <div class="stat-sub">🔥 Keep completing challenges</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i class="fas fa-video"></i> &nbsp;AI Interviews Done</div>
+                    <div class="stat-val" style="color:#a855f7;">{{ history.total_interviews|default:"0" }}</div>
+                    <div class="stat-sub">Sessions completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i class="fas fa-star"></i> &nbsp;Avg Interview Score</div>
+                    <div class="stat-val" style="color:#10b981;">{{ history.avg_score|default:"0"|floatformat:1 }}<span style="font-size:1rem;color:#64748b;">%</span></div>
+                    <div class="stat-sub">Based on all sessions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i class="fas fa-fire"></i> &nbsp;Day Streak</div>
+                    <div class="stat-val" id="streakVal" style="color:#ef4444;">0</div>
+                    <div class="stat-sub">Consecutive active days</div>
+                </div>
+            </div>
+
+            <!-- Skills Progress -->
+            <div class="chart-box">
+                <h4><i class="fas fa-tools" style="color:#a855f7;"></i> &nbsp;Skills Progress</h4>
+                <div class="skills-progress-list">
+                    {% for skill in skills %}
+                    <div class="skill-row">
+                        <div class="skill-row-top">
+                            <span class="skill-name">{{ skill.name }}</span>
+                            <span class="skill-pct">{{ skill.level }}%</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-fill" style="width:{{ skill.level }}%; background:linear-gradient(to right,#a855f7,#06b6d4);"></div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div style="text-align: center; padding: 2.5rem 1rem; color: #94a3b8; font-size: 0.9rem;">
+                        <i class="fas fa-info-circle" style="color: #a855f7; margin-bottom: 0.5rem; display: block; font-size: 1.5rem;"></i>
+                        No skills tracked yet. Upload your resume to the <strong>AI Career Coach</strong> on the Dashboard to automatically populate your technical skills progress!
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- 90-Day Roadmap -->
+            <div class="chart-box">
+                <h4><i class="fas fa-road" style="color:#06b6d4;"></i> &nbsp;Career Roadmap — Your next 90 days</h4>
+
+                <div style="display:flex; gap:0.75rem; margin-bottom:1rem; flex-wrap:wrap;">
+                    <input id="roadmapGoal" class="hub-input" placeholder="Your goal, e.g. Get a job at Google, Become a Full Stack Dev..." style="flex:1; min-width:200px;">
+                    <input id="roadmapSkills" class="hub-input" placeholder="Current skills, e.g. Python, Django, React" style="flex:1; min-width:200px;">
+                    <button class="hub-btn hub-btn-primary" onclick="generateRoadmap()" id="roadmapBtn" style="white-space:nowrap;">
+                        <i class="fas fa-route"></i> Generate Plan
+                    </button>
+                </div>
+
+                <div id="roadmapLoader" class="loading-state" style="display:none; padding:2rem 0;">
+                    <i class="fas fa-circle-notch fa-2x spin"></i>
+                    <p>Crafting your 90-day plan with AI...</p>
+                </div>
+
+                <div id="roadmapResult" style="display:none;">
+                    <div class="roadmap-section" id="roadmapContent"></div>
+                </div>
+
+                <div id="roadmapPlaceholder" class="roadmap-section">
+                    {% for phase in roadmap_phases %}
+                    <div class="roadmap-step">
+                        <div class="roadmap-dot" style="background:{{ phase.color_bg }};color:{{ phase.color }};">{{ phase.num }}</div>
+                        <div class="roadmap-step-content">
+                            <h5>{{ phase.title }} <span style="color:#475569;font-size:0.75rem;font-weight:500;">{{ phase.label }}</span></h5>
+                            <p>{{ phase.desc }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /hub-content -->
+</div><!-- /hub-layout -->
+
+<!-- Coding Config Modal -->
+<div id="codingConfigModal" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:rgba(15,23,42,0.95); border:1px solid rgba(255,255,255,0.08); border-radius:24px; padding:2rem; max-width:420px; width:90%; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); position:relative;">
+        <h3 style="color:#fff; font-size:1.25rem; font-weight:800; margin:0 0 0.5rem 0; display:flex; align-items:center; gap:0.5rem; font-family:'Inter', sans-serif;"><i class="fas fa-code" style="color:#10b981;"></i> Coding Challenge Setup</h3>
+        <p style="color:#94a3b8; font-size:0.85rem; margin:0 0 1.5rem 0; line-height:1.5; font-family:'Inter', sans-serif;">Select your preferred programming language or type it in manually.</p>
+        
+        <label style="color:#cbd5e1; font-size:0.8rem; font-weight:700; display:block; margin-bottom:0.5rem; font-family:'Inter', sans-serif;">Programming Language</label>
+        <select id="codingLangSelect" onchange="toggleCustomLangInput()" style="width:100%; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:#fff; padding:0.8rem 1rem; font-size:0.9rem; font-weight:600; outline:none; margin-bottom:1rem; cursor:pointer;">
+            <option value="Python" style="background:#1e293b;">Python</option>
+            <option value="JavaScript" style="background:#1e293b;">JavaScript</option>
+            <option value="Java" style="background:#1e293b;">Java</option>
+            <option value="C++" style="background:#1e293b;">C++</option>
+            <option value="Other" style="background:#1e293b;">Other (Type manually)...</option>
+        </select>
+        
+        <input type="text" id="customLangInput" placeholder="e.g. Ruby, Go, Rust, C#, PHP..." style="display:none; width:100%; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:#fff; padding:0.8rem 1rem; font-size:0.9rem; outline:none; margin-bottom:1.5rem; font-family:'Inter', sans-serif;" />
+        
+        <div id="codingLoader" style="display:none; text-align:center; margin-bottom:1rem; color:#a78bfa; font-size:0.85rem; font-weight:600; font-family:'Inter', sans-serif;">
+            <i class="fas fa-circle-notch fa-spin" style="margin-right:0.3rem;"></i> Crafting coding problem with AI...
+        </div>
+
+        <div style="display:flex; gap:0.75rem; justify-content:flex-end;">
+            <button class="hub-btn hub-btn-outline" onclick="closeCodingModal()" style="padding:0.6rem 1.2rem; font-size:0.85rem; cursor:pointer;">Cancel</button>
+            <button id="codingLaunchBtn" class="hub-btn hub-btn-primary" onclick="launchCodingChallenge()" style="padding:0.6rem 1.5rem; font-size:0.85rem; cursor:pointer; border:none;">Proceed</button>
+        </div>
+    </div>
+</div>
+
+<!-- Interview Config Modal -->
+<div id="interviewConfigModal" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:rgba(15,23,42,0.95); border:1px solid rgba(255,255,255,0.08); border-radius:24px; padding:2rem; max-width:420px; width:90%; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); position:relative;">
+        <h3 style="color:#fff; font-size:1.25rem; font-weight:800; margin:0 0 0.5rem 0; display:flex; align-items:center; gap:0.5rem; font-family:'Inter', sans-serif;"><i class="fas fa-microphone" style="color:#f59e0b;"></i> Mock Interview Setup</h3>
+        <p style="color:#94a3b8; font-size:0.85rem; margin:0 0 1.5rem 0; line-height:1.5; font-family:'Inter', sans-serif;">Choose the language and difficulty level for your conversational AI mock interview.</p>
+        
+        <label style="color:#cbd5e1; font-size:0.8rem; font-weight:700; display:block; margin-bottom:0.5rem; font-family:'Inter', sans-serif;">Interview Language</label>
+        <select id="interviewLangSelect" style="width:100%; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:#fff; padding:0.8rem 1rem; font-size:0.9rem; font-weight:600; outline:none; margin-bottom:1.2rem; cursor:pointer;">
+            <option value="en-US" style="background:#1e293b;">English</option>
+            <option value="ta-EN" style="background:#1e293b;">Tanglish (Tamil + English)</option>
+            <option value="ta-IN" style="background:#1e293b;">Tamil</option>
+        </select>
+
+        <label style="color:#cbd5e1; font-size:0.8rem; font-weight:700; display:block; margin-bottom:0.5rem; font-family:'Inter', sans-serif;">Difficulty Level</label>
+        <select id="interviewDiffSelect" style="width:100%; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:#fff; padding:0.8rem 1rem; font-size:0.9rem; font-weight:600; outline:none; margin-bottom:1.5rem; cursor:pointer;">
+            <option value="Beginner" style="background:#1e293b;">🌱 Beginner</option>
+            <option value="Intermediate" selected style="background:#1e293b;">⚡ Intermediate</option>
+            <option value="Advanced" style="background:#1e293b;">🔥 Advanced</option>
+        </select>
+
+        <div id="interviewLoader" style="display:none; text-align:center; margin-bottom:1rem; color:#f59e0b; font-size:0.85rem; font-weight:600; font-family:'Inter', sans-serif;">
+            <i class="fas fa-circle-notch fa-spin" style="margin-right:0.3rem;"></i> Initializing interview room...
+        </div>
+        
+        <!-- Hidden Form for submission -->
+        <form id="hiddenInterviewForm" method="POST" action="{% url 'interview:start_interview' %}" style="display:none;">
+            {% csrf_token %}
+            <input type="hidden" name="language" id="hiddenLangInput">
+            <input type="hidden" name="difficulty" id="hiddenDiffInput">
+        </form>
+
+        <div style="display:flex; gap:0.75rem; justify-content:flex-end;">
+            <button class="hub-btn hub-btn-outline" onclick="closeInterviewModal()" style="padding:0.6rem 1.2rem; font-size:0.85rem; cursor:pointer;">Cancel</button>
+            <button id="interviewLaunchBtn" class="hub-btn hub-btn-primary" onclick="launchInterviewChallenge()" style="padding:0.6rem 1.5rem; font-size:0.85rem; cursor:pointer; border:none; background:linear-gradient(135deg,#d97706,#f59e0b);">Proceed</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* ═══════ CSRF ═══════ */
+const CSRF = '{{ csrf_token }}';
+
+/* ═══════ TABS ═══════ */
+function showTab(id, el) {
+    document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    document.getElementById('pane-'+id).classList.add('active');
+    if(el) el.classList.add('active');
+}
+
+/* ═══════════════════════════════
+   1. AI TUTOR
+═══════════════════════════════ */
+marked.setOptions({ breaks:true, gfm:true });
+
+document.getElementById('tutorInput').addEventListener('keypress', e=>{
+    if(e.key==='Enter') sendTutorMsg();
+});
+
+// Notes Generator: press Enter to generate
+document.getElementById('noteTopic').addEventListener('keypress', e=>{
+    if(e.key==='Enter') generateNotes();
+});
+
+function askTutor(msg){
+    document.getElementById('tutorInput').value = msg;
+    sendTutorMsg();
+}
+
+async function sendTutorMsg(){
+    const inp = document.getElementById('tutorInput');
+    const msg = inp.value.trim();
+    if(!msg) return;
+    const box = document.getElementById('chatBox');
+
+    box.innerHTML += `<div class="msg msg-user">${msg}</div>`;
+    inp.value = '';
+    box.scrollTop = box.scrollHeight;
+
+    const tid = 'typ'+Date.now();
+    box.innerHTML += `<div id="${tid}" class="msg msg-ai"><div class="typing-dots"><span></span><span></span><span></span></div></div>`;
+    box.scrollTop = box.scrollHeight;
+
+    try {
+        const r = await fetch('/api/tutor/', {
+            method:'POST',
+            headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
+            body:JSON.stringify({message:msg})
+        });
+        if (!r.ok) throw new Error(`Server error: ${r.status}`);
+        const d = await r.json();
+        document.getElementById(tid).remove();
+        box.innerHTML += `<div class="msg msg-ai">${marked.parse(d.reply || 'No response received.')}</div>`;
+        box.scrollTop = box.scrollHeight;
+        if(window.Prism) Prism.highlightAllUnder(box);
+    } catch(e) {
+        document.getElementById(tid).innerHTML = `⚠️ Error: ${e.message}. Please try again.`;
+    }
+}
+
+/* ═══════════════════════════════
+   2. NOTES GENERATOR
+═══════════════════════════════ */
+async function generateNotes(){
+    const topic = document.getElementById('noteTopic').value.trim();
+    const type  = document.getElementById('noteType').value;
+    if(!topic){ alert('Please enter a topic first!'); return; }
+
+    document.getElementById('notesPlaceholder').style.display = 'none';
+    document.getElementById('notesResult').style.display    = 'none';
+    document.getElementById('notesLoader').style.display    = 'flex';
+    document.getElementById('notesDownloadBtn').style.display = 'none';
+
+    try {
+        const r = await fetch('/api/notes/', {
+            method:'POST',
+            headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
+            body:JSON.stringify({topic, note_type:type})
+        });
+        const d = await r.json();
+        document.getElementById('notesLoader').style.display = 'none';
+
+        if (!r.ok || d.error) {
+            document.getElementById('notesResult').innerHTML = `
+                <div style="background:rgba(244,63,94,0.08);border:1px solid rgba(244,63,94,0.2);padding:1.2rem 1.5rem;border-radius:12px;color:#fca5a5;">
+                    <strong><i class="fas fa-exclamation-circle" style="color:#f43f5e;margin-right:0.5rem;"></i>Could not generate notes:</strong>
+                    <p style="margin:0.5rem 0 0;font-size:0.9rem;">Please check your input query, verify your internet connection, and try again.</p>
+                </div>`;
+            document.getElementById('notesResult').style.display = 'block';
+            return;
+        }
+
+        const notesHTML = marked.parse(d.notes || 'No notes generated.');
+        const fallbackBanner = d.fallback ? `
+            <div style="display:flex;align-items:center;gap:0.6rem;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);padding:0.8rem 1.2rem;border-radius:10px;margin-bottom:1rem;color:#fbbf24;font-size:0.82rem;font-weight:600;">
+                <i class="fas fa-bolt"></i> AI quota limit reached — displaying preset reference notes. Please try again in a few moments.
+            </div>` : '';
+        document.getElementById('notesResult').innerHTML = fallbackBanner + notesHTML;
+        document.getElementById('notesResult').style.display = 'block';
+        document.getElementById('notesDownloadBtn').style.display = '';
+        if(window.Prism) Prism.highlightAllUnder(document.getElementById('notesResult'));
+    } catch(e) {
+        document.getElementById('notesLoader').style.display = 'none';
+        document.getElementById('notesResult').innerHTML = `
+            <div style="background:rgba(244,63,94,0.08);border:1px solid rgba(244,63,94,0.2);padding:1.2rem 1.5rem;border-radius:12px;color:#fca5a5;">
+                <strong><i class="fas fa-wifi" style="color:#f43f5e;margin-right:0.5rem;"></i>Connection Error:</strong>
+                <p style="margin:0.5rem 0 0;font-size:0.9rem;">Please verify your internet connection and try again.</p>
+            </div>`;
+        document.getElementById('notesResult').style.display = 'block';
+    }
+}
+
+function downloadNotesPDF(){
+    const content = document.getElementById('notesResult').innerHTML;
+    const win = window.open('','_blank');
+    win.document.write(`<html><head><title>Notes</title><style>body{font-family:sans-serif;max-width:900px;margin:2rem auto;line-height:1.7;color:#111;}h1,h2,h3{color:#4f46e5;}pre{background:#f4f4f4;padding:1rem;border-radius:6px;overflow-x:auto;}code{background:#f0f0f0;padding:2px 5px;border-radius:3px;}@media print{body{margin:0;}}</style></head><body>${content}</body></html>`);
+    win.document.close();
+    win.print();
+}
+
+function quickNotes(topic){
+    showTab('notes', document.querySelectorAll('.nav-item')[1]);
+    document.getElementById('noteTopic').value = topic;
+    generateNotes();
+}
+
+/* ═══════════════════════════════
+   3. AI QUIZZES
+═══════════════════════════════ */
+let quizData = [], currentQ = 0, correctCount = 0;
+
+async function startQuiz(){
+    const topic = document.getElementById('quizTopic').value.trim();
+    const diff  = document.getElementById('quizDiff').value;
+    if(!topic){ alert('Please enter a quiz topic!'); return; }
+
+    document.getElementById('quizSetup').style.display  = 'none';
+    document.getElementById('quizLoader').style.display = 'flex';
+    document.getElementById('quizResult').style.display = 'none';
+
+    try {
+        const r = await fetch(`/api/quiz/?topic=${encodeURIComponent(topic + ' ' + diff)}`);
+        const d = await r.json();
+        
+        if (!r.ok || d.error) {
+            alert(d.error || 'Failed to generate quiz. Please check your topic.');
+            document.getElementById('quizLoader').style.display = 'none';
+            document.getElementById('quizSetup').style.display  = 'block';
+            return;
+        }
+
+        quizData = d.quiz;
+        if(!quizData || !quizData.length) throw new Error('No quiz data');
+
+        currentQ = 0; correctCount = 0;
+        document.getElementById('quizLoader').style.display = 'none';
+        document.getElementById('quizArea').style.display   = 'flex';
+        renderQuestion();
+    } catch(e) {
+        document.getElementById('quizLoader').style.display = 'none';
+        document.getElementById('quizSetup').style.display  = 'block';
+        alert('Failed to generate quiz. Please try again.');
+    }
+}
+
+function renderQuestion(){
+    const q = quizData[currentQ];
+    const total = quizData.length;
+    const pct = (currentQ / total) * 100;
+
+    document.getElementById('quizStatus').textContent = `Question ${currentQ+1} of ${total}`;
+    document.getElementById('quizScore').textContent  = `✅ ${correctCount} Correct`;
+    document.getElementById('quizBar').style.width    = pct + '%';
+    document.getElementById('nextBtn').style.display  = 'none';
+
+    const letters = ['A','B','C','D'];
+    const opts = q.options.map((o,i)=>`
+        <div class="q-option" id="opt${i}" onclick="checkAnswer(${i},${q.correct_index})">
+            <div class="q-letter">${letters[i]}</div> ${o}
+        </div>`).join('');
+
+    document.getElementById('quizCard').innerHTML = `
+        <div class="q-card">
+            <div class="q-num">Question ${currentQ+1}</div>
+            <div class="q-text">${q.question}</div>
+            <div class="q-options">${opts}</div>
+            <div class="q-explanation" id="explanation">${q.explanation}</div>
+        </div>`;
+}
+
+function checkAnswer(selected, correct){
+    document.querySelectorAll('.q-option').forEach(o=>o.classList.add('locked'));
+    document.querySelectorAll('.q-option').forEach(o=>o.style.pointerEvents='none');
+
+    if(selected === correct){
+        document.getElementById('opt'+selected).classList.add('correct');
+        correctCount++;
+    } else {
+        document.getElementById('opt'+selected).classList.add('wrong');
+        document.getElementById('opt'+correct).classList.add('correct');
+    }
+    document.getElementById('explanation').style.display = 'block';
+    document.getElementById('nextBtn').style.display = '';
+}
+
+function nextQuestion(){
+    currentQ++;
+    if(currentQ >= quizData.length){
+        showQuizResult();
+    } else {
+        renderQuestion();
+    }
+}
+
+function showQuizResult(){
+    document.getElementById('quizArea').style.display   = 'none';
+    document.getElementById('quizResult').style.display = 'block';
+    const pct = Math.round((correctCount/quizData.length)*100);
+    document.getElementById('finalScore').textContent = `${pct}%`;
+    document.getElementById('quizBar').style.width = '100%';
+
+    let msg='', sub='';
+    if(pct>=80){ msg='🎉 Excellent Work!'; sub='You have a strong understanding of this topic.'; }
+    else if(pct>=60){ msg='👍 Good Effort!'; sub='Review the explanations and try again to improve.'; }
+    else { msg='📚 Keep Studying!'; sub='Read the study notes for this topic and retake the quiz.'; }
+
+    document.getElementById('resultMsg').textContent = msg;
+    document.getElementById('resultSub').textContent = sub;
+}
+
+function resetQuiz(){
+    quizData=[]; currentQ=0; correctCount=0;
+    document.getElementById('quizSetup').style.display  = 'block';
+    document.getElementById('quizArea').style.display   = 'none';
+    document.getElementById('quizResult').style.display = 'none';
+    document.getElementById('quizBar').style.width = '0%';
+}
+
+function quickQuiz(topic){
+    showTab('quiz', document.querySelectorAll('.nav-item')[2]);
+    document.getElementById('quizTopic').value = topic;
+    startQuiz();
+}
+
+/* ═══════ STREAK (localStorage) ═══════ */
+const todayKey = 'streak_'+new Date().toDateString();
+if(!localStorage.getItem(todayKey)){
+    const yesterday = 'streak_'+new Date(Date.now()-86400000).toDateString();
+    const prev = parseInt(localStorage.getItem('streak_count')||'0');
+    const wasYesterday = localStorage.getItem(yesterday);
+    const newStreak = wasYesterday ? prev+1 : 1;
+    localStorage.setItem('streak_count', newStreak);
+    localStorage.setItem(todayKey, '1');
+}
+const streak = parseInt(localStorage.getItem('streak_count')||'3');
+document.getElementById('streakCount').textContent = streak;
+const streakValEl = document.getElementById('streakVal');
+if (streakValEl) streakValEl.textContent = streak;
+
+/* ═══════════════════════════════
+   ROADMAP GENERATOR
+   ═══════════════════════════════ */
+const roadmapColors = [
+    {bg:'rgba(139,92,246,0.15)', color:'#a855f7'},
+    {bg:'rgba(6,182,212,0.15)',  color:'#06b6d4'},
+    {bg:'rgba(16,185,129,0.15)', color:'#10b981'},
+];
+const roadmapLabels = ['Day 1–30', 'Day 31–60', 'Day 61–90'];
+const roadmapTitles = ['Foundation', 'Skill Building', 'Interview Ready'];
+
+async function generateRoadmap() {
+    const goal   = document.getElementById('roadmapGoal').value.trim();
+    const skills = document.getElementById('roadmapSkills').value.trim();
+    if (!goal) { alert('Please enter your career goal first!'); return; }
+
+    const CSRF = '{{ csrf_token }}';
+
+    document.getElementById('roadmapPlaceholder').style.display = 'none';
+    document.getElementById('roadmapResult').style.display      = 'none';
+    document.getElementById('roadmapLoader').style.display      = 'flex';
+    document.getElementById('roadmapBtn').disabled              = true;
+
+    try {
+        const r = await fetch('/api/roadmap/', {
+            method:'POST',
+            headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
+            body: JSON.stringify({ goal, skills })
+        });
+        if (!r.ok) {
+            alert('Failed to generate roadmap. Please check your connection and try again.');
+            document.getElementById('roadmapLoader').style.display = 'none';
+            document.getElementById('roadmapBtn').disabled         = false;
+            return;
+        }
+        const d = await r.json();
+        document.getElementById('roadmapLoader').style.display = 'none';
+        document.getElementById('roadmapBtn').disabled         = false;
+
+        if (d.error) {
+            alert(d.error);
+            document.getElementById('roadmapPlaceholder').style.display = 'block';
+            return;
+        }
+
+        const phases = [d.day30 || [], d.day60 || [], d.day90 || []];
+        let html = '';
+        phases.forEach((milestones, i) => {
+            const c = roadmapColors[i % roadmapColors.length];
+            const items = Array.isArray(milestones) ? milestones : [String(milestones)];
+            html += `
+            <div class="roadmap-step">
+                <div class="roadmap-dot" style="background:${c.bg};color:${c.color};">${i+1}</div>
+                <div class="roadmap-step-content">
+                    <h5>${roadmapTitles[i]} <span style="color:#475569;font-size:0.75rem;font-weight:500;">${roadmapLabels[i]}</span></h5>
+                    <ul style="padding-left:1.2rem; margin:0.3rem 0; color:#94a3b8; font-size:0.82rem; line-height:1.7;">
+                        ${items.map(m => `<li>${m}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>`;
+        });
+
+        document.getElementById('roadmapContent').innerHTML = html;
+        document.getElementById('roadmapResult').style.display = 'block';
+    } catch(e) {
+        document.getElementById('roadmapLoader').style.display  = 'none';
+        document.getElementById('roadmapPlaceholder').style.display = 'block';
+        document.getElementById('roadmapBtn').disabled = false;
+        alert('Failed to generate roadmap: ' + e.message);
+    }
+}
+
+/* ═══════ CONFIG MODALS ═══════ */
+const CHALLENGE_LANG_DATA = {
+    python: {
+        codingDesc: 'Write a Python function to find the <strong style="color:#e2e8f0;">longest common prefix</strong> among an array of strings. Handle edge cases for empty arrays.',
+        codingMeta: '<i class="fas fa-clock"></i> ~20 min &nbsp;|&nbsp; <i class="fas fa-signal"></i> Medium',
+        codingLang: 'Python',
+        quizTopic: 'Python Basics',
+        quizDesc: 'Today\'s topic: <strong style="color:#e2e8f0;">Python Basics</strong>. Take a 5-question quiz to test your understanding of data structures, control flows, and syntax.',
+        quizMeta: '<i class="fas fa-clock"></i> ~5 min &nbsp;|&nbsp; <i class="fas fa-signal"></i> Beginner',
+        notesTopic: 'Python Advanced Features',
+        notesDesc: 'Generate and read study notes on <strong style="color:#e2e8f0;">Python Advanced Features</strong>. Spend 15 minutes reviewing decorators, generators, and OOP.',
+        notesMeta: '<i class="fas fa-clock"></i> ~15 min &nbsp;|&nbsp; <i class="fas fa-signal"></i> Intermediate'
+    },
+    sql: {
+        codingDesc: 'Write a SQL query to find the <strong style="color:#e2e8f0;">second highest salary</strong> from an Employee table. Handle cases where there is no second highest.',
+        codingMeta: '<i class="fas fa-clock"></i> ~15 min &nbsp;|&nbsp; <i class="fas fa-signal"></i> Medium',
+        codingLang: 'SQL',
+        quizTopic: 'SQL Joins',
+        quizDesc: 'Today\'s topic: <strong style="color:#e2e8f0;">SQL Joins</strong>. Take a 5-question quiz to test your understanding of INNER, LEFT, RIGHT, and FULL outer joins.',
+        quizMeta: '<i class="fas fa-clock"></i> ~5 min &nbsp;|&nbsp; <i class="fas fa-signal"></i> Intermediate',
+        notesTopic: 'SQL Performance Optimization',
+        notesDesc: 'Generate and read study notes on <strong style="color:#e2e8f0;">SQL Performance Optimization</strong>. Spend 15 minutes reviewing indexes and query profiling.',
+        notesMeta: '<i class="fas fa-clock"></i> ~15 min &nbsp;|&nbsp; <i class="fas fa-signal"></i> Advanced'
+    },
+    javascript: {
+        codingDesc: 'Write a JavaScript function to return a <strong style="color:#e2e8f0;">Promise</strong> that resolves after N milliseconds. Handle potential cancellation tokens.',
+        codingMeta: '<i class="fas fa-clock"></i> ~10 min &nbsp;|&nbsp; <i class="fas fa-signal"></i> Easy',
+        codingLang: 'JavaScript',
+        quizTopic: 'JavaScript Promises',
+        quizDesc: 'Today\'s topic: <strong style="color:#e2e8f0;">JavaScript Promises</strong>. Take a 5-question quiz to test your understanding of callbacks, async/await, and event loop.',
+        quizMeta: '<i class="fas fa-clock"></i> ~5 min &nbsp;|&nbsp; <i class="fas fa-signal"></i> Intermediate',
+        notesTopic: 'JavaScript Event Loop',
+        notesDesc: 'Generate and read study notes on <strong style="color:#e2e8f0;">JavaScript Event Loop</strong>. Spend 15 minutes reviewing task queue, microtasks, and execution context.',
+        notesMeta: '<i class="fas fa-clock"></i> ~15 min &nbsp;|&nbsp; <i class="fas fa-signal"></i> Advanced'
+    },
+    java: {
+        codingDesc: 'Write a Java class to implement a thread-safe <strong style="color:#e2e8f0;">Singleton pattern</strong> using double-checked locking.',
+        codingMeta: '<i class="fas fa-clock"></i> ~20 min &nbsp;|&nbsp; <i class="fas fa-signal"></i> Hard',
+        codingLang: 'Java',
+        quizTopic: 'Java OOP Concepts',
+        quizDesc: 'Today\'s topic: <strong style="color:#e2e8f0;">Java OOP Concepts</strong>. Take a 5-question quiz to test your understanding of polymorphism, inheritance, and abstract classes.',
+        quizMeta: '<i class="fas fa-clock"></i> ~5 min &nbsp;|&nbsp; <i class="fas fa-signal"></i> Intermediate',
+        notesTopic: 'Java Multithreading',
+        notesDesc: 'Generate and read study notes on <strong style="color:#e2e8f0;">Java Multithreading</strong>. Spend 15 minutes reviewing execution pools, runnable vs thread, and volatile variables.',
+        notesMeta: '<i class="fas fa-clock"></i> ~20 min &nbsp;|&nbsp; <i class="fas fa-signal"></i> Hard'
+    }
+};
+
+const VALID_TECH_TOPICS = [
+    'python', 'sql', 'javascript', 'js', 'java', 'c++', 'cpp', 'c#', 'csharp', 'c', 
+    'html', 'css', 'php', 'ruby', 'rust', 'go', 'golang', 'typescript', 'ts', 'react', 
+    'angular', 'vue', 'node', 'nodejs', 'express', 'django', 'flask', 'spring', 'laravel', 
+    'docker', 'kubernetes', 'k8s', 'aws', 'gcp', 'azure', 'git', 'github', 'devops', 
+    'system design', 'data structures', 'dsa', 'algorithms', 'database', 'mongodb', 'mysql', 
+    'postgresql', 'redis'
+];
+
+function changeChallengeLanguage() {
+    const select = document.getElementById('challengeLangSelect');
+    const input = document.getElementById('challengeCustomInput');
+    const errorBox = document.getElementById('challengeErrorBox');
+    const cardsGrid = document.getElementById('challengeCardsGrid');
+
+    if (select.value === 'other') {
+        input.style.display = 'block';
+        input.focus();
+        submitCustomChallengeLanguage(); // Trigger validation for whatever is typed
+    } else {
+        input.style.display = 'none';
+        errorBox.style.display = 'none';
+        cardsGrid.style.display = 'grid';
+
+        const data = CHALLENGE_LANG_DATA[select.value];
+        if (!data) return;
+
+        // Update Coding Challenge Card
+        document.getElementById('chCodingDesc').innerHTML = data.codingDesc;
+        document.getElementById('chCodingMeta').innerHTML = data.codingMeta;
+        document.getElementById('chCodingBtn').setAttribute('onclick', `openCodingModal('${data.codingLang}')`);
+
+        // Update Quiz Card
+        document.getElementById('chQuizDesc').innerHTML = data.quizDesc;
+        document.getElementById('chQuizMeta').innerHTML = data.quizMeta;
+        document.getElementById('chQuizBtn').setAttribute('onclick', `quickQuiz('${data.quizTopic}')`);
+
+        // Update Notes Card
+        document.getElementById('chNotesDesc').innerHTML = data.notesDesc;
+        document.getElementById('chNotesMeta').innerHTML = data.notesMeta;
+        document.getElementById('chNotesBtn').setAttribute('onclick', `quickNotes('${data.notesTopic}')`);
+    }
+}
+
+function submitCustomChallengeLanguage() {
+    const input = document.getElementById('challengeCustomInput');
+    const errorBox = document.getElementById('challengeErrorBox');
+    const errorText = document.getElementById('challengeErrorText');
+    const cardsGrid = document.getElementById('challengeCardsGrid');
+    const typed = input.value.trim();
+
+    if (!typed) {
+        // Show validation prompt, hide cards
+        errorText.textContent = "Please type a programming language or technical topic (e.g. C++, HTML, PHP).";
+        errorBox.style.display = 'block';
+        cardsGrid.style.display = 'none';
+        return;
+    }
+
+    const clean = typed.toLowerCase();
+    const isValid = VALID_TECH_TOPICS.some(t => t === clean || clean.includes(t) || t.includes(clean));
+
+    if (!isValid) {
+        errorText.textContent = `Invalid topic: "${typed}" is not a recognized programming language or technology path. Please enter a valid technical topic.`;
+        errorBox.style.display = 'block';
+        cardsGrid.style.display = 'none';
+    } else {
+        errorBox.style.display = 'none';
+        cardsGrid.style.display = 'grid';
+
+        // Capitalize for display
+        const displayTopic = typed.charAt(0).toUpperCase() + typed.slice(1);
+
+        // Dynamically update cards for the custom language
+        document.getElementById('chCodingDesc').innerHTML = `Write a ${displayTopic} function or query to solve a common coding problem, such as utility helpers, data structures, or algorithms.`;
+        document.getElementById('chCodingMeta').innerHTML = `<i class="fas fa-clock"></i> ~15 min &nbsp;|&nbsp; <i class="fas fa-signal"></i> Medium`;
+        document.getElementById('chCodingBtn').setAttribute('onclick', `openCodingModal('${displayTopic}')`);
+
+        document.getElementById('chQuizDesc').innerHTML = `Today's topic: <strong style="color:#e2e8f0;">${displayTopic} Basics</strong>. Take a 5-question quiz to test your understanding of core concepts.`;
+        document.getElementById('chQuizMeta').innerHTML = `<i class="fas fa-clock"></i> ~5 min &nbsp;|&nbsp; <i class="fas fa-signal"></i> Intermediate`;
+        document.getElementById('chQuizBtn').setAttribute('onclick', `quickQuiz('${displayTopic} Basics')`);
+
+        document.getElementById('chNotesDesc').innerHTML = `Generate and read study notes on <strong style="color:#e2e8f0;">${displayTopic} Advanced Concepts</strong>. Spend 15 minutes reviewing best practices.`;
+        document.getElementById('chNotesMeta').innerHTML = `<i class="fas fa-clock"></i> ~15 min &nbsp;|&nbsp; <i class="fas fa-signal"></i> Easy`;
+        document.getElementById('chNotesBtn').setAttribute('onclick', `quickNotes('${displayTopic} Advanced Concepts')`);
+    }
+}
+
+function openCodingModal(defaultLang = 'Python') {
+    document.getElementById('codingConfigModal').style.display = 'flex';
+    const select = document.getElementById('codingLangSelect');
+    if (select) {
+        select.value = defaultLang;
+        toggleCustomLangInput();
+    }
+}
+function closeCodingModal() {
+    document.getElementById('codingConfigModal').style.display = 'none';
+    document.getElementById('customLangInput').style.display = 'none';
+    document.getElementById('codingLangSelect').value = 'Python';
+}
+function toggleCustomLangInput() {
+    const select = document.getElementById('codingLangSelect');
+    const input = document.getElementById('customLangInput');
+    if (select.value === 'Other') {
+        input.style.display = 'block';
+        input.focus();
+    } else {
+        input.style.display = 'none';
+    }
+}
+async function launchCodingChallenge() {
+    let lang = document.getElementById('codingLangSelect').value;
+    if (lang === 'Other') {
+        lang = document.getElementById('customLangInput').value.trim();
+    }
+    if (!lang) {
+        alert('Please enter or select a language!');
+        return;
+    }
+
+    const loader = document.getElementById('codingLoader');
+    const launchBtn = document.getElementById('codingLaunchBtn');
+    
+    loader.style.display = 'block';
+    launchBtn.disabled = true;
+    
+    try {
+        const resp = await fetch("/coding/generate-single/", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+            body: JSON.stringify({ language: lang })
+        });
+        const data = await resp.json();
+        if (data.status === 'success') {
+            window.location.href = `/coding/editor/${data.problem_id}/`;
+        } else {
+            alert('Failed to generate challenge. Please try again.');
+            loader.style.display = 'none';
+            launchBtn.disabled = false;
+        }
+    } catch (e) {
+        alert('An error occurred. Please try again.');
+        loader.style.display = 'none';
+        launchBtn.disabled = false;
+    }
+}
+
+function openInterviewModal() {
+    document.getElementById('interviewConfigModal').style.display = 'flex';
+}
+function closeInterviewModal() {
+    document.getElementById('interviewConfigModal').style.display = 'none';
+}
+function launchInterviewChallenge() {
+    const lang = document.getElementById('interviewLangSelect').value;
+    const diff = document.getElementById('interviewDiffSelect').value;
+    
+    document.getElementById('hiddenLangInput').value = lang;
+    document.getElementById('hiddenDiffInput').value = diff;
+    
+    document.getElementById('interviewLoader').style.display = 'block';
+    document.getElementById('interviewLaunchBtn').disabled = true;
+    
+    document.getElementById('hiddenInterviewForm').submit();
+}
+</script>
+{% endblock %}

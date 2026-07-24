@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AI Resume Studio - Dashboard{% endblock %}
+
+{% block extra_head %}
+<style>
+    .studio-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    .studio-header h1 {
+        font-size: 3rem;
+        background: linear-gradient(to right, #a855f7, #ec4899);
+        -webkit-background-clip: text;
+        color: transparent;
+        margin-bottom: 1rem;
+    }
+    .action-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-bottom: 4rem;
+    }
+    .studio-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.4s ease;
+        text-decoration: none;
+        color: inherit;
+        backdrop-filter: blur(10px);
+    }
+    .studio-card:hover {
+        transform: translateY(-10px);
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(168, 85, 247, 0.5);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+    }
+    .studio-card i {
+        font-size: 3rem;
+        margin-bottom: 1.5rem;
+        color: #a855f7;
+    }
+    .studio-card h3 {
+        margin-bottom: 0.5rem;
+        font-size: 1.4rem;
+    }
+    .studio-card p {
+        color: #94a3b8;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="studio-header">
+    <h1>AI Resume Studio</h1>
+    <p class="lead">Build, analyze, and optimize your resume using advanced AI tools.</p>
+</div>
+
+<div class="action-cards">
+    <a href="{% url 'resume_studio:template_selection' %}" class="studio-card">
+        <i class="fas fa-layer-group"></i>
+        <h3>Templates Library</h3>
+        <p>Explore beautiful Resume and CV templates to start with.</p>
+    </a>
+    
+    <a href="{% url 'resume_studio:resume_builder' %}" class="studio-card">
+        <i class="fas fa-pen-nib"></i>
+        <h3>Resume Builder</h3>
+        <p>Canva-like drag and drop builder for perfect alignment.</p>
+    </a>
+
+    <a href="{% url 'resume_studio:ats_checker' %}" class="studio-card">
+        <i class="fas fa-robot"></i>
+        <h3>ATS Checker</h3>
+        <p>Scan your resume and find missing keywords.</p>
+    </a>
+
+    <a href="{% url 'resume_studio:cover_letter_generator' %}" class="studio-card">
+        <i class="fas fa-envelope-open-text"></i>
+        <h3>Cover Letter AI</h3>
+        <p>Generate a professional, tailored Cover Letter for any job description.</p>
+    </a>
+    
+    <a href="{% url 'resume_studio:ai_improver' %}" class="studio-card">
+        <i class="fas fa-wand-magic-sparkles"></i>
+        <h3>AI Improver</h3>
+        <p>Let AI rewrite your experience and summary professionally.</p>
+    </a>
+</div>
+
+
+{% endblock %}

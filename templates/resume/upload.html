@@ -1,0 +1,709 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Resume Analysis - AI Interview Pro{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Override: upload page should be centered, compact */
+    .main-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 1.5rem 2rem !important;
+    }
+
+    /* ── PAGE HEADER ── */
+    .upload-header {
+        text-align: center;
+        margin-bottom: 1.5rem;
+        width: 100%;
+    }
+
+    .upload-eyebrow {
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        color: #fb7185;
+        margin-bottom: 0.4rem;
+    }
+
+    .upload-title {
+        font-size: 2rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, #fff 30%, #a5b4fc 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0 0 0.4rem;
+        letter-spacing: -0.5px;
+    }
+
+    .upload-desc {
+        color: #64748b;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    /* ── TWO COLUMN LAYOUT ── */
+    .upload-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        width: 100%;
+        max-width: 900px;
+    }
+
+    /* ── UPLOAD CARD ── */
+    .upload-card {
+        background: rgba(10,15,30,0.7);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 20px;
+        padding: 1.75rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .upload-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, #8b5cf6, #06b6d4);
+    }
+
+    .card-heading {
+        font-size: 0.9rem;
+        font-weight: 800;
+        color: #e2e8f0;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .card-heading i { color: #8b5cf6; }
+
+    /* Upload Zone */
+    .upload-zone {
+        border: 2px dashed rgba(139,92,246,0.25);
+        border-radius: 16px;
+        padding: 2.5rem 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: rgba(2,6,23,0.4);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.6rem;
+        text-align: center;
+        position: relative;
+    }
+
+    .upload-zone:hover, .upload-zone.dragover {
+        border-color: #8b5cf6;
+        background: rgba(139,92,246,0.05);
+        box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
+        transform: translateY(-2px);
+    }
+
+    .upload-zone.dragover { border-style: solid; transform: scale(1.01); }
+
+    .upload-zone-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(139,92,246,0.1);
+        border: 1px solid rgba(139,92,246,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        color: #a78bfa;
+        transition: all 0.3s;
+    }
+
+    .upload-zone:hover .upload-zone-icon {
+        background: rgba(139,92,246,0.2);
+        transform: scale(1.08) translateY(-3px);
+        box-shadow: 0 8px 20px rgba(139,92,246,0.2);
+    }
+
+    .zone-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #e2e8f0;
+        margin: 0;
+    }
+
+    .zone-hint {
+        font-size: 0.78rem;
+        color: #475569;
+        margin: 0;
+    }
+
+    /* File selected card */
+    .file-chip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(139,92,246,0.08);
+        border: 1px solid rgba(139,92,246,0.2);
+        border-radius: 10px;
+        padding: 0.7rem 1rem;
+        margin-top: 0.75rem;
+        animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+        from { opacity:0; transform:translateY(6px); }
+        to { opacity:1; transform:translateY(0); }
+    }
+
+    .file-chip-info {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .file-chip-icon { font-size: 1.2rem; }
+    .file-chip-name { font-size: 0.85rem; font-weight: 700; color: #e2e8f0; }
+    .file-chip-size { font-size: 0.75rem; color: #64748b; }
+
+    .file-clear-btn {
+        background: none;
+        border: none;
+        color: #ef4444;
+        cursor: pointer;
+        font-size: 0.9rem;
+        padding: 0.2rem;
+        transition: transform 0.2s;
+    }
+
+    .file-clear-btn:hover { transform: scale(1.2); }
+
+    /* Analyze button */
+    .btn-analyze {
+        width: 100%;
+        padding: 0.9rem;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        border: none;
+        color: #fff;
+        font-weight: 800;
+        font-size: 0.97rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        box-shadow: 0 6px 20px rgba(139,92,246,0.3);
+    }
+
+    .btn-analyze:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    .btn-analyze:not(:disabled):hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(139,92,246,0.5);
+    }
+
+    /* Divider */
+    .or-divider {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 1.25rem 0;
+        color: rgba(255,255,255,0.1);
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    .or-divider::before, .or-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: rgba(255,255,255,0.06);
+    }
+
+    /* Build with AI link */
+    .build-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        padding: 0.78rem;
+        border-radius: 14px;
+        border: 1px solid rgba(6,182,212,0.3);
+        background: rgba(6,182,212,0.05);
+        color: #22d3ee !important;
+        text-decoration: none !important;
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: all 0.25s;
+    }
+
+    .build-link:hover {
+        background: rgba(6,182,212,0.12);
+        border-color: #22d3ee;
+        transform: translateY(-2px);
+    }
+
+    /* ── RIGHT: AI PREVIEW CARD ── */
+    .ai-preview-card {
+        background: rgba(10,15,30,0.7);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 20px;
+        padding: 1.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ai-preview-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, #06b6d4, #8b5cf6);
+    }
+
+    /* Idle state */
+    .ai-idle {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        text-align: center;
+        padding: 2rem 1rem;
+    }
+
+    .ai-idle-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: rgba(6,182,212,0.08);
+        border: 1px solid rgba(6,182,212,0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        color: #22d3ee;
+        margin: 0 auto 1rem;
+    }
+
+    .ai-idle h4 {
+        color: #e2e8f0;
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin-bottom: 0.35rem;
+    }
+
+    .ai-idle p {
+        color: #475569;
+        font-size: 0.82rem;
+        line-height: 1.5;
+        max-width: 220px;
+    }
+
+    /* Feature checklist */
+    .feature-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        margin-top: 1.5rem;
+    }
+
+    .feature-row {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.6rem 0.8rem;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 10px;
+        font-size: 0.83rem;
+        color: #94a3b8;
+        font-weight: 500;
+    }
+
+    .feature-row i {
+        width: 22px;
+        text-align: center;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+
+    /* Processing animation */
+    .ai-processing {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        padding: 2rem 1rem;
+        text-align: center;
+    }
+
+    .process-ring {
+        width: 64px;
+        height: 64px;
+        border: 3px solid rgba(139,92,246,0.15);
+        border-top-color: #8b5cf6;
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+        margin: 0 auto 1rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .process-steps {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        margin-top: 1rem;
+        width: 100%;
+    }
+
+    .process-step {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.8rem;
+        color: #64748b;
+        padding: 0.4rem 0.6rem;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+
+    .process-step.done { color: #10b981; background: rgba(16,185,129,0.05); }
+    .process-step.active { color: #a78bfa; background: rgba(139,92,246,0.05); }
+    .process-step i { width: 14px; font-size: 0.75rem; }
+
+    /* Detected info preview */
+    .detected-info {
+        display: none;
+    }
+
+    .detected-name {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 0.2rem;
+    }
+
+    .detected-role {
+        font-size: 0.85rem;
+        color: #8b5cf6;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .detected-skills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-bottom: 1rem;
+    }
+
+    .skill-tag {
+        background: rgba(139,92,246,0.1);
+        border: 1px solid rgba(139,92,246,0.2);
+        border-radius: 20px;
+        padding: 0.25rem 0.7rem;
+        font-size: 0.74rem;
+        font-weight: 700;
+        color: #c4b5fd;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .upload-layout { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="upload-header">
+    <div class="upload-eyebrow"><i class="fas fa-sparkles"></i> AI Resume Engine</div>
+    <h1 class="upload-title">Analyze Your Resume</h1>
+    <p class="upload-desc">Upload once — get ATS score, skill detection, formatting audit & a custom mock interview</p>
+</div>
+
+<div class="upload-layout">
+
+    <!-- ── LEFT: UPLOAD CARD ── -->
+    <div class="upload-card">
+        <div class="card-heading">
+            <i class="fas fa-cloud-arrow-up"></i>
+            Upload Resume
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" id="uploadForm">
+            {% csrf_token %}
+            <input type="file" name="resume" id="fileInput" accept=".pdf,.docx" hidden>
+
+            <div class="upload-zone" id="dropZone">
+                <div class="upload-zone-icon" id="zoneIcon">
+                    <i class="fas fa-cloud-arrow-up"></i>
+                </div>
+                <p class="zone-title" id="zoneTitle">Drop your resume here</p>
+                <p class="zone-hint" id="zoneHint">PDF or DOCX &nbsp;·&nbsp; Max 5MB</p>
+            </div>
+
+            <!-- File chip (hidden until file selected) -->
+            <div class="file-chip" id="fileChip" style="display:none;">
+                <div class="file-chip-info">
+                    <i class="fas fa-file-pdf file-chip-icon" id="fileChipIcon" style="color:#e11d48;"></i>
+                    <div>
+                        <div class="file-chip-name" id="fileChipName">resume.pdf</div>
+                        <div class="file-chip-size" id="fileChipSize">0 KB</div>
+                    </div>
+                </div>
+                <button type="button" class="file-clear-btn" id="clearBtn">
+                    <i class="fas fa-times-circle"></i>
+                </button>
+            </div>
+
+            <button type="submit" class="btn-analyze" id="analyzeBtn" disabled>
+                <i class="fas fa-wand-magic-sparkles"></i> Begin AI Analysis
+            </button>
+        </form>
+
+        <div class="or-divider"><span>or</span></div>
+
+        <a href="{% url 'resume:resume_builder' %}" class="build-link">
+            <i class="fas fa-pen-to-square"></i>
+            Build Resume with AI Builder
+        </a>
+    </div>
+
+    <!-- ── RIGHT: AI PREVIEW CARD ── -->
+    <div class="ai-preview-card" id="aiPreviewCard">
+        <div class="card-heading">
+            <i class="fas fa-brain" style="color:#06b6d4;"></i>
+            AI Detection Preview
+        </div>
+
+        <!-- Idle state -->
+        <div class="ai-idle" id="aiIdle">
+            <div class="ai-idle-icon">
+                <i class="fas fa-file-circle-question"></i>
+            </div>
+            <h4>Upload a resume to begin</h4>
+            <p>Our AI will instantly detect your skills, experience level, and give you a preview before analysis.</p>
+        </div>
+
+        <!-- Feature list (idle) -->
+        <div class="feature-list" id="featureList">
+            <div class="feature-row">
+                <i class="fas fa-check-circle" style="color:#10b981;"></i>
+                ATS compatibility score (0–100)
+            </div>
+            <div class="feature-row">
+                <i class="fas fa-check-circle" style="color:#10b981;"></i>
+                Auto-detect skills & technologies
+            </div>
+            <div class="feature-row">
+                <i class="fas fa-check-circle" style="color:#10b981;"></i>
+                Section audit (Education, Exp, Projects…)
+            </div>
+            <div class="feature-row">
+                <i class="fas fa-check-circle" style="color:#10b981;"></i>
+                Custom mock interview from your resume
+            </div>
+            <div class="feature-row">
+                <i class="fas fa-check-circle" style="color:#10b981;"></i>
+                AI recommendations to improve score
+            </div>
+        </div>
+
+        <!-- Processing animation -->
+        <div class="ai-processing" id="aiProcessing">
+            <div class="process-ring"></div>
+            <p style="color:#a78bfa; font-weight:700; font-size:0.9rem; margin-bottom:0.25rem;">AI is reading your resume…</p>
+            <p style="color:#475569; font-size:0.8rem;">This takes a few seconds</p>
+            <div class="process-steps" id="processSteps">
+                <div class="process-step active" id="step1">
+                    <i class="fas fa-circle-notch fa-spin"></i> Extracting text content
+                </div>
+                <div class="process-step" id="step2">
+                    <i class="fas fa-clock"></i> Detecting skills & experience
+                </div>
+                <div class="process-step" id="step3">
+                    <i class="fas fa-clock"></i> Calculating ATS score
+                </div>
+                <div class="process-step" id="step4">
+                    <i class="fas fa-clock"></i> Generating AI recommendations
+                </div>
+            </div>
+        </div>
+
+        <!-- File detected preview (shown on file select) -->
+        <div class="detected-info" id="detectedInfo">
+            <p style="font-size:0.72rem; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:1px; margin-bottom:0.75rem;">
+                <i class="fas fa-check-circle" style="color:#10b981;"></i> File Ready for Analysis
+            </p>
+            <div style="background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.12); border-radius:12px; padding:1rem 1.1rem; margin-bottom:1rem;">
+                <div class="detected-name" id="detectedFileName">resume.pdf</div>
+                <div style="display:flex; gap:1rem; margin-top:0.4rem; flex-wrap:wrap;">
+                    <span style="font-size:0.78rem; color:#64748b;"><i class="fas fa-weight-hanging" style="margin-right:0.25rem;"></i><span id="detectedFileSize">0 KB</span></span>
+                    <span style="font-size:0.78rem; color:#64748b;"><i class="fas fa-file-alt" style="margin-right:0.25rem;"></i><span id="detectedFileType">PDF</span></span>
+                </div>
+            </div>
+            <p style="color:#94a3b8; font-size:0.83rem; margin-bottom:0.6rem; font-weight:600;">
+                <i class="fas fa-robot" style="color:#8b5cf6; margin-right:0.3rem;"></i>
+                Click <strong>"Begin AI Analysis"</strong> to get your full report:
+            </p>
+            <div style="display:flex; flex-direction:column; gap:0.4rem;">
+                <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.8rem; color:#64748b;">
+                    <i class="fas fa-arrow-right" style="color:#8b5cf6; font-size:0.7rem;"></i> ATS Score & Skills detected
+                </div>
+                <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.8rem; color:#64748b;">
+                    <i class="fas fa-arrow-right" style="color:#06b6d4; font-size:0.7rem;"></i> Formatting & impact audit
+                </div>
+                <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.8rem; color:#64748b;">
+                    <i class="fas fa-arrow-right" style="color:#10b981; font-size:0.7rem;"></i> Personalized mock interview
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div><!-- /upload-layout -->
+
+<script>
+    const dropZone    = document.getElementById('dropZone');
+    const fileInput   = document.getElementById('fileInput');
+    const fileChip    = document.getElementById('fileChip');
+    const fileChipName = document.getElementById('fileChipName');
+    const fileChipSize = document.getElementById('fileChipSize');
+    const fileChipIcon = document.getElementById('fileChipIcon');
+    const clearBtn    = document.getElementById('clearBtn');
+    const analyzeBtn  = document.getElementById('analyzeBtn');
+    const zoneIcon    = document.getElementById('zoneIcon');
+    const zoneTitle   = document.getElementById('zoneTitle');
+    const zoneHint    = document.getElementById('zoneHint');
+    const aiIdle      = document.getElementById('aiIdle');
+    const featureList = document.getElementById('featureList');
+    const detectedInfo = document.getElementById('detectedInfo');
+    const aiProcessing = document.getElementById('aiProcessing');
+
+    // Step animations
+    let stepTimer;
+
+    function formatBytes(b) {
+        if (b < 1024) return b + ' B';
+        if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
+        return (b/(1024*1024)).toFixed(1) + ' MB';
+    }
+
+    function handleFile(file) {
+        if (!file) return;
+        const isPDF = file.name.endsWith('.pdf');
+        const isDOCX = file.name.endsWith('.docx');
+        if (!isPDF && !isDOCX) { alert('Please upload a PDF or DOCX file.'); return; }
+
+        // Update zone
+        fileChipName.textContent = file.name;
+        fileChipSize.textContent = formatBytes(file.size);
+        fileChipIcon.style.color = isPDF ? '#e11d48' : '#2563eb';
+        fileChipIcon.className = isPDF ? 'fas fa-file-pdf file-chip-icon' : 'fas fa-file-word file-chip-icon';
+        fileChip.style.display = 'flex';
+
+        zoneIcon.querySelector('i').className = 'fas fa-check-circle';
+        zoneIcon.style.background = 'rgba(16,185,129,0.12)';
+        zoneIcon.style.borderColor = 'rgba(16,185,129,0.3)';
+        zoneIcon.querySelector('i').style.color = '#10b981';
+        zoneTitle.textContent = 'File selected';
+        zoneHint.textContent = 'Click "Begin AI Analysis" to continue';
+        zoneTitle.style.color = '#10b981';
+
+        analyzeBtn.disabled = false;
+
+        // Show detected info in right panel
+        aiIdle.style.display = 'none';
+        featureList.style.display = 'none';
+        detectedInfo.style.display = 'block';
+        document.getElementById('detectedFileName').textContent = file.name;
+        document.getElementById('detectedFileSize').textContent = formatBytes(file.size);
+        document.getElementById('detectedFileType').textContent = isPDF ? 'PDF Document' : 'Word Document';
+    }
+
+    function resetZone() {
+        fileInput.value = '';
+        fileChip.style.display = 'none';
+        zoneIcon.querySelector('i').className = 'fas fa-cloud-arrow-up';
+        zoneIcon.style.background = '';
+        zoneIcon.style.borderColor = '';
+        zoneIcon.querySelector('i').style.color = '#a78bfa';
+        zoneTitle.textContent = 'Drop your resume here';
+        zoneTitle.style.color = '#e2e8f0';
+        zoneHint.textContent = 'PDF or DOCX · Max 5MB';
+        analyzeBtn.disabled = true;
+        aiIdle.style.display = 'flex';
+        featureList.style.display = 'flex';
+        detectedInfo.style.display = 'none';
+        aiProcessing.style.display = 'none';
+    }
+
+    dropZone.onclick = (e) => {
+        if (!e.target.closest('#clearBtn')) fileInput.click();
+    };
+
+    fileInput.onchange = (e) => handleFile(e.target.files[0]);
+    clearBtn.onclick = (e) => { e.stopPropagation(); resetZone(); };
+
+    // Drag & Drop
+    dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('dragover'); };
+    dropZone.ondragleave = () => dropZone.classList.remove('dragover');
+    dropZone.ondrop = (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file) { fileInput.files = e.dataTransfer.files; handleFile(file); }
+    };
+
+    // On form submit — show processing animation
+    document.getElementById('uploadForm').addEventListener('submit', function() {
+        detectedInfo.style.display = 'none';
+        aiProcessing.style.display = 'flex';
+        analyzeBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Analysing…';
+        analyzeBtn.disabled = true;
+
+        // Animate steps
+        const steps = ['step1','step2','step3','step4'];
+        let idx = 0;
+        stepTimer = setInterval(() => {
+            if (idx < steps.length) {
+                if (idx > 0) {
+                    const prev = document.getElementById(steps[idx-1]);
+                    prev.classList.remove('active');
+                    prev.classList.add('done');
+                    prev.querySelector('i').className = 'fas fa-check-circle';
+                }
+                const curr = document.getElementById(steps[idx]);
+                curr.classList.add('active');
+                curr.querySelector('i').className = 'fas fa-circle-notch fa-spin';
+                idx++;
+            } else {
+                clearInterval(stepTimer);
+            }
+        }, 1200);
+    });
+</script>
+{% endblock %}

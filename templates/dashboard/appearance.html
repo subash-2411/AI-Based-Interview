@@ -1,0 +1,471 @@
+{% extends 'base.html' %}
+
+{% block title %}Appearance Settings - AI Interview Pro{% endblock %}
+
+{% block extra_head %}
+<style>
+    .appearance-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .appearance-header {
+        margin-bottom: 3rem;
+    }
+
+    .theme-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .theme-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .theme-card {
+        border-radius: 24px;
+        padding: 1.5rem;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        position: relative;
+        transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .theme-card.active-theme {
+        border: 2px solid var(--primary) !important;
+        box-shadow: 0 0 20px var(--primary-glow) !important;
+    }
+
+    .preview-badge {
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+        background: var(--primary);
+        color: #ffffff;
+        padding: 0.3rem 0.8rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Mockup Dashboard Container */
+    .mockup-container {
+        height: 180px;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        position: relative;
+    }
+
+    /* Mini Sidebar */
+    .mockup-sidebar {
+        width: 45px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px 6px;
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .mockup-logo {
+        width: 14px;
+        height: 14px;
+        border-radius: 4px;
+        margin-bottom: 12px;
+    }
+
+    .mockup-nav-item {
+        width: 100%;
+        height: 8px;
+        border-radius: 4px;
+    }
+
+    /* Mini Content Body */
+    .mockup-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .mockup-nav {
+        height: 16px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+    }
+
+    .mockup-nav-btn {
+        width: 25px;
+        height: 8px;
+        border-radius: 4px;
+    }
+
+    .mockup-dashboard {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 10px;
+        flex: 1;
+    }
+
+    .mockup-left {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .mockup-hero {
+        height: 40px;
+        border-radius: 8px;
+    }
+
+    .mockup-card-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .mockup-mini-card {
+        height: 35px;
+        border-radius: 8px;
+    }
+
+    .mockup-right {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .mockup-panel {
+        flex: 1;
+        border-radius: 8px;
+    }
+
+    /* ---------------- THEME MOCKUPS GRAPHICS ---------------- */
+    
+    /* Default Theme Mockup */
+    .theme-default .mockup-container { background: #00020a; }
+    .theme-default .mockup-sidebar { background: #020617; }
+    .theme-default .mockup-logo { background: #8b5cf6; }
+    .theme-default .mockup-nav-item { background: rgba(255,255,255,0.05); }
+    .theme-default .mockup-nav-item.active { background: rgba(139,92,246,0.15); }
+    .theme-default .mockup-nav { background: rgba(2,6,23,0.8); }
+    .theme-default .mockup-nav-btn { background: rgba(255,255,255,0.1); }
+    .theme-default .mockup-hero { background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(6,182,212,0.05)); border: 1px solid rgba(139,92,246,0.2); }
+    .theme-default .mockup-mini-card { background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.05); }
+    .theme-default .mockup-panel { background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.05); }
+
+    /* Corporate Theme Mockup */
+    .theme-corporate .mockup-container { background: #f3f4f6; border-color: #d1d5db; }
+    .theme-corporate .mockup-sidebar { background: #ffffff; border-color: #e5e7eb; }
+    .theme-corporate .mockup-logo { background: #0a66c2; }
+    .theme-corporate .mockup-nav-item { background: #e5e7eb; }
+    .theme-corporate .mockup-nav-item.active { background: rgba(10,102,194,0.1); }
+    .theme-corporate .mockup-nav { background: #ffffff; border-bottom: 1px solid #e5e7eb; }
+    .theme-corporate .mockup-nav-btn { background: #d1d5db; }
+    .theme-corporate .mockup-hero { background: rgba(10,102,194,0.05); border: 1px solid rgba(10,102,194,0.15); }
+    .theme-corporate .mockup-mini-card { background: #ffffff; border: 1px solid #e5e7eb; }
+    .theme-corporate .mockup-panel { background: #ffffff; border: 1px solid #e5e7eb; }
+
+    /* Executive Theme Mockup */
+    .theme-executive .mockup-container { background: #090d16; }
+    .theme-executive .mockup-sidebar { background: #0f172a; border-color: rgba(255,255,255,0.05); }
+    .theme-executive .mockup-logo { background: #3b82f6; }
+    .theme-executive .mockup-nav-item { background: rgba(255,255,255,0.05); }
+    .theme-executive .mockup-nav-item.active { background: rgba(59,130,246,0.15); }
+    .theme-executive .mockup-nav { background: #0f172a; }
+    .theme-executive .mockup-nav-btn { background: rgba(255,255,255,0.1); }
+    .theme-executive .mockup-hero { background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.15); }
+    .theme-executive .mockup-mini-card { background: #1e293b; border: 1px solid rgba(255,255,255,0.05); }
+    .theme-executive .mockup-panel { background: #1e293b; border: 1px solid rgba(255,255,255,0.05); }
+
+    /* Neural AI Theme Mockup */
+    .theme-neural .mockup-container { background: #0b0f19; }
+    .theme-neural .mockup-sidebar { background: #0f172a; border-color: rgba(99,102,241,0.1); }
+    .theme-neural .mockup-logo { background: #6366f1; }
+    .theme-neural .mockup-nav-item { background: rgba(255,255,255,0.05); }
+    .theme-neural .mockup-nav-item.active { background: rgba(99,102,241,0.15); }
+    .theme-neural .mockup-nav { background: rgba(15,23,42,0.9); border-bottom: 1px solid rgba(99,102,241,0.1); }
+    .theme-neural .mockup-nav-btn { background: rgba(255,255,255,0.1); }
+    .theme-neural .mockup-hero { background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(6,182,212,0.05)); border: 1px solid rgba(99,102,241,0.2); }
+    .theme-neural .mockup-mini-card { background: rgba(17,24,39,0.7); border: 1px solid rgba(99,102,241,0.15); }
+    .theme-neural .mockup-panel { background: rgba(17,24,39,0.7); border: 1px solid rgba(99,102,241,0.15); }
+
+    .toast-notification {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        background: #10b981;
+        color: #ffffff;
+        padding: 1rem 2rem;
+        border-radius: 16px;
+        font-weight: 700;
+        box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transform: translateY(150%);
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        z-index: 9999;
+    }
+
+    .toast-notification.show {
+        transform: translateY(0);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="appearance-container">
+    <div class="appearance-header">
+        <h1 style="font-size: 3rem; font-weight: 900; margin-bottom: 0.5rem;"><i class="fas fa-palette"></i> Appearance Settings</h1>
+        <p style="color: var(--text-secondary); font-size: 1.15rem;">Customize your dashboard and overall ecosystem interface theme. Changes apply globally across the platform.</p>
+    </div>
+
+    <div class="theme-grid">
+        <!-- 1. Default Theme -->
+        <div class="theme-card glass-card theme-default" id="card-default" onclick="previewTheme('default')">
+            <span class="preview-badge" id="badge-default" style="display: none;">Current</span>
+            <h3 style="font-size: 1.35rem; font-weight: 800;"><i class="fas fa-sparkles"></i> Default Theme</h3>
+            
+            <div class="mockup-container">
+                <div class="mockup-sidebar">
+                    <div class="mockup-logo"></div>
+                    <div class="mockup-nav-item active"></div>
+                    <div class="mockup-nav-item"></div>
+                    <div class="mockup-nav-item"></div>
+                </div>
+                <div class="mockup-body">
+                    <div class="mockup-nav">
+                        <div class="mockup-nav-btn"></div>
+                        <div class="mockup-nav-btn"></div>
+                    </div>
+                    <div class="mockup-dashboard">
+                        <div class="mockup-left">
+                            <div class="mockup-hero"></div>
+                            <div class="mockup-card-row">
+                                <div class="mockup-mini-card"></div>
+                                <div class="mockup-mini-card"></div>
+                            </div>
+                        </div>
+                        <div class="mockup-right">
+                            <div class="mockup-panel"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin: 0; min-height: 45px;">The standard AI Interview Pro experience. Dark glassmorphism elements with electric purple and cyan accents.</p>
+            <button class="btn-primary" style="width: 100%; border-radius: 14px; padding: 0.9rem;" onclick="applyTheme(event, 'default')">Apply Default</button>
+        </div>
+
+        <!-- 2. Professional Corporate Theme -->
+        <div class="theme-card glass-card theme-corporate" id="card-corporate" onclick="previewTheme('corporate')">
+            <span class="preview-badge" id="badge-corporate" style="display: none;">Current</span>
+            <h3 style="font-size: 1.35rem; font-weight: 800;"><i class="fas fa-briefcase"></i> Professional Corporate</h3>
+            
+            <div class="mockup-container">
+                <div class="mockup-sidebar">
+                    <div class="mockup-logo"></div>
+                    <div class="mockup-nav-item active"></div>
+                    <div class="mockup-nav-item"></div>
+                    <div class="mockup-nav-item"></div>
+                </div>
+                <div class="mockup-body">
+                    <div class="mockup-nav">
+                        <div class="mockup-nav-btn"></div>
+                        <div class="mockup-nav-btn"></div>
+                    </div>
+                    <div class="mockup-dashboard">
+                        <div class="mockup-left">
+                            <div class="mockup-hero"></div>
+                            <div class="mockup-card-row">
+                                <div class="mockup-mini-card"></div>
+                                <div class="mockup-mini-card"></div>
+                            </div>
+                        </div>
+                        <div class="mockup-right">
+                            <div class="mockup-panel"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin: 0; min-height: 45px;">Inspired by LinkedIn, Microsoft and Atlassian. Clean light theme with formal corporate blue styles.</p>
+            <button class="btn-primary" style="width: 100%; border-radius: 14px; padding: 0.9rem;" onclick="applyTheme(event, 'corporate')">Apply Corporate</button>
+        </div>
+
+        <!-- 3. Executive Boardroom Theme -->
+        <div class="theme-card glass-card theme-executive" id="card-executive" onclick="previewTheme('executive')">
+            <span class="preview-badge" id="badge-executive" style="display: none;">Current</span>
+            <h3 style="font-size: 1.35rem; font-weight: 800;"><i class="fas fa-building"></i> Executive Boardroom</h3>
+            
+            <div class="mockup-container">
+                <div class="mockup-sidebar">
+                    <div class="mockup-logo"></div>
+                    <div class="mockup-nav-item active"></div>
+                    <div class="mockup-nav-item"></div>
+                    <div class="mockup-nav-item"></div>
+                </div>
+                <div class="mockup-body">
+                    <div class="mockup-nav">
+                        <div class="mockup-nav-btn"></div>
+                        <div class="mockup-nav-btn"></div>
+                    </div>
+                    <div class="mockup-dashboard">
+                        <div class="mockup-left">
+                            <div class="mockup-hero"></div>
+                            <div class="mockup-card-row">
+                                <div class="mockup-mini-card"></div>
+                                <div class="mockup-mini-card"></div>
+                            </div>
+                        </div>
+                        <div class="mockup-right">
+                            <div class="mockup-panel"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin: 0; min-height: 45px;">Inspired by Bloomberg and Financial Dashboards. Premium deep dark navy slate background with clean silver gray accents.</p>
+            <button class="btn-primary" style="width: 100%; border-radius: 14px; padding: 0.9rem;" onclick="applyTheme(event, 'executive')">Apply Executive</button>
+        </div>
+
+        <!-- 4. Neural AI Theme -->
+        <div class="theme-card glass-card theme-neural" id="card-neural" onclick="previewTheme('neural')">
+            <span class="preview-badge" id="badge-neural" style="display: none;">Current</span>
+            <h3 style="font-size: 1.35rem; font-weight: 800;"><i class="fas fa-brain-circuit"></i> Neural AI Theme</h3>
+            
+            <div class="mockup-container">
+                <div class="mockup-sidebar">
+                    <div class="mockup-logo"></div>
+                    <div class="mockup-nav-item active"></div>
+                    <div class="mockup-nav-item"></div>
+                    <div class="mockup-nav-item"></div>
+                </div>
+                <div class="mockup-body">
+                    <div class="mockup-nav">
+                        <div class="mockup-nav-btn"></div>
+                        <div class="mockup-nav-btn"></div>
+                    </div>
+                    <div class="mockup-dashboard">
+                        <div class="mockup-left">
+                            <div class="mockup-hero"></div>
+                            <div class="mockup-card-row">
+                                <div class="mockup-mini-card"></div>
+                                <div class="mockup-mini-card"></div>
+                            </div>
+                        </div>
+                        <div class="mockup-right">
+                            <div class="mockup-panel"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin: 0; min-height: 45px;">Inspired by OpenAI and Anthropic. Modern dark gray layout with deep pulsing violet and glowing electric blue highlights.</p>
+            <button class="btn-primary" style="width: 100%; border-radius: 14px; padding: 0.9rem;" onclick="applyTheme(event, 'neural')">Apply Neural AI</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast notification element -->
+<div class="toast-notification" id="theme-toast">
+    <i class="fas fa-circle-check fa-lg"></i>
+    <span id="toast-text">Theme Applied Successfully!</span>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let activeTheme = localStorage.getItem('ai_theme') || 'default';
+    
+    // Highlight the current theme on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        updateActiveBadge(activeTheme);
+    });
+
+    // Preview theme instantly by setting data-theme attribute on documentElement
+    function previewTheme(themeName) {
+        document.documentElement.setAttribute('data-theme', themeName);
+        
+        // Remove temporary active borders from other cards
+        document.querySelectorAll('.theme-card').forEach(card => {
+            card.classList.remove('active-theme');
+        });
+        
+        // Highlight previewed card
+        document.getElementById('card-' + themeName).classList.add('active-theme');
+    }
+
+    // Save/Apply theme permanently
+    async function applyTheme(event, themeName) {
+        // Prevent click from bubbling to card click
+        event.stopPropagation();
+        
+        // Apply instantly
+        document.documentElement.setAttribute('data-theme', themeName);
+        localStorage.setItem('ai_theme', themeName);
+        activeTheme = themeName;
+        
+        updateActiveBadge(themeName);
+        
+        // Save to DB via fetch AJAX POST
+        try {
+            const response = await fetch("{% url 'api_save_theme' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ theme: themeName })
+            });
+            const data = await response.json();
+            if (data.status === 'success') {
+                showToast("Theme applied and saved successfully!");
+            } else {
+                console.error("DB Save failed: ", data.message);
+                showToast("Theme applied locally.");
+            }
+        } catch (error) {
+            console.error("Network error saving theme: ", error);
+            showToast("Theme applied locally.");
+        }
+    }
+
+    function updateActiveBadge(themeName) {
+        // Reset all badges and cards active class
+        document.querySelectorAll('.theme-card').forEach(card => {
+            card.classList.remove('active-theme');
+        });
+        document.querySelectorAll('.preview-badge').forEach(badge => {
+            badge.style.display = 'none';
+        });
+
+        // Set active badge and card highlight
+        document.getElementById('card-' + themeName).classList.add('active-theme');
+        document.getElementById('badge-' + themeName).style.display = 'block';
+    }
+
+    function showToast(message) {
+        const toast = document.getElementById('theme-toast');
+        document.getElementById('toast-text').innerText = message;
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+</script>
+{% endblock %}

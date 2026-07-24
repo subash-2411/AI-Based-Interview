@@ -1,0 +1,397 @@
+{% extends 'base.html' %}
+
+{% block title %}Coding Round - AI Interview Pro{% endblock %}
+
+{% block extra_head %}
+<style>
+    .coding-hero {
+        position: relative;
+        margin-bottom: 3rem;
+        padding: 3rem;
+        background: linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(6,182,212,0.05) 100%);
+        border: 1px solid rgba(139,92,246,0.15);
+        border-radius: 32px;
+        overflow: hidden;
+    }
+    .coding-hero::before {
+        content: '';
+        position: absolute;
+        top: -60px; right: -60px;
+        width: 250px; height: 250px;
+        background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+    .coding-hero::after {
+        content: '</>';
+        position: absolute;
+        right: 3rem; top: 50%;
+        transform: translateY(-50%);
+        font-size: 7rem;
+        font-weight: 900;
+        font-family: 'Consolas', monospace;
+        color: rgba(139,92,246,0.07);
+        letter-spacing: -4px;
+        pointer-events: none;
+    }
+    .hero-eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 4px;
+        color: #8b5cf6;
+        font-weight: 800;
+        font-size: 0.75rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+    .hero-eyebrow::before {
+        content: '';
+        width: 24px; height: 2px;
+        background: #8b5cf6;
+        border-radius: 2px;
+    }
+    .hero-title {
+        font-size: clamp(2.2rem, 4vw, 3.5rem);
+        font-weight: 900;
+        margin: 0 0 1rem;
+        background: linear-gradient(135deg, #fff 30%, #a78bfa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .hero-desc {
+        color: #94a3b8;
+        font-size: 1.1rem;
+        max-width: 560px;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+    .hero-stats {
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+    .hero-stat {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+    .hero-stat-num {
+        font-size: 1.6rem;
+        font-weight: 900;
+        color: #fff;
+    }
+    .hero-stat-label {
+        font-size: 0.75rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 700;
+    }
+
+    /* Status Banner */
+    .status-banner {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.25rem 2rem;
+        border-radius: 20px;
+        margin-bottom: 2.5rem;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+    .status-banner.personalized {
+        background: rgba(16,185,129,0.08);
+        border: 1px solid rgba(16,185,129,0.2);
+        color: #6ee7b7;
+    }
+    .status-banner.setup-needed {
+        background: rgba(245,158,11,0.08);
+        border: 1px solid rgba(245,158,11,0.2);
+        color: #fcd34d;
+    }
+    .status-banner i { font-size: 1.2rem; }
+    .status-banner a {
+        margin-left: auto;
+        padding: 0.5rem 1.5rem;
+        border-radius: 12px;
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 700;
+        transition: 0.3s;
+    }
+    .status-banner.personalized a {
+        background: rgba(16,185,129,0.15);
+        border: 1px solid rgba(16,185,129,0.3);
+        color: #6ee7b7;
+    }
+    .status-banner.setup-needed a {
+        background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+        color: white;
+        border: none;
+    }
+    .status-banner a:hover { opacity: 0.85; transform: translateY(-1px); }
+
+    /* Problem List */
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .section-title::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: rgba(255,255,255,0.05);
+    }
+
+    .problem-list { display: flex; flex-direction: column; gap: 1rem; }
+
+    .problem-card {
+        background: rgba(15,23,42,0.5);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 24px;
+        padding: 1.75rem 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    .problem-card::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 0; bottom: 0;
+        width: 3px;
+        background: transparent;
+        border-radius: 24px 0 0 24px;
+        transition: 0.35s;
+    }
+    .problem-card.recommended::before { background: linear-gradient(180deg, #8b5cf6, #06b6d4); }
+    .problem-card.easy::before { background: #10b981; }
+    .problem-card.medium::before { background: #f59e0b; }
+    .problem-card.hard::before { background: #ef4444; }
+
+    .problem-card:hover {
+        border-color: rgba(139,92,246,0.3);
+        background: rgba(139,92,246,0.05);
+        transform: translateX(6px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    }
+
+    .problem-num {
+        font-size: 1.6rem;
+        font-weight: 900;
+        color: rgba(255,255,255,0.08);
+        font-variant-numeric: tabular-nums;
+        min-width: 48px;
+        text-align: center;
+        font-family: 'Consolas', monospace;
+    }
+    .problem-card:hover .problem-num { color: rgba(139,92,246,0.25); }
+
+    .problem-body { flex: 1; min-width: 0; }
+
+    .problem-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.6rem;
+        flex-wrap: wrap;
+    }
+    .diff-badge {
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 0.3rem 0.85rem;
+        border-radius: 8px;
+    }
+    .diff-easy { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.25); }
+    .diff-medium { background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.25); }
+    .diff-hard { background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.25); }
+    .badge-recommended {
+        background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(6,182,212,0.15));
+        border: 1px solid rgba(139,92,246,0.35);
+        color: #c4b5fd;
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 0.3rem 0.85rem;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .problem-title {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #f1f5f9;
+        margin-bottom: 0.4rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .problem-desc {
+        color: #64748b;
+        font-size: 0.88rem;
+        line-height: 1.5;
+        margin-bottom: 0.75rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .problem-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .skill-tag {
+        font-size: 0.7rem;
+        color: #94a3b8;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.07);
+        padding: 0.2rem 0.65rem;
+        border-radius: 6px;
+        font-weight: 600;
+    }
+
+    .solve-btn {
+        background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+        border: none;
+        color: white;
+        padding: 0.75rem 1.75rem;
+        border-radius: 14px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s;
+        white-space: nowrap;
+        box-shadow: 0 4px 15px rgba(139,92,246,0.2);
+        flex-shrink: 0;
+    }
+    .solve-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(139,92,246,0.4);
+        opacity: 0.9;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        background: rgba(15,23,42,0.3);
+        border: 1px dashed rgba(255,255,255,0.07);
+        border-radius: 28px;
+        color: #475569;
+    }
+    .empty-state i { font-size: 3rem; margin-bottom: 1.5rem; display: block; opacity: 0.3; }
+    .empty-state p { font-size: 1rem; margin-bottom: 2rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Hero Section -->
+<div class="coding-hero">
+    <div class="hero-eyebrow">Algorithm Mastery</div>
+    <h1 class="hero-title">Coding Round</h1>
+    <p class="hero-desc">
+        Resume-personalized coding challenges to sharpen your problem-solving skills before your technical interview.
+    </p>
+    <div class="hero-stats">
+        <div class="hero-stat">
+            <span class="hero-stat-num">{{ problems|length }}</span>
+            <span class="hero-stat-label">Challenges</span>
+        </div>
+        {% if has_coding_profile %}
+        <div class="hero-stat">
+            <span class="hero-stat-num" style="color:#10b981;">AI</span>
+            <span class="hero-stat-label">Personalized</span>
+        </div>
+        {% endif %}
+        <div class="hero-stat">
+            <span class="hero-stat-num">{{ user_skills|length }}</span>
+            <span class="hero-stat-label">Skills Detected</span>
+        </div>
+    </div>
+</div>
+
+<!-- Personalization Status -->
+{% if has_coding_profile %}
+    <div class="status-banner personalized">
+        <i class="fas fa-check-circle"></i>
+        <div>
+            <strong>AI Personalization Active</strong> — Challenges tailored to your resume skills.
+        </div>
+        <a href="{% url 'coding:coding_setup' %}">
+            <i class="fas fa-sync-alt"></i> Refresh
+        </a>
+    </div>
+{% else %}
+    <div class="status-banner setup-needed">
+        <i class="fas fa-magic"></i>
+        <div>
+            <strong>Unlock Personalized Challenges</strong> — Upload your resume and get AI-generated problems matched to your skills.
+        </div>
+        <a href="{% url 'coding:coding_setup' %}">
+            <i class="fas fa-upload"></i> Set Up Now
+        </a>
+    </div>
+{% endif %}
+
+<!-- Problem List -->
+<div class="section-title">
+    <i class="fas fa-list-ul" style="color:#8b5cf6;"></i> All Challenges
+</div>
+
+<div class="problem-list">
+    {% for problem in problems %}
+        <div class="problem-card {% if problem.is_recommended %}recommended{% elif problem.difficulty == 'Easy' %}easy{% elif problem.difficulty == 'Medium' %}medium{% else %}hard{% endif %}">
+            <div class="problem-num">{{ forloop.counter|stringformat:"02d" }}</div>
+
+            <div class="problem-body">
+                <div class="problem-meta">
+                    <span class="diff-badge {% if problem.difficulty == 'Easy' %}diff-easy{% elif problem.difficulty == 'Medium' %}diff-medium{% else %}diff-hard{% endif %}">
+                        {{ problem.difficulty }}
+                    </span>
+                    {% if problem.is_recommended %}
+                        <span class="badge-recommended">
+                            <i class="fas fa-star" style="font-size:0.6rem;"></i> For You
+                        </span>
+                    {% endif %}
+                </div>
+                <div class="problem-title">{{ problem.title }}</div>
+                <div class="problem-desc">{{ problem.description|truncatewords:18 }}</div>
+                <div class="problem-tags">
+                    {% for tag in problem.tag_list %}
+                        <span class="skill-tag">{{ tag }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <a href="{% url 'coding:coding_editor' problem.id %}" class="solve-btn">
+                <i class="fas fa-code"></i> Solve
+            </a>
+        </div>
+    {% empty %}
+        <div class="empty-state">
+            <i class="fas fa-terminal"></i>
+            <p>No challenges yet. Upload your resume to generate personalized problems!</p>
+            <a href="{% url 'coding:coding_setup' %}" class="solve-btn">
+                <i class="fas fa-upload"></i> Get Started
+            </a>
+        </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

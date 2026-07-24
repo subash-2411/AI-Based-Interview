@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        @page { size: a4 portrait; margin: 1cm; }
+        body { font-family: Helvetica, Arial, sans-serif; color: #333; line-height: 1.5; }
+        .header { text-align: center; border-bottom: 2px solid #8b5cf6; padding-bottom: 10px; margin-bottom: 20px; }
+        .name { font-size: 24pt; font-weight: bold; color: #8b5cf6; margin-bottom: 5px; }
+        .contact { font-size: 10pt; color: #666; }
+        .section-title { font-size: 14pt; font-weight: bold; color: #8b5cf6; border-bottom: 1px solid #eee; margin-top: 15px; margin-bottom: 8px; }
+        .content { font-size: 11pt; }
+        .skills { margin-top: 5px; }
+        .skill-item { display: inline-block; background: #f3f4f6; padding: 3px 8px; border-radius: 4px; margin-right: 5px; margin-bottom: 5px; font-size: 10pt; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="name">{{ name }}</div>
+        <div class="contact">{{ email }} | {{ phone }}</div>
+    </div>
+
+    <div class="section-title">CAREER OBJECTIVE</div>
+    <div class="content">{{ objective }}</div>
+
+    <div class="section-title">TECHNICAL SKILLS</div>
+    <div class="skills">
+        {% for skill in skills %}
+            <span class="skill-item">{{ skill }}</span>
+        {% endfor %}
+    </div>
+
+    <div class="section-title">EDUCATION</div>
+    <div class="content">{{ education }}</div>
+
+    <div class="section-title">EXPERIENCE</div>
+    <div class="content">{{ experience }}</div>
+</body>
+</html>

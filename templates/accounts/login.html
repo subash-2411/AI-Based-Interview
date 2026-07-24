@@ -1,0 +1,641 @@
+{% extends 'base.html' %}
+{% load socialaccount %}
+
+{% block title %}Sign In — AI Interview Pro{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Override main-content for full-page auth */
+    .main-content {
+        padding: 0 !important;
+    }
+
+    /* ══ FULL PAGE AUTH LAYOUT ══ */
+    .auth-page {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        min-height: 100vh;
+    }
+
+    /* ── LEFT: DEEP VISUAL PANEL ── */
+    .auth-visual {
+        position: relative;
+        background: #050816;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 3rem 3.5rem;
+    }
+
+    /* Layered gradient orbs */
+    .auth-visual::before {
+        content: '';
+        position: absolute;
+        top: -15%;
+        left: -10%;
+        width: 55%;
+        height: 55%;
+        background: radial-gradient(circle, rgba(139,92,246,0.4) 0%, transparent 65%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .auth-visual::after {
+        content: '';
+        position: absolute;
+        bottom: -10%;
+        right: -5%;
+        width: 50%;
+        height: 50%;
+        background: radial-gradient(circle, rgba(6,182,212,0.3) 0%, transparent 65%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .visual-orb-mid {
+        position: absolute;
+        top: 50%;
+        left: 55%;
+        transform: translate(-50%, -50%);
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(236,72,153,0.15) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    /* Grid pattern overlay */
+    .visual-grid {
+        position: absolute;
+        inset: 0;
+        background-image:
+            linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+        background-size: 40px 40px;
+        pointer-events: none;
+    }
+
+    .auth-visual-content {
+        position: relative;
+        z-index: 2;
+        max-width: 400px;
+    }
+
+    .visual-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(139,92,246,0.12);
+        border: 1px solid rgba(139,92,246,0.3);
+        border-radius: 20px;
+        padding: 0.35rem 0.9rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #c4b5fd;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 1.75rem;
+    }
+
+    .visual-headline {
+        font-size: 3.2rem;
+        font-weight: 900;
+        line-height: 1.1;
+        color: #fff;
+        margin-bottom: 1rem;
+        letter-spacing: -1.5px;
+    }
+
+    .visual-headline .gradient-text {
+        background: linear-gradient(135deg, #a78bfa 0%, #06b6d4 50%, #ec4899 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .visual-sub {
+        color: rgba(148,163,184,0.85);
+        font-size: 1rem;
+        line-height: 1.65;
+        margin-bottom: 2.5rem;
+        max-width: 340px;
+    }
+
+    /* Floating stat cards */
+    .visual-stats {
+        display: flex;
+        gap: 0.85rem;
+        flex-wrap: wrap;
+    }
+
+    .stat-pill {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        padding: 0.6rem 1rem;
+        backdrop-filter: blur(10px);
+    }
+
+    .stat-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+    }
+
+    .stat-text strong {
+        display: block;
+        color: #fff;
+        font-size: 0.82rem;
+        font-weight: 800;
+        line-height: 1.1;
+    }
+
+    .stat-text span {
+        color: #64748b;
+        font-size: 0.7rem;
+    }
+
+    /* Visual brand logo inside flex stats */
+    .visual-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        text-decoration: none !important;
+    }
+
+    .visual-brand i {
+        font-size: 1.4rem;
+        color: #8b5cf6;
+        filter: drop-shadow(0 0 10px rgba(139,92,246,0.6));
+    }
+
+    .visual-brand span {
+        font-size: 0.95rem;
+        font-weight: 900;
+        color: rgba(255,255,255,0.7);
+        letter-spacing: -0.2px;
+    }
+
+    /* ── RIGHT: FORM PANEL ── */
+    .auth-form-panel {
+        background: #04060f;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 2.5rem 3rem;
+        border-left: 1px solid rgba(255,255,255,0.05);
+        overflow-y: auto;
+    }
+
+    .auth-form-inner {
+        width: 100%;
+        max-width: 380px;
+        animation: fadeInUp 0.55s cubic-bezier(0.16,1,0.3,1);
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(18px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-eyebrow {
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 2.5px;
+        color: #7c3aed;
+        margin-bottom: 0.6rem;
+    }
+
+    .form-title {
+        font-size: 2rem;
+        font-weight: 900;
+        color: #fff;
+        margin-bottom: 0.3rem;
+        letter-spacing: -0.5px;
+    }
+
+    .form-subtitle {
+        color: #475569;
+        font-size: 0.88rem;
+        margin-bottom: 1.75rem;
+    }
+
+    /* Error / Success banners */
+    .form-alert {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.6rem;
+        padding: 0.7rem 0.9rem;
+        border-radius: 10px;
+        font-size: 0.84rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .form-alert.error {
+        background: rgba(239,68,68,0.08);
+        border: 1px solid rgba(239,68,68,0.25);
+        color: #fca5a5;
+    }
+
+    .form-alert.success {
+        background: rgba(16,185,129,0.08);
+        border: 1px solid rgba(16,185,129,0.25);
+        color: #6ee7b7;
+    }
+
+    .form-alert i { margin-top: 1px; flex-shrink: 0; }
+
+    /* Google button */
+    .google-signin {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.65rem;
+        width: 100%;
+        padding: 0.78rem;
+        background: #fff;
+        color: #1e293b !important;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        text-decoration: none !important;
+        border: none;
+        cursor: pointer;
+        transition: all 0.25s;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+        margin-bottom: 1.25rem;
+    }
+
+    .google-signin:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    }
+
+    /* OR divider */
+    .or-line {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+        color: rgba(255,255,255,0.1);
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    .or-line::before, .or-line::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: rgba(255,255,255,0.07);
+    }
+
+    /* Input fields */
+    .field-group {
+        margin-bottom: 1rem;
+    }
+
+    .field-label {
+        display: block;
+        font-size: 0.76rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.7px;
+        margin-bottom: 0.4rem;
+    }
+
+    .field-input-wrap {
+        position: relative;
+    }
+
+    .field-input-wrap .field-icon {
+        position: absolute;
+        left: 0.9rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #334155;
+        font-size: 0.85rem;
+        pointer-events: none;
+    }
+
+    .deep-input {
+        width: 100%;
+        background: rgba(10,15,30,0.8);
+        border: 1.5px solid rgba(255,255,255,0.06);
+        padding: 0.85rem 1rem 0.85rem 2.4rem;
+        border-radius: 12px;
+        color: #f1f5f9;
+        font-size: 0.95rem;
+        font-weight: 500;
+        transition: all 0.25s;
+        outline: none;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .deep-input:focus {
+        border-color: #7c3aed;
+        background: rgba(10,15,30,1);
+        box-shadow: 0 0 0 4px rgba(124,58,237,0.12);
+    }
+
+    .deep-input::placeholder {
+        color: rgba(100,116,139,0.5);
+        font-size: 0.88rem;
+    }
+
+    /* Password wrapper */
+    .pwd-wrap { position: relative; }
+
+    .pwd-toggle {
+        position: absolute;
+        right: 0.9rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #334155;
+        cursor: pointer;
+        font-size: 0.9rem;
+        padding: 0;
+        transition: color 0.2s;
+        display: flex;
+        align-items: center;
+    }
+
+    .pwd-toggle:hover { color: #a78bfa; }
+
+    /* Forgot / row */
+    .field-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.4rem;
+    }
+
+    .forgot-link {
+        font-size: 0.76rem;
+        color: #6d28d9;
+        text-decoration: none;
+        font-weight: 700;
+        transition: color 0.2s;
+    }
+
+    .forgot-link:hover { color: #a78bfa; }
+
+    /* Submit button */
+    .signin-btn {
+        width: 100%;
+        padding: 0.9rem;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #7c3aed, #2563eb);
+        color: #fff;
+        font-weight: 800;
+        font-size: 0.97rem;
+        border: none;
+        cursor: pointer;
+        letter-spacing: 0.3px;
+        transition: all 0.25s;
+        margin-top: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        box-shadow: 0 6px 20px rgba(124,58,237,0.35);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .signin-btn::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, #6d28d9, #1d4ed8);
+        opacity: 0;
+        transition: opacity 0.25s;
+    }
+
+    .signin-btn:hover::before { opacity: 1; }
+    .signin-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(124,58,237,0.5); }
+    .signin-btn span { position: relative; z-index: 1; display: flex; align-items: center; gap: 0.5rem; }
+
+    /* Register link */
+    .form-bottom-link {
+        text-align: center;
+        margin-top: 1.5rem;
+        color: #475569;
+        font-size: 0.87rem;
+    }
+
+    .form-bottom-link a {
+        color: #8b5cf6;
+        font-weight: 700;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .form-bottom-link a:hover { color: #a78bfa; }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+        .auth-page { grid-template-columns: 1fr; }
+        .auth-visual { display: none; }
+        .auth-form-panel { padding: 2rem 1.5rem; min-height: 100vh; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+
+    <!-- ── LEFT VISUAL PANEL ── -->
+    <div class="auth-visual">
+        <div class="visual-grid"></div>
+        <div class="visual-orb-mid"></div>
+
+        <div class="auth-visual-content">
+            <div class="visual-badge">
+                <i class="fas fa-shield-alt"></i>
+                AI-Powered Career Platform
+            </div>
+
+            <h1 class="visual-headline">
+                Ace Every<br>
+                <span class="gradient-text">Interview.</span><br>
+                Land Your Dream Job.
+            </h1>
+
+            <p class="visual-sub">
+                Real-time AI coaching, ATS-optimised resume builder, live coding practice — everything you need to get hired faster.
+            </p>
+
+            <div class="visual-stats">
+                <div class="stat-pill">
+                    <div class="stat-icon" style="background:rgba(139,92,246,0.15);">
+                        <i class="fas fa-microphone" style="color:#a78bfa;"></i>
+                    </div>
+                    <div class="stat-text">
+                        <strong>AI Mock Interviews</strong>
+                        <span>Voice & text feedback</span>
+                    </div>
+                </div>
+                <div class="stat-pill">
+                    <div class="stat-icon" style="background:rgba(6,182,212,0.15);">
+                        <i class="fas fa-file-alt" style="color:#22d3ee;"></i>
+                    </div>
+                    <div class="stat-text">
+                        <strong>Resume Studio</strong>
+                        <span>ATS score & builder</span>
+                    </div>
+                </div>
+                <div class="stat-pill">
+                    <div class="stat-icon" style="background:rgba(16,185,129,0.15);">
+                        <i class="fas fa-code" style="color:#10b981;"></i>
+                    </div>
+                    <div class="stat-text">
+                        <strong>Coding Rounds</strong>
+                        <span>Live editor + AI hints</span>
+                    </div>
+                </div>
+
+                <a href="/" class="visual-brand" style="margin-left: 0.5rem;">
+                    <i class="fas fa-brain"></i>
+                    <span>AI Interview Pro</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── RIGHT FORM PANEL ── -->
+    <div class="auth-form-panel">
+        <div class="auth-form-inner">
+
+            <div class="form-eyebrow">Welcome back</div>
+            <h2 class="form-title">Sign In</h2>
+            <p class="form-subtitle">Enter your email or mobile number to continue</p>
+
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                <div class="form-alert {% if message.tags == 'success' %}success{% else %}error{% endif %}">
+                    <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+                    <span>{{ message }}</span>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if form.non_field_errors %}
+            <div class="form-alert error">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>Invalid credentials. Please check your email/mobile and password.</span>
+            </div>
+            {% endif %}
+
+            <!-- Google OAuth -->
+            <a href="{% provider_login_url 'google' %}" class="google-signin" id="googleBtn">
+                <svg width="17" height="17" viewBox="0 0 18 18">
+                    <path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 002.38-5.88c0-.57-.05-.66-.15-1.18z"/>
+                    <path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 01-7.18-2.54H1.83v2.07A8 8 0 008.98 17z"/>
+                    <path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 010-3.04V5.41H1.83a8 8 0 000 7.18l2.67-2.07z"/>
+                    <path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 001.83 5.4L4.5 7.49a4.77 4.77 0 014.48-3.31z"/>
+                </svg>
+                Continue with Google
+            </a>
+
+            <div class="or-line"><span>or sign in with</span></div>
+
+            <form method="POST" autocomplete="off" id="loginForm">
+                {% csrf_token %}
+                <!-- Honeypot -->
+                <input type="text" name="fake_user" style="display:none;" tabindex="-1" aria-hidden="true">
+                <input type="password" name="fake_pass" style="display:none;" tabindex="-1" aria-hidden="true">
+
+                <!-- Email or Mobile -->
+                <div class="field-group">
+                    <label class="field-label" for="id_username">Email or Mobile Number</label>
+                    <div class="field-input-wrap">
+                        <i class="fas fa-at field-icon"></i>
+                        <input type="text"
+                               id="id_username"
+                               name="username"
+                               class="deep-input"
+                               placeholder="Enter email or mobile number"
+                               required
+                               autocomplete="off"
+                               onfocus="this.removeAttribute('readonly');"
+                               readonly>
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div class="field-group">
+                    <div class="field-meta">
+                        <label class="field-label" for="id_password" style="margin-bottom:0;">Password</label>
+                        <a href="{% url 'password_reset' %}" class="forgot-link">Forgot password?</a>
+                    </div>
+                    <div class="pwd-wrap">
+                        <div class="field-input-wrap">
+                            <i class="fas fa-lock field-icon"></i>
+                            <input type="password"
+                                   id="id_password"
+                                   name="password"
+                                   class="deep-input"
+                                   placeholder="Enter your password"
+                                   required
+                                   autocomplete="new-password"
+                                   style="padding-right: 2.8rem;"
+                                   onfocus="this.removeAttribute('readonly');"
+                                   readonly>
+                        </div>
+                        <button type="button" class="pwd-toggle" onclick="togglePwd()" style="right:0.9rem; top:50%; position:absolute; transform:translateY(-50%);">
+                            <i class="fas fa-eye-slash" id="pwdIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="signin-btn" id="loginBtn">
+                    <span><i class="fas fa-arrow-right-to-bracket"></i> Sign In Securely</span>
+                </button>
+            </form>
+
+            <div class="form-bottom-link">
+                New here? <a href="{% url 'register' %}">Create a free account</a>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function togglePwd() {
+        const f = document.getElementById('id_password');
+        const i = document.getElementById('pwdIcon');
+        if (f.type === 'password') {
+            f.type = 'text';
+            i.className = 'fas fa-eye';
+        } else {
+            f.type = 'password';
+            i.className = 'fas fa-eye-slash';
+        }
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', function() {
+        const btn = document.getElementById('loginBtn');
+        btn.innerHTML = '<span><i class="fas fa-circle-notch fa-spin"></i> Signing in...</span>';
+        btn.disabled = true;
+    });
+</script>
+{% endblock %}

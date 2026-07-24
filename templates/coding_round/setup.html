@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+
+{% block title %}Setup Coding Round | AI Interview Pro{% endblock %}
+
+{% block content %}
+<div class="setup-container">
+    <div class="glass-panel text-center setup-box">
+        <h1 class="gradient-text">Personalize Your Practice</h1>
+        <p class="subtitle">Upload your resume. Our AI will analyze your skills and generate custom coding challenges tailored specifically for you.</p>
+
+        <form id="setupForm">
+            {% csrf_token %}
+            <div class="upload-area" id="dropZone">
+                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                <h3>Drag & Drop your Resume</h3>
+                <p>or click to browse</p>
+                <input type="file" name="resume" id="fileInput" accept=".pdf,.docx,.txt" required>
+                <div id="fileName" class="file-name"></div>
+            </div>
+
+            <button type="submit" class="btn-primary start-btn" id="generateBtn" disabled>
+                <i class="fas fa-magic"></i> Generate Custom Problems
+            </button>
+        </form>
+
+        <div id="loadingState" style="display: none; margin-top: 2rem;">
+            <div class="ai-loader">
+                <div class="core"></div>
+                <div class="ring ring-1"></div>
+                <div class="ring ring-2"></div>
+            </div>
+            <h3 style="color: #a78bfa; margin-top: 1.5rem;">AI is analyzing your resume...</h3>
+            <p style="color: #94a3b8;">Extracting skills and crafting custom challenges.</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .setup-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 80vh;
+        padding: 2rem;
+    }
+    .setup-box {
+        max-width: 600px;
+        width: 100%;
+        padding: 3rem;
+    }
+    .gradient-text {
+        font-size: 2.5rem;
+        background: linear-gradient(135deg, #a78bfa, #ec4899);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1rem;
+        font-weight: 800;
+    }
+    .subtitle {
+        color: #94a3b8;
+        font-size: 1.1rem;
+        margin-bottom: 2.5rem;
+    }
+    
+    .upload-area {
+        border: 2px dashed rgba(167, 139, 250, 0.4);
+        border-radius: 20px;
+        padding: 3rem 2rem;
+        background: rgba(15, 23, 42, 0.4);
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+        margin-bottom: 2rem;
+    }
+    .upload-area:hover, .upload-area.dragover {
+        border-color: #a78bfa;
+        background: rgba(167, 139, 250, 0.1);
+        transform: translateY(-5px);
+    }
+    .upload-icon {
+        font-size: 4rem;
+        color: #8b5cf6;
+        margin-bottom: 1rem;
+    }
+    .upload-area h3 {
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+    .upload-area p {
+        color: #64748b;
+    }
+    #fileInput {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+    .file-name {
+        margin-top: 1rem;
+        color: #4ade80;
+        font-weight: 600;
+    }
+
+    .start-btn {
+        width: 100%;
+        padding: 1rem;
+        font-size: 1.2rem;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+        border: none;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .start-btn:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4);
+    }
+    .start-btn:disabled {
+        background: #334155;
+        color: #64748b;
+        cursor: not-allowed;
+    }
+
+    /* AI Loader */
+    .ai-loader {
+        position: relative; width: 80px; height: 80px; margin: 0 auto;
+    }
+    .ai-loader .core {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        width: 20px; height: 20px; background: #a78bfa; border-radius: 50%;
+        box-shadow: 0 0 20px #a78bfa; animation: pulse 1s infinite alternate;
+    }
+    .ai-loader .ring {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        border-radius: 50%; border: 2px solid transparent;
+    }
+    .ai-loader .ring-1 {
+        width: 50px; height: 50px; border-top-color: #ec4899; border-bottom-color: #3b82f6;
+        animation: spin 2s linear infinite;
+    }
+    .ai-loader .ring-2 {
+        width: 80px; height: 80px; border-left-color: #8b5cf6; border-right-color: #10b981;
+        animation: spin 3s linear infinite reverse;
+    }
+    @keyframes spin { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+    @keyframes pulse { 100% { transform: translate(-50%, -50%) scale(1.5); } }
+</style>
+
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const fileNameDisplay = document.getElementById('fileName');
+    const generateBtn = document.getElementById('generateBtn');
+    const setupForm = document.getElementById('setupForm');
+    const loadingState = document.getElementById('loadingState');
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            fileNameDisplay.innerHTML = `<i class="fas fa-check-circle"></i> ${e.target.files[0].name}`;
+            generateBtn.disabled = false;
+        } else {
+            fileNameDisplay.innerHTML = '';
+            generateBtn.disabled = true;
+        }
+    });
+
+    setupForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(setupForm);
+        
+        generateBtn.style.display = 'none';
+        document.querySelector('.upload-area').style.display = 'none';
+        loadingState.style.display = 'block';
+
+        try {
+            const response = await fetch("{% url 'coding:generate_practice_api' %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                window.location.href = "{% url 'coding:coding_list' %}";
+            } else {
+                alert("Error generating problems: " + data.message);
+                window.location.reload();
+            }
+        } catch (error) {
+            console.error(error);
+            alert("An error occurred.");
+            window.location.reload();
+        }
+    });
+</script>
+{% endblock %}

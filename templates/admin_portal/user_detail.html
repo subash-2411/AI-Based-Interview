@@ -1,0 +1,192 @@
+{% extends 'admin_portal/base.html' %}
+{% block title %}{{ target_user.username }} — Command Center{% endblock %}
+{% block nav_users %}active{% endblock %}
+{% block breadcrumb %}Users / {{ target_user.username }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display:flex; align-items:center; gap:1rem;">
+        <div class="user-av" style="width:48px; height:48px; font-size:1.1rem; border-radius:14px;">
+            {{ target_user.username|first|upper }}
+        </div>
+        <div>
+            <h1>{{ target_user.username }}</h1>
+            <p>{{ target_user.email }} &nbsp;·&nbsp; {{ target_user.phone_number|default:"No mobile" }}</p>
+        </div>
+    </div>
+    <div style="display:flex; gap:0.5rem;">
+        <button class="qa-btn" onclick="toggleStaff({{ target_user.id }})" id="staffBtn">
+            <i class="fas fa-shield-alt"></i>
+            {% if target_user.is_staff %}Remove Admin{% else %}Make Admin{% endif %}
+        </button>
+        <button class="qa-btn danger" onclick="deleteUser({{ target_user.id }}, '{{ target_user.username }}')">
+            <i class="fas fa-trash"></i> Delete User
+        </button>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1.5rem;">
+    <div class="stat-card" style="--accent-color:var(--purple);">
+        <div class="stat-top">
+            <span class="stat-label">Interviews</span>
+            <div class="stat-icon" style="background:rgba(139,92,246,0.1);"><i class="fas fa-microphone" style="color:var(--purple);"></i></div>
+        </div>
+        <div class="stat-value">{{ interview_count }}</div>
+        <div class="stat-sub">Avg score: <strong>{{ avg_interview_score|floatformat:1 }}%</strong></div>
+    </div>
+    <div class="stat-card" style="--accent-color:var(--cyan);">
+        <div class="stat-top">
+            <span class="stat-label">Resumes</span>
+            <div class="stat-icon" style="background:rgba(6,182,212,0.1);"><i class="fas fa-file-alt" style="color:var(--cyan);"></i></div>
+        </div>
+        <div class="stat-value">{{ resume_count }}</div>
+        <div class="stat-sub">Uploaded</div>
+    </div>
+    <div class="stat-card" style="--accent-color:var(--green);">
+        <div class="stat-top">
+            <span class="stat-label">Submissions</span>
+            <div class="stat-icon" style="background:rgba(16,185,129,0.1);"><i class="fas fa-code" style="color:var(--green);"></i></div>
+        </div>
+        <div class="stat-value">{{ submission_count }}</div>
+        <div class="stat-sub">Coding problems</div>
+    </div>
+    <div class="stat-card" style="--accent-color:var(--amber);">
+        <div class="stat-top">
+            <span class="stat-label">Status</span>
+            <div class="stat-icon" style="background:rgba(245,158,11,0.1);"><i class="fas fa-user-check" style="color:var(--amber);"></i></div>
+        </div>
+        <div class="stat-value" style="font-size:1rem; margin-top:0.25rem;">
+            {% if target_user.is_staff %}<span class="badge badge-red">Admin</span>{% else %}<span class="badge badge-green">User</span>{% endif %}
+            {% if target_user.is_active %}<span class="badge badge-green" style="margin-left:0.3rem;">Active</span>{% else %}<span class="badge badge-red" style="margin-left:0.3rem;">Blocked</span>{% endif %}
+        </div>
+        <div class="stat-sub">Joined {{ target_user.date_joined|date:"d M Y" }}</div>
+    </div>
+</div>
+
+<div class="content-grid">
+    <!-- Interviews -->
+    <div class="panel">
+        <div class="panel-header">
+            <span class="panel-title"><i class="fas fa-microphone"></i> Interview Sessions</span>
+        </div>
+        <table class="data-table">
+            <thead><tr><th>Date</th><th>Language</th><th>Difficulty</th><th>Score</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for iv in interviews %}
+                <tr>
+                    <td style="font-size:0.75rem; color:var(--muted);">{{ iv.created_at|date:"d M Y H:i" }}</td>
+                    <td>
+                        {% if iv.language == 'ta-IN' %}<span class="badge badge-amber">Tamil</span>
+                        {% else %}<span class="badge badge-blue">English</span>{% endif %}
+                    </td>
+                    <td style="font-size:0.78rem;">{{ iv.difficulty }}</td>
+                    <td>
+                        <div class="score-bar-wrap">
+                            <div class="score-bar-bg"><div class="score-bar-fill" style="width:{{ iv.score }}%;"></div></div>
+                            <span class="score-num">{{ iv.score|floatformat:0 }}%</span>
+                        </div>
+                    </td>
+                    <td>
+                        {% if iv.is_completed %}<span class="badge badge-green">Done</span>
+                        {% else %}<span class="badge badge-amber">Ongoing</span>{% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" style="color:var(--muted); text-align:center; padding:2rem;">No interviews yet</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Resumes + Submissions -->
+    <div style="display:flex; flex-direction:column; gap:1.25rem;">
+        <div class="panel">
+            <div class="panel-header"><span class="panel-title"><i class="fas fa-file-alt"></i> Resumes</span></div>
+            <table class="data-table">
+                <thead><tr><th>Date</th><th>ATS Score</th><th>Skills</th><th>Action</th></tr></thead>
+                <tbody>
+                    {% for r in resumes %}
+                    <tr>
+                        <td style="font-size:0.75rem; color:var(--muted);">{{ r.uploaded_at|date:"d M Y" }}</td>
+                        <td>
+                            <span class="badge {% if r.ats_score >= 70 %}badge-green{% elif r.ats_score >= 40 %}badge-amber{% else %}badge-red{% endif %}">
+                                {{ r.ats_score|floatformat:0 }}%
+                            </span>
+                        </td>
+                        <td style="font-size:0.73rem; color:var(--muted);">
+                            {% if r.skills %}{{ r.skills|join:", "|truncatechars:40 }}{% else %}—{% endif %}
+                        </td>
+                        <td>
+                            {% if r.file %}
+                            <a href="{% url 'admin_portal:download_resume' r.id %}" class="action-btn" style="padding:0.25rem 0.5rem; font-size:0.7rem;">
+                                <i class="fas fa-download"></i> Download
+                            </a>
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" style="color:var(--muted); text-align:center; padding:1.5rem;">No resumes</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header"><span class="panel-title"><i class="fas fa-code"></i> Code Submissions</span></div>
+            <table class="data-table">
+                <thead><tr><th>Problem</th><th>Score</th><th>Date</th></tr></thead>
+                <tbody>
+                    {% for s in submissions %}
+                    <tr>
+                        <td style="font-size:0.78rem; font-weight:600;">{{ s.problem.title|truncatechars:20 }}</td>
+                        <td>
+                            <span class="badge {% if s.score >= 70 %}badge-green{% elif s.score >= 40 %}badge-amber{% else %}badge-red{% endif %}">
+                                {{ s.score|floatformat:0 }}%
+                            </span>
+                        </td>
+                        <td style="font-size:0.72rem; color:var(--muted);">{{ s.completed_at|date:"d M" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" style="color:var(--muted); text-align:center; padding:1.5rem;">No submissions</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function getCookie(n) {
+    let v = null;
+    document.cookie.split(';').forEach(c => {
+        c = c.trim();
+        if (c.startsWith(n + '=')) v = decodeURIComponent(c.slice(n.length + 1));
+    });
+    return v;
+}
+
+function toggleStaff(id) {
+    fetch(`/admin-portal/users/${id}/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': getCookie('csrftoken') },
+        body: 'action=toggle_staff'
+    }).then(r => r.json()).then(data => {
+        if (data.success) location.reload();
+    });
+}
+
+function deleteUser(id, name) {
+    if (!confirm(`Delete "${name}"? Cannot be undone.`)) return;
+    fetch(`/admin-portal/users/${id}/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': getCookie('csrftoken') },
+        body: 'action=delete_user'
+    }).then(r => r.json()).then(data => {
+        if (data.success) window.location.href = '/admin-portal/users/';
+    });
+}
+</script>
+{% endblock %}

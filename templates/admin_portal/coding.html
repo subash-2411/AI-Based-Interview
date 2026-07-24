@@ -1,0 +1,292 @@
+{% extends 'admin_portal/base.html' %}
+{% block title %}Coding — Command Center{% endblock %}
+{% block nav_coding %}active{% endblock %}
+{% block breadcrumb %}Coding{% endblock %}
+
+{% block extra_head %}
+<style>
+    .modal-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9000;
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+        background: var(--bg2); border: 1px solid var(--border2); border-radius: 16px;
+        padding: 2rem; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto;
+        transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal-title { font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 1.5rem; display:flex; align-items:center; gap:0.5rem; }
+    .form-label { font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.35rem; display: block; }
+    .form-input {
+        width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 9px;
+        padding: 0.65rem 0.9rem; color: var(--text); font-size: 0.85rem; font-family: 'Inter', sans-serif;
+        outline: none; transition: border-color 0.2s; margin-bottom: 1rem;
+    }
+    .form-input:focus { border-color: var(--border2); }
+    .form-input::placeholder { color: var(--muted2); }
+    textarea.form-input { min-height: 90px; resize: vertical; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .form-select { appearance: none; -webkit-appearance: none; cursor: pointer; }
+    .btn-submit {
+        width: 100%; padding: 0.8rem; border-radius: 10px; border: none; cursor: pointer;
+        background: linear-gradient(135deg, var(--red), #b91c1c); color: #fff;
+        font-weight: 800; font-size: 0.9rem; font-family: 'Inter', sans-serif;
+        transition: all 0.25s;
+    }
+    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 20px var(--red-glow); }
+    .btn-cancel {
+        width: 100%; padding: 0.7rem; border-radius: 10px; border: 1px solid var(--border);
+        cursor: pointer; background: transparent; color: var(--muted); font-weight: 600;
+        font-size: 0.85rem; font-family: 'Inter', sans-serif; margin-top: 0.5rem; transition: all 0.2s;
+    }
+    .btn-cancel:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+    .diff-easy   { color: #10b981; }
+    .diff-medium { color: #f59e0b; }
+    .diff-hard   { color: #ef4444; }
+    .tag-chip {
+        display: inline-flex; align-items: center; gap: 0.3rem;
+        padding: 0.18rem 0.55rem; border-radius: 20px;
+        background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.15);
+        color: #60a5fa; font-size: 0.68rem; font-weight: 600; margin: 1px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1><i class="fas fa-code" style="color:var(--green); margin-right:0.5rem;"></i>Coding Management</h1>
+        <p>{{ total_problems }} problems · {{ total_submissions }} submissions</p>
+    </div>
+    <button class="qa-btn" onclick="openModal()" style="background:rgba(16,185,129,0.1); border-color:rgba(16,185,129,0.3); color:#10b981;">
+        <i class="fas fa-plus"></i> Add Problem
+    </button>
+</div>
+
+<!-- Stats -->
+<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-bottom:1.5rem;">
+    <div class="stat-card" style="--accent-color:var(--green);">
+        <div class="stat-top"><span class="stat-label">Total Problems</span><div class="stat-icon" style="background:rgba(16,185,129,0.1);"><i class="fas fa-puzzle-piece" style="color:var(--green);"></i></div></div>
+        <div class="stat-value">{{ total_problems }}</div>
+    </div>
+    <div class="stat-card" style="--accent-color:var(--blue);">
+        <div class="stat-top"><span class="stat-label">Submissions</span><div class="stat-icon" style="background:rgba(59,130,246,0.1);"><i class="fas fa-paper-plane" style="color:var(--blue);"></i></div></div>
+        <div class="stat-value">{{ total_submissions }}</div>
+    </div>
+    <div class="stat-card" style="--accent-color:var(--amber);">
+        <div class="stat-top"><span class="stat-label">Avg Sub / Problem</span><div class="stat-icon" style="background:rgba(245,158,11,0.1);"><i class="fas fa-chart-bar" style="color:var(--amber);"></i></div></div>
+        <div class="stat-value">
+            {% if total_problems > 0 %}{{ total_submissions|floatformat:0 }}{% else %}0{% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="content-grid">
+
+    <!-- Problems Table -->
+    <div class="panel">
+        <div class="panel-header">
+            <span class="panel-title"><i class="fas fa-list"></i> Coding Problems</span>
+            <span style="font-size:0.73rem; color:var(--muted);">{{ total_problems }} problems</span>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Difficulty</th>
+                    <th>Language</th>
+                    <th>Tags</th>
+                    <th>Submissions</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody id="problemsBody">
+                {% for p in problems %}
+                <tr id="prob-{{ p.id }}">
+                    <td style="color:var(--muted2); font-size:0.72rem;">#{{ p.id }}</td>
+                    <td style="font-weight:700; font-size:0.83rem;">{{ p.title }}</td>
+                    <td>
+                        {% if p.difficulty == 'Hard' %}<span class="badge badge-red">Hard</span>
+                        {% elif p.difficulty == 'Easy' %}<span class="badge badge-green">Easy</span>
+                        {% else %}<span class="badge badge-amber">Medium</span>{% endif %}
+                    </td>
+                    <td style="font-size:0.78rem; color:var(--muted);">{{ p.language }}</td>
+                    <td style="max-width:140px;">
+                        {% for tag in p.tags.split|slice:":3" %}
+                            <span class="tag-chip">{{ tag|cut:"," }}</span>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        <span class="badge badge-blue">{{ p.sub_count }}</span>
+                    </td>
+                    <td>
+                        <button class="action-btn danger" onclick="deleteProblem({{ p.id }}, '{{ p.title|escapejs }}')" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" style="text-align:center; color:var(--muted); padding:3rem;">No problems yet. Click "Add Problem" to get started.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Recent Submissions -->
+    <div class="panel">
+        <div class="panel-header">
+            <span class="panel-title"><i class="fas fa-paper-plane"></i> Recent Submissions</span>
+        </div>
+        <table class="data-table">
+            <thead><tr><th>User</th><th>Problem</th><th>Score</th><th>Date</th></tr></thead>
+            <tbody>
+                {% for s in submissions %}
+                <tr>
+                    <td>
+                        <div class="user-cell">
+                            <div class="user-av" style="width:24px;height:24px;font-size:0.65rem;border-radius:7px;">{{ s.user.username|first|upper }}</div>
+                            <span style="font-weight:600; font-size:0.78rem;">{{ s.user.username }}</span>
+                        </div>
+                    </td>
+                    <td style="font-size:0.75rem; color:var(--muted);">{{ s.problem.title|truncatechars:22 }}</td>
+                    <td>
+                        <span class="badge {% if s.score >= 70 %}badge-green{% elif s.score >= 40 %}badge-amber{% else %}badge-red{% endif %}">
+                            {{ s.score|floatformat:0 }}%
+                        </span>
+                    </td>
+                    <td style="font-size:0.72rem; color:var(--muted); white-space:nowrap;">{{ s.completed_at|date:"d M H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" style="text-align:center; color:var(--muted); padding:2rem;">No submissions yet</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<!-- ══ ADD PROBLEM MODAL ══ -->
+<div class="modal-overlay" id="addModal">
+    <div class="modal">
+        <div class="modal-title"><i class="fas fa-plus-circle" style="color:var(--green);"></i> Add New Coding Problem</div>
+        <form id="addProblemForm">
+            {% csrf_token %}
+            <label class="form-label">Problem Title *</label>
+            <input type="text" name="title" class="form-input" placeholder="e.g. Two Sum" required>
+
+            <label class="form-label">Description *</label>
+            <textarea name="description" class="form-input" placeholder="Describe the problem clearly…" required></textarea>
+
+            <div class="form-row">
+                <div>
+                    <label class="form-label">Difficulty</label>
+                    <select name="difficulty" class="form-input form-select">
+                        <option value="Easy">Easy</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="Hard">Hard</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Language</label>
+                    <select name="language" class="form-input form-select">
+                        <option value="Python">Python</option>
+                        <option value="JavaScript">JavaScript</option>
+                        <option value="Java">Java</option>
+                        <option value="C++">C++</option>
+                    </select>
+                </div>
+            </div>
+
+            <label class="form-label">Tags (comma-separated)</label>
+            <input type="text" name="tags" class="form-input" placeholder="Array, HashMap, Two Pointers">
+
+            <label class="form-label">Starter Code</label>
+            <textarea name="initial_code" class="form-input" style="font-family:monospace; font-size:0.82rem; min-height:110px;">def solution():
+    # Write your code here
+    pass</textarea>
+
+            <button type="submit" class="btn-submit" id="addSubmitBtn">
+                <i class="fas fa-plus"></i> Add Problem
+            </button>
+            <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openModal()  { document.getElementById('addModal').classList.add('open'); }
+function closeModal() { document.getElementById('addModal').classList.remove('open'); }
+
+// Close on overlay click
+document.getElementById('addModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+
+function getCookie(n) {
+    let v = null;
+    document.cookie.split(';').forEach(c => {
+        c = c.trim();
+        if (c.startsWith(n + '=')) v = decodeURIComponent(c.slice(n.length + 1));
+    });
+    return v;
+}
+
+// Add problem form submit
+document.getElementById('addProblemForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('addSubmitBtn');
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Adding…';
+    btn.disabled = true;
+
+    const formData = new FormData(this);
+    const data = new URLSearchParams();
+    for (let [k, v] of formData.entries()) data.append(k, v);
+
+    fetch('{% url "admin_portal:add_problem" %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': getCookie('csrftoken') },
+        body: data.toString()
+    })
+    .then(r => r.json())
+    .then(resp => {
+        if (resp.success) {
+            closeModal();
+            location.reload();
+        } else {
+            alert('Error: ' + (resp.error || 'Unknown error'));
+            btn.innerHTML = '<i class="fas fa-plus"></i> Add Problem';
+            btn.disabled = false;
+        }
+    })
+    .catch(() => {
+        btn.innerHTML = '<i class="fas fa-plus"></i> Add Problem';
+        btn.disabled = false;
+    });
+});
+
+// Delete problem
+function deleteProblem(id, title) {
+    if (!confirm(`Delete problem "${title}"?`)) return;
+    fetch(`/admin-portal/coding/delete/${id}/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const row = document.getElementById(`prob-${id}`);
+            row.style.opacity = '0';
+            row.style.transition = 'opacity 0.3s';
+            setTimeout(() => row.remove(), 300);
+        }
+    });
+}
+</script>
+{% endblock %}
