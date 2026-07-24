@@ -164,6 +164,11 @@ LOGIN_REDIRECT_URL = 'dashboard'
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
+        'APP': {
+            'client_id': os.getenv('GOOGLE_CLIENT_ID', 'placeholder-google-client-id'),
+            'secret': os.getenv('GOOGLE_CLIENT_SECRET', 'placeholder-google-client-secret'),
+            'key': ''
+        },
         'SCOPE': [
             'profile',
             'email',
