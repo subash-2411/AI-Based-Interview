@@ -643,10 +643,15 @@
             }
             .main-area {
                 margin-left: 0 !important;
+                max-width: 100% !important;
+                overflow-x: hidden !important;
             }
             .main-content {
                 padding: 1rem 1rem 1.5rem !important;
+                max-width: 100% !important;
+                overflow-x: hidden !important;
             }
+
             .auth-topbar {
                 justify-content: space-between !important;
                 padding: 0 1rem !important;
@@ -663,6 +668,27 @@
                 color: var(--text-primary);
                 cursor: pointer;
                 font-size: 1.1rem;
+            }
+            /* Public Navbar Mobile Adjustments */
+            .nav-container {
+                padding: 0 1rem !important;
+            }
+            .logo {
+                font-size: 1.1rem !important;
+                white-space: nowrap !important;
+            }
+            .logo i {
+                font-size: 1.3rem !important;
+            }
+            .nav-links {
+                gap: 0.8rem !important;
+            }
+            .nav-links a {
+                font-size: 0.85rem !important;
+            }
+            .nav-links .btn-primary {
+                padding: 0.4rem 0.9rem !important;
+                font-size: 0.8rem !important;
             }
         }
     </style>
