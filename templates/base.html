@@ -621,11 +621,49 @@
         [data-theme="neural"] .bg-animation { background: radial-gradient(circle at 50% 50%,#0b0f19,#090a0f) !important; }
         [data-theme="neural"] .circle { opacity: 0.13 !important; }
 
-        /* Responsive */
+        /* Responsive Mobile Layout */
+        .mobile-toggle {
+            display: none;
+        }
+
         @media (max-width: 1024px) {
-            .premium-sidebar { display: none; }
-            .main-area { margin-left: 0; }
-            .main-content { padding: 1rem 1.2rem 1.5rem; }
+            .premium-sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                display: flex !important;
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                z-index: 3000;
+            }
+            .premium-sidebar.mobile-open {
+                transform: translateX(0);
+                box-shadow: 5px 0 25px rgba(0, 0, 0, 0.8) !important;
+            }
+            .main-area {
+                margin-left: 0 !important;
+            }
+            .main-content {
+                padding: 1rem 1rem 1.5rem !important;
+            }
+            .auth-topbar {
+                justify-content: space-between !important;
+                padding: 0 1rem !important;
+            }
+            .mobile-toggle {
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                width: 36px;
+                height: 36px;
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                color: var(--text-primary);
+                cursor: pointer;
+                font-size: 1.1rem;
+            }
         }
     </style>
 
@@ -677,11 +715,14 @@
         <!-- ══════════════ SIDEBAR ══════════════ -->
         <aside class="premium-sidebar">
             <!-- Brand -->
-            <div class="sidebar-brand">
+            <div class="sidebar-brand" style="display: flex; justify-content: space-between; align-items: center;">
                 <a href="/" class="sidebar-logo">
                     <i class="fas fa-brain"></i>
                     <span>AI Interview Pro</span>
                 </a>
+                <button class="mobile-toggle" onclick="toggleSidebar()" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary);">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
 
             <!-- Navigation -->
@@ -744,8 +785,13 @@
             {% if user.is_authenticated %}
             <!-- Slim top bar for authenticated users -->
             <div class="auth-topbar">
-                <a href="{% url 'dashboard' %}"><i class="fas fa-th-large"></i> Dashboard</a>
-                <a href="{% url 'profile' %}"><i class="fas fa-user-circle"></i> {{ user.username }}</a>
+                <button class="mobile-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <a href="{% url 'dashboard' %}"><i class="fas fa-th-large"></i> Dashboard</a>
+                    <a href="{% url 'profile' %}"><i class="fas fa-user-circle"></i> {{ user.username }}</a>
+                </div>
             </div>
             {% endif %}
 
@@ -768,6 +814,25 @@
     </div>
 
     {% block extra_js %}{% endblock %}
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.premium-sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('mobile-open');
+            }
+        }
+        
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.querySelector('.premium-sidebar');
+            const toggle = document.querySelector('.mobile-toggle');
+            if (window.innerWidth <= 1024 && sidebar && sidebar.classList.contains('mobile-open')) {
+                if (!sidebar.contains(event.target) && !toggle.contains(event.target)) {
+                    sidebar.classList.remove('mobile-open');
+                }
+            }
+        });
+    </script>
 </body>
 
 </html>
