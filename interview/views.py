@@ -22,7 +22,11 @@ def start_interview_view(request):
 
     resumes = Resume.objects.filter(user=request.user)
     has_resume = resumes.exists()
-    resume = resumes.latest('uploaded_at') if has_resume else None
+    if not has_resume:
+        messages.warning(request, "Please upload your resume first to practice a customized mock interview based on your skills!")
+        return redirect('resume:upload_resume')
+    resume = resumes.latest('uploaded_at')
+
 
     if request.method == 'POST':
         lang = request.POST.get('language', 'en-US')
