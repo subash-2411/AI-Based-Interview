@@ -781,7 +781,61 @@
         .ai-panel { height: auto; }
         .question-container { height: auto; min-height: 140px; }
     }
+
+    @media (max-width: 768px) {
+        .interview-top-bar {
+            flex-direction: column;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 1rem !important;
+            text-align: center;
+        }
+        .session-info {
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.6rem;
+            width: 100%;
+        }
+        .recording-indicator {
+            font-size: 0.75rem;
+        }
+        .badge-outline {
+            padding: 0.25rem 0.6rem;
+            font-size: 0.7rem;
+        }
+        .timer-display {
+            font-size: 1.1rem;
+        }
+        .btn-danger-outline {
+            width: 100%;
+            text-align: center;
+            font-size: 0.85rem;
+            padding: 0.6rem;
+        }
+        .controls-panel {
+            flex-direction: column;
+            gap: 0.75rem;
+            width: 100%;
+        }
+        .control-btn {
+            width: 100%;
+            font-size: 0.95rem;
+            padding: 0.8rem;
+        }
+        .ai-panel {
+            padding: 1.5rem;
+        }
+        .ai-avatar-ring {
+            width: 90px;
+            height: 90px;
+            font-size: 2.5rem;
+        }
+        .transcript-box {
+            font-size: 1.05rem !important;
+        }
+    }
 </style>
+
 
 <script>
     let questions = {{ questions_json|safe }};
