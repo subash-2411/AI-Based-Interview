@@ -259,8 +259,36 @@
 }
 .tip-item i { color: #1e3a5f; font-size: 0.72rem; }
 
-/* Hidden difficulty input */
-#diffInput { display: none; }
+    /* Responsive styles for Mobile */
+    @media (max-width: 768px) {
+        .setup-grid {
+            grid-template-columns: 1fr !important;
+            gap: 0.8rem;
+        }
+        .company-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 0.4rem;
+        }
+        .no-resume-banner {
+            flex-direction: column;
+            gap: 0.8rem;
+            padding: 1.25rem 1.25rem !important;
+        }
+        .page-title {
+            font-size: 1.5rem !important;
+        }
+        .page-sub {
+            font-size: 0.8rem !important;
+        }
+        .config-card {
+            padding: 1rem 1.1rem !important;
+        }
+        .diff-pill {
+            font-size: 0.7rem !important;
+            padding: 0.5rem 0.35rem !important;
+        }
+    }
+    #diffInput { display: none; }
 </style>
 {% endblock %}
 
