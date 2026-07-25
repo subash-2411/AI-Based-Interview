@@ -6,15 +6,26 @@ django.setup()
 
 from accounts.models import User
 
-# List all users
-users = User.objects.all()
-print("Existing users:")
-for u in users:
-    print(f"Username: {u.username}, Email: {u.email}, Superuser: {u.is_superuser}, Staff: {u.is_staff}")
+username_target = 'Subash'
+password_target = '2411'
 
-# Let's see if there is an admin user.
-admin_user = User.objects.filter(is_superuser=True).first()
-if admin_user:
-    print(f"\nSuperuser already exists: {admin_user.username}")
-else:
-    print("\nNo superuser found.")
+try:
+    # Check if user already exists
+    user = User.objects.filter(username__iexact=username_target).first()
+    if user:
+        print(f"User '{user.username}' found. Promoting to superuser and setting password to '{password_target}'...")
+        user.is_staff = True
+        user.is_superuser = True
+        user.set_password(password_target)
+        user.save()
+        print("Success! User promoted.")
+    else:
+        print(f"User '{username_target}' not found. Creating new superuser...")
+        user = User.objects.create_superuser(
+            username=username_target,
+            email='subash@example.com',
+            password=password_target
+        )
+        print(f"Success! Superuser '{username_target}' created with password '{password_target}'.")
+except Exception as e:
+    print(f"Error: {e}")
