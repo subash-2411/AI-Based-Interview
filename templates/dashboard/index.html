@@ -184,7 +184,36 @@
         .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
         .main-row { grid-template-columns: 1fr; }
     }
+
+    @media (max-width: 768px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr !important;
+        }
+        .hero-banner {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 1.5rem;
+            padding: 2rem 1.5rem !important;
+        }
+        .hero-banner h1 {
+            font-size: 1.6rem !important;
+        }
+        .hero-banner p {
+            font-size: 0.85rem !important;
+        }
+        .hero-banner div[style*="display: flex"] {
+            width: 100%;
+            flex-direction: column;
+            gap: 0.6rem !important;
+        }
+        .hero-banner .btn-primary, .hero-banner .btn-secondary {
+            width: 100% !important;
+            text-align: center;
+            justify-content: center;
+        }
+    }
 </style>
+
 {% endblock %}
 
 {% block content %}
@@ -196,8 +225,9 @@
     </div>
     <div style="z-index: 1; display: flex; gap: 0.75rem; flex-wrap: wrap;">
         <a href="{% url 'resume_studio:dashboard' %}" class="btn-primary" style="padding: 0.7rem 1.5rem; border-radius: 12px; font-weight: 700; font-size:0.88rem;"><i class="fas fa-magic"></i> Resume Studio</a>
-        <a href="{% url 'interview:quick_start_interview' %}?lang=en-US" class="btn-secondary" style="padding: 0.7rem 1.5rem; border-radius: 12px; font-weight: 700; font-size:0.88rem;"><i class="fas fa-play"></i> Mock Interview</a>
+        <a href="{% url 'resume:upload_resume' %}" class="btn-secondary" style="padding: 0.7rem 1.5rem; border-radius: 12px; font-weight: 700; font-size:0.88rem;"><i class="fas fa-upload"></i> Upload Resume</a>
     </div>
+
 </div>
 
 <div class="dashboard-grid">
