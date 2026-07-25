@@ -851,13 +851,14 @@
         // Close sidebar when clicking outside on mobile
         document.addEventListener('click', function(event) {
             const sidebar = document.querySelector('.premium-sidebar');
-            const toggle = document.querySelector('.mobile-toggle');
+            const clickedToggle = event.target.closest('.mobile-toggle');
             if (window.innerWidth <= 1024 && sidebar && sidebar.classList.contains('mobile-open')) {
-                if (!sidebar.contains(event.target) && !toggle.contains(event.target)) {
+                if (!sidebar.contains(event.target) && !clickedToggle) {
                     sidebar.classList.remove('mobile-open');
                 }
             }
         });
+
     </script>
 </body>
 
