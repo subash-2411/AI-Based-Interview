@@ -1,14 +1,15 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Edit Profile - {{ user.username }}{% endblock %}
 
 {% block content %}
-<div class="form-container">
-    <div class="glass-card">
-        <h2 class="hero-title" style="font-size: 2.5rem; margin-bottom: 0.5rem; text-align: center;">Edit Profile</h2>
-        <p class="hero-subtitle" style="margin-bottom: 2rem; text-align: center;">Update your personal information</p>
+<div class="form-container" style="max-width: 800px; margin: 0 auto; padding-bottom: 4rem;">
+    <div class="glass-card" style="padding: 2.5rem 2rem;">
+        <h2 class="hero-title" style="font-size: 2.2rem; margin-bottom: 0.5rem; text-align: center;">Edit Profile</h2>
+        <p class="hero-subtitle" style="margin-bottom: 2rem; text-align: center;">Choose an avatar or update your profile details</p>
 
-        <form method="POST" enctype="multipart/form-data">
+        <form method="POST" enctype="multipart/form-data" id="profileForm">
             {% csrf_token %}
             
             {% if form.non_field_errors %}
@@ -17,53 +18,308 @@
                 {% endfor %}
             {% endif %}
 
-            {% for field in form %}
-                <div class="input-group">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">{{ field.label }}</label>
-                    {% if field.name == 'profile_pic' %}
-                        <div class="file-input-wrapper">
-                            {{ field }}
-                        </div>
-                    {% else %}
-                        {{ field }}
-                    {% endif %}
-                    
-                    {% if field.errors %}
-                        {% for error in field.errors %}
-                            <div class="alert alert-error" style="padding: 0.5rem; margin-top: 0.5rem; font-size: 0.8rem;">
-                                {{ error }}
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                </div>
-            {% endfor %}
+            <!-- Avatar Selection Section -->
+            <div class="avatar-picker-section mb-4">
+                <label style="display: block; font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem; color: #fff;">
+                    <i class="fas fa-user-astronaut" style="color: var(--primary); margin-right: 8px;"></i> Select Profile Avatar
+                </label>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+                    Pick an avatar below, keep your account initial, or upload your own photo.
+                </p>
 
-            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                <button type="submit" class="btn-primary" style="flex: 1;">Save Changes</button>
-                <a href="{% url 'profile' %}" class="btn-outline" style="flex: 1; text-align: center; text-decoration: none; padding: 0.8rem; border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text-muted);">Cancel</a>
+                <input type="hidden" name="avatar_preset" id="id_avatar_preset" value="{{ user.avatar_preset|default:'' }}">
+
+                <!-- Category: Default -->
+                <div class="avatar-section-title">
+                    <span>Default</span>
+                </div>
+                <div class="avatar-grid mb-4">
+                    <!-- Default Initial -->
+                    <div class="avatar-option {% if not user.avatar_preset and not user.profile_pic %}active{% endif %}" data-preset="" onclick="selectAvatar('')">
+                        <div class="avatar-thumb initial-thumb">
+                            <span>{{ user.get_avatar_initial }}</span>
+                        </div>
+                        <span class="avatar-name">Default Initial</span>
+                        <div class="active-check"><i class="fas fa-check"></i></div>
+                    </div>
+                </div>
+
+                <!-- Category: Avatars -->
+                <div class="avatar-section-title">
+                    <span>Avatars</span>
+                </div>
+                <div class="avatar-grid mb-4">
+
+                    <!-- Boy 1 to 3 -->
+                    <div class="avatar-option {% if user.avatar_preset == 'boy_1' %}active{% endif %}" data-preset="boy_1" onclick="selectAvatar('boy_1')">
+                        <div class="avatar-thumb">
+                            <img src="{% static 'avatars/boy_1.svg' %}" alt="Avatar 1">
+                        </div>
+                        <div class="active-check"><i class="fas fa-check"></i></div>
+                    </div>
+
+                    <div class="avatar-option {% if user.avatar_preset == 'boy_2' %}active{% endif %}" data-preset="boy_2" onclick="selectAvatar('boy_2')">
+                        <div class="avatar-thumb">
+                            <img src="{% static 'avatars/boy_2.svg' %}" alt="Avatar 2">
+                        </div>
+                        <div class="active-check"><i class="fas fa-check"></i></div>
+                    </div>
+
+                    <div class="avatar-option {% if user.avatar_preset == 'boy_3' %}active{% endif %}" data-preset="boy_3" onclick="selectAvatar('boy_3')">
+                        <div class="avatar-thumb">
+                            <img src="{% static 'avatars/boy_3.svg' %}" alt="Avatar 3">
+                        </div>
+                        <div class="active-check"><i class="fas fa-check"></i></div>
+                    </div>
+
+                    <div class="avatar-option {% if user.avatar_preset == 'girl_1' %}active{% endif %}" data-preset="girl_1" onclick="selectAvatar('girl_1')">
+                        <div class="avatar-thumb">
+                            <img src="{% static 'avatars/girl_1.svg' %}" alt="Avatar 4">
+                        </div>
+                        <div class="active-check"><i class="fas fa-check"></i></div>
+                    </div>
+
+                    <div class="avatar-option {% if user.avatar_preset == 'girl_2' %}active{% endif %}" data-preset="girl_2" onclick="selectAvatar('girl_2')">
+                        <div class="avatar-thumb">
+                            <img src="{% static 'avatars/girl_2.svg' %}" alt="Avatar 5">
+                        </div>
+                        <div class="active-check"><i class="fas fa-check"></i></div>
+                    </div>
+
+                    <div class="avatar-option {% if user.avatar_preset == 'girl_3' %}active{% endif %}" data-preset="girl_3" onclick="selectAvatar('girl_3')">
+                        <div class="avatar-thumb">
+                            <img src="{% static 'avatars/girl_3.svg' %}" alt="Avatar 6">
+                        </div>
+                        <div class="active-check"><i class="fas fa-check"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider-line mb-4"></div>
+
+            <!-- Custom Profile Pic Upload -->
+            <div class="input-group mb-4">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #fff;">
+                    <i class="fas fa-camera text-secondary mr-2"></i> Or Upload Custom Photo (Overrides Preset Avatar)
+                </label>
+                <div class="file-input-wrapper">
+                    {{ form.profile_pic }}
+                </div>
+                {% if form.profile_pic.errors %}
+                    {% for error in form.profile_pic.errors %}
+                        <div class="alert alert-error" style="padding: 0.5rem; margin-top: 0.5rem; font-size: 0.8rem;">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <!-- Names Grid -->
+            <div class="form-row-2">
+                <div class="input-group">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">First Name</label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}<div class="alert alert-error">{{ form.first_name.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="input-group">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Last Name</label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}<div class="alert alert-error">{{ form.last_name.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <!-- Email & Phone -->
+            <div class="form-row-2">
+                <div class="input-group">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Email Address</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}<div class="alert alert-error">{{ form.email.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="input-group">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Mobile Number</label>
+                    {{ form.phone_number }}
+                    {% if form.phone_number.errors %}<div class="alert alert-error">{{ form.phone_number.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <!-- Bio -->
+            <div class="input-group mb-4">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Bio</label>
+                {{ form.bio }}
+                {% if form.bio.errors %}<div class="alert alert-error">{{ form.bio.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="form-actions-btns">
+                <button type="submit" class="btn-primary" style="flex: 1; padding: 0.9rem; font-weight: 700; border-radius: 12px; cursor: pointer;">
+                    <i class="fas fa-save mr-2"></i> Save Changes
+                </button>
+                <a href="{% url 'profile' %}" class="btn-outline" style="flex: 1; text-align: center; text-decoration: none; padding: 0.9rem; border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text-muted); font-weight: 600;">
+                    Cancel
+                </a>
             </div>
         </form>
     </div>
 </div>
 
 <style>
+    .avatar-section-title {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-muted);
+        margin: 1rem 0 0.6rem 0;
+        font-weight: 700;
+    }
+    .avatar-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+        gap: 0.85rem;
+    }
+    .avatar-option {
+        position: relative;
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 0.75rem 0.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        user-select: none;
+    }
+    .avatar-option:hover {
+        transform: translateY(-3px);
+        background: rgba(255, 255, 255, 0.07);
+        border-color: rgba(139, 92, 246, 0.4);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+    .avatar-option.active {
+        border-color: #8b5cf6;
+        background: rgba(139, 92, 246, 0.15);
+        box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+    }
+    .avatar-thumb {
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .avatar-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .initial-thumb {
+        background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+        color: #ffffff;
+        font-weight: 800;
+        font-size: 1.5rem;
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+    }
+    .avatar-name {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        font-weight: 600;
+        text-align: center;
+    }
+    .avatar-option.active .avatar-name {
+        color: #fff;
+    }
+    .active-check {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 20px;
+        height: 20px;
+        background: #8b5cf6;
+        color: #fff;
+        border-radius: 50%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.65rem;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    }
+    .avatar-option.active .active-check {
+        display: flex;
+    }
+    .divider-line {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.08);
+        margin: 1.5rem 0;
+    }
+    .form-row-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+    .form-actions-btns {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
     .btn-outline:hover {
-        background: rgba(255,255,255,0.05);
+        background: rgba(255, 255, 255, 0.05);
         color: white;
     }
     textarea.input-field {
         resize: vertical;
-        min-height: 100px;
+        min-height: 90px;
     }
     .file-input-wrapper {
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.03);
         border: 1px solid var(--glass-border);
-        padding: 1rem;
+        padding: 0.85rem;
         border-radius: 12px;
         color: var(--text-muted);
     }
     .file-input-wrapper input {
         color: white;
+        max-width: 100%;
+    }
+
+    @media (max-width: 768px) {
+        .avatar-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.6rem;
+        }
+        .avatar-option {
+            padding: 0.6rem 0.3rem;
+        }
+        .avatar-thumb {
+            width: 48px;
+            height: 48px;
+        }
+        .initial-thumb {
+            font-size: 1.3rem;
+        }
+        .form-row-2 {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        .form-actions-btns {
+            flex-direction: column;
+        }
     }
 </style>
+
+<script>
+function selectAvatar(presetKey) {
+    document.getElementById('id_avatar_preset').value = presetKey;
+    document.querySelectorAll('.avatar-option').forEach(el => {
+        el.classList.remove('active');
+    });
+    const target = document.querySelector(`.avatar-option[data-preset="${presetKey}"]`);
+    if (target) {
+        target.classList.add('active');
+    }
+}
+</script>
 {% endblock %}

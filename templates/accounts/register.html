@@ -632,6 +632,23 @@
                         {% endif %}
                     </div>
                 </div>
+                
+                <!-- Gender -->
+                <div class="field-group">
+                    <label class="field-label" for="reg_gender">Gender</label>
+                    <div class="field-input-wrap">
+                        <i class="fas fa-venus-mars field-icon" style="z-index: 10;"></i>
+                        <select id="reg_gender" name="gender" class="deep-input {% if form.gender.errors %}is-error{% endif %}" required style="padding-left: 2.3rem;">
+                            <option value="" disabled selected>Select Gender</option>
+                            <option value="M" {% if form.gender.value == 'M' %}selected{% endif %}>Male</option>
+                            <option value="F" {% if form.gender.value == 'F' %}selected{% endif %}>Female</option>
+                            <option value="O" {% if form.gender.value == 'O' %}selected{% endif %}>Other</option>
+                        </select>
+                    </div>
+                    {% if form.gender.errors %}
+                    <div class="field-error"><i class="fas fa-exclamation-circle"></i> {{ form.gender.errors|striptags }}</div>
+                    {% endif %}
+                </div>
 
                 <!-- Password -->
                 <div class="field-group">

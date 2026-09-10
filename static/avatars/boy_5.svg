@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="skin5" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffedd5"/>
+      <stop offset="100%" stop-color="#fed7aa"/>
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" fill="url(#bg5)"/>
+  <!-- Suit -->
+  <path d="M22 116 C22 84 38 74 60 74 C82 74 98 84 98 116 Z" fill="#0f172a"/>
+  <polygon points="52,74 68,74 60,94" fill="#cbd5e1"/>
+  <!-- Head & Neck -->
+  <rect x="52" y="64" width="16" height="15" fill="#fed7aa" rx="4"/>
+  <ellipse cx="60" cy="48" rx="22" ry="24" fill="url(#skin5)"/>
+  <!-- Short Side-part Hair -->
+  <path d="M37 42 C36 26 48 18 64 20 C76 22 83 30 83 44 C80 28 66 26 54 26 C44 26 38 32 37 42 Z" fill="#451a03"/>
+  <!-- Beard -->
+  <path d="M42 48 C42 68 52 74 60 74 C68 74 78 68 78 48 C76 64 68 68 60 68 C52 68 44 64 42 48 Z" fill="#451a03" opacity="0.6"/>
+  <!-- Eyes -->
+  <circle cx="51" cy="46" r="3" fill="#1c1917"/>
+  <circle cx="69" cy="46" r="3" fill="#1c1917"/>
+  <!-- Smile -->
+  <path d="M54 58 Q60 63 66 58" fill="none" stroke="#78350f" stroke-width="2" stroke-linecap="round"/>
+</svg>

@@ -180,6 +180,26 @@
     }
     .roadmap-item li { margin-bottom: 0.5rem; }
 
+    .interview-item-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.05);
+        padding: 0.8rem 1.2rem;
+        border-radius: 12px;
+        transition: 0.2s;
+        box-sizing: border-box;
+        width: 100%;
+    }
+
+    .hero-banner-btns {
+        z-index: 1;
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
     @media (max-width: 1200px) {
         .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
         .main-row { grid-template-columns: 1fr; }
@@ -188,28 +208,54 @@
     @media (max-width: 768px) {
         .dashboard-grid {
             grid-template-columns: 1fr !important;
+            gap: 1rem !important;
+        }
+        .ai-card {
+            grid-column: span 1 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 1.5rem 1.2rem !important;
+            box-sizing: border-box !important;
+        }
+        .main-row {
+            grid-template-columns: 1fr !important;
+            gap: 1rem !important;
         }
         .hero-banner {
-            flex-direction: column;
-            align-items: flex-start !important;
-            gap: 1.5rem;
-            padding: 2rem 1.5rem !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 1.25rem !important;
+            padding: 1.6rem 1.25rem !important;
+            border-radius: 20px !important;
         }
         .hero-banner h1 {
-            font-size: 1.6rem !important;
+            font-size: 1.55rem !important;
+            word-break: break-word !important;
         }
         .hero-banner p {
-            font-size: 0.85rem !important;
+            font-size: 0.88rem !important;
         }
-        .hero-banner div[style*="display: flex"] {
-            width: 100%;
-            flex-direction: column;
-            gap: 0.6rem !important;
-        }
-        .hero-banner .btn-primary, .hero-banner .btn-secondary {
+        .hero-banner-btns {
+            flex-direction: column !important;
             width: 100% !important;
-            text-align: center;
-            justify-content: center;
+            gap: 0.65rem !important;
+        }
+        .hero-banner-btns a {
+            width: 100% !important;
+            text-align: center !important;
+            justify-content: center !important;
+            box-sizing: border-box !important;
+        }
+        .interview-item-row {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 0.75rem !important;
+        }
+        .interview-item-actions {
+            width: 100% !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
         }
     }
 </style>
@@ -223,9 +269,9 @@
         <h1 style="font-size: 2rem; font-weight: 900; margin: 0.4rem 0; color: #fff;">Hello, {{ user.username }} 👋</h1>
         <p style="color: #94a3b8; font-size: 0.95rem; max-width: 500px;">Your intelligent career dashboard — analyze skills, practice interviews, and map your success path.</p>
     </div>
-    <div style="z-index: 1; display: flex; gap: 0.75rem; flex-wrap: wrap;">
-        <a href="{% url 'resume_studio:dashboard' %}" class="btn-primary" style="padding: 0.7rem 1.5rem; border-radius: 12px; font-weight: 700; font-size:0.88rem;"><i class="fas fa-magic"></i> Resume Studio</a>
-        <a href="{% url 'resume:upload_resume' %}" class="btn-secondary" style="padding: 0.7rem 1.5rem; border-radius: 12px; font-weight: 700; font-size:0.88rem;"><i class="fas fa-upload"></i> Upload Resume</a>
+    <div class="hero-banner-btns">
+        <a href="{% url 'resume_studio:dashboard' %}" class="btn-primary" style="padding: 0.75rem 1.5rem; border-radius: 12px; font-weight: 700; font-size:0.9rem; display:inline-flex; align-items:center; gap:0.5rem;"><i class="fas fa-magic"></i> Resume Studio</a>
+        <a href="{% url 'resume:upload_resume' %}" class="btn-secondary" style="padding: 0.75rem 1.5rem; border-radius: 12px; font-weight: 700; font-size:0.9rem; display:inline-flex; align-items:center; gap:0.5rem;"><i class="fas fa-upload"></i> Upload Resume</a>
     </div>
 
 </div>
@@ -295,24 +341,24 @@
         </div>
         <div style="display: flex; flex-direction: column; gap: 0.8rem; flex: 1; margin-top: 1rem; width: 100%;">
             {% for session in recent_sessions|slice:":3" %}
-            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 0.8rem 1.2rem; border-radius: 12px; transition: 0.2s;">
-                <div style="min-width: 0; flex: 1; padding-right: 1rem;">
+            <div class="interview-item-row">
+                <div style="min-width: 0; flex: 1; padding-right: 0.5rem; width: 100%;">
                     <div style="color: #fff; font-weight: 700; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                         {{ session.category|title }}
                     </div>
-                    <div style="display: flex; align-items: center; gap: 0.8rem; margin-top: 0.3rem; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 0.6rem; margin-top: 0.3rem; flex-wrap: wrap;">
                         <span style="color: #64748b; font-size: 0.78rem;">
                             <i class="far fa-calendar-alt" style="margin-right: 0.3rem;"></i>{{ session.created_at|date:"M d, Y" }}
                         </span>
                         <span style="color: #64748b; font-size: 0.78rem;">
                             <i class="far fa-clock" style="margin-right: 0.3rem;"></i>{{ session.formatted_duration }}
                         </span>
-                        <span style="color: rgba(139, 92, 246, 0.8); font-size: 0.78rem; font-weight: 600;">
+                        <span style="color: rgba(139, 92, 246, 0.8); font-size: 0.78rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">
                             <i class="far fa-file-pdf" style="margin-right: 0.3rem;"></i>{{ session.resume_name }}
                         </span>
                     </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0;">
+                <div class="interview-item-actions" style="display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0;">
                     <span style="font-weight: 800; font-size: 1.1rem; color: {% if session.score >= 80 %}#10b981{% elif session.score >= 60 %}#f59e0b{% else %}#ef4444{% endif %}; margin-right: 0.3rem;">
                         {{ session.score|floatformat:1 }}<span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">/100</span>
                     </span>

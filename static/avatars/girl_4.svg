@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <defs>
+    <linearGradient id="g_bg4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="g_skin4" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fed7aa"/>
+      <stop offset="100%" stop-color="#fb923c"/>
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" fill="url(#g_bg4)"/>
+  <!-- Top / Body -->
+  <path d="M25 116 C25 86 40 76 60 76 C80 76 95 86 95 116 Z" fill="#064e3b"/>
+  <circle cx="60" cy="94" r="14" fill="#34d399"/>
+  <!-- Ponytail side -->
+  <path d="M78 40 C94 30 102 55 96 75 C90 65 85 55 78 48 Z" fill="#292524"/>
+  <!-- Head & Neck -->
+  <rect x="53" y="65" width="14" height="15" fill="#fb923c" rx="4"/>
+  <ellipse cx="60" cy="50" rx="22" ry="24" fill="url(#g_skin4)"/>
+  <!-- Front Hair -->
+  <path d="M36 44 C36 24 50 20 60 20 C70 20 84 24 84 44 C78 30 68 28 60 28 C52 28 42 30 36 44 Z" fill="#292524"/>
+  <path d="M34 44 C34 56 36 68 40 74 C42 66 40 54 40 44 Z" fill="#292524"/>
+  <!-- Eyes -->
+  <circle cx="51" cy="49" r="2.8" fill="#1c1917"/>
+  <circle cx="69" cy="49" r="2.8" fill="#1c1917"/>
+  <!-- Smile -->
+  <path d="M54 59 Q60 65 66 59" fill="none" stroke="#047857" stroke-width="2" stroke-linecap="round"/>
+</svg>

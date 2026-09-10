@@ -2,11 +2,28 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
+    GENDER_CHOICES = [
+        ('M', 'Male'),
+        ('F', 'Female'),
+        ('O', 'Other'),
+    ]
     email = models.EmailField(blank=True)
     profile_pic = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
+    avatar_preset = models.CharField(max_length=50, blank=True, default='')
     bio = models.TextField(max_length=500, blank=True)
     phone_number = models.CharField(max_length=15, blank=True)
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, null=True)
     
+    def get_avatar_initial(self):
+        if self.first_name:
+            return self.first_name[0].upper()
+        return self.username[0].upper() if self.username else 'U'
+        
+    def get_default_avatar(self):
+        if self.avatar_preset:
+            return self.avatar_preset
+        return ''
+
     def __str__(self):
         return self.username
 

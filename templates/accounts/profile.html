@@ -11,13 +11,15 @@
             <div class="profile-avatar">
                 {% if user.profile_pic %}
                     <img src="{{ user.profile_pic.url }}" alt="{{ user.username }}">
+                {% elif user.get_default_avatar %}
+                    <img src="{% static 'avatars/' %}{{ user.get_default_avatar }}.svg" alt="{{ user.username }}">
                 {% else %}
-                    <i class="fas fa-user-astronaut"></i>
+                    <div class="profile-avatar-initial">{{ user.get_avatar_initial }}</div>
                 {% endif %}
-                <div class="level-badge">Lv. {{ history.level }}</div>
+                <div class="level-badge">Lv. {{ history.level|default:"1" }}</div>
             </div>
             <div class="profile-text">
-                <h1 class="hero-title" style="font-size: 2.5rem; margin-bottom: 0.5rem; text-align: left;">{{ user.get_full_name|default:user.username }}</h1>
+                <h1 class="hero-title" style="font-size: 2.2rem; margin-bottom: 0.5rem; text-align: left; word-break: break-word;">{{ user.get_full_name|default:user.username }}</h1>
                 <p class="text-muted"><i class="fas fa-envelope mr-2"></i> {{ user.email }}</p>
                 {% if user.bio %}
                     <p class="profile-bio mt-3">{{ user.bio }}</p>
@@ -27,7 +29,7 @@
             </div>
         </div>
         <div class="profile-actions">
-            <a href="{% url 'edit_profile' %}" class="btn-primary"><i class="fas fa-edit"></i> Edit Profile</a>
+            <a href="{% url 'edit_profile' %}" class="btn-primary" style="white-space: nowrap;"><i class="fas fa-edit"></i> Edit Profile</a>
         </div>
     </div>
 
@@ -108,6 +110,7 @@
         position: relative;
         width: 120px;
         height: 120px;
+        min-width: 120px;
         background: var(--glass);
         border: 2px solid var(--primary);
         border-radius: 30px;
@@ -117,6 +120,20 @@
         font-size: 3.5rem;
         color: var(--primary);
         overflow: hidden;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
+    .profile-avatar-initial {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+        color: #ffffff;
+        font-size: 3.2rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.2);
     }
     .profile-avatar img {
         width: 100%;
@@ -133,7 +150,8 @@
         font-size: 0.7rem;
         font-weight: 800;
         text-align: center;
-        padding: 2px 0;
+        padding: 3px 0;
+        letter-spacing: 0.5px;
     }
     .profile-grid {
         display: grid;

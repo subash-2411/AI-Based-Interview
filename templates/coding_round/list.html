@@ -296,6 +296,48 @@
     }
     .empty-state i { font-size: 3rem; margin-bottom: 1.5rem; display: block; opacity: 0.3; }
     .empty-state p { font-size: 1rem; margin-bottom: 2rem; }
+
+    @media (max-width: 768px) {
+        .coding-hero {
+            padding: 1.5rem 1.25rem !important;
+            border-radius: 20px !important;
+            margin-bottom: 1.5rem !important;
+        }
+        .hero-title {
+            font-size: 1.85rem !important;
+        }
+        .hero-desc {
+            font-size: 0.9rem !important;
+        }
+        .status-banner {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            padding: 1.25rem 1rem !important;
+            border-radius: 16px !important;
+        }
+        .status-banner a {
+            margin-left: 0 !important;
+            margin-top: 0.75rem !important;
+            width: 100% !important;
+            text-align: center !important;
+            box-sizing: border-box !important;
+        }
+        .problem-card {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            padding: 1.25rem 1rem !important;
+            gap: 1rem !important;
+            border-radius: 18px !important;
+        }
+        .problem-num {
+            display: none !important;
+        }
+        .solve-btn {
+            width: 100% !important;
+            justify-content: center !important;
+            box-sizing: border-box !important;
+        }
+    }
 </style>
 {% endblock %}
 

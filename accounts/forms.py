@@ -20,7 +20,7 @@ class StudentRegisterForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'phone_number', 'password1', 'password2']
+        fields = ['username', 'email', 'phone_number', 'gender', 'password1', 'password2']
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -50,12 +50,15 @@ class StudentLoginForm(AuthenticationForm):
 
 
 class ProfileUpdateForm(forms.ModelForm):
+    avatar_preset = forms.CharField(required=False, widget=forms.HiddenInput())
+
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'bio', 'phone_number', 'profile_pic']
+        fields = ['first_name', 'last_name', 'email', 'bio', 'phone_number', 'gender', 'profile_pic', 'avatar_preset']
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'input-field'}),
             'last_name': forms.TextInput(attrs={'class': 'input-field'}),
             'bio': forms.Textarea(attrs={'class': 'input-field', 'rows': 3}),
             'phone_number': forms.TextInput(attrs={'class': 'input-field', 'placeholder': 'Mobile Number'}),
+            'gender': forms.Select(attrs={'class': 'input-field'}),
         }

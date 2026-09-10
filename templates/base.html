@@ -424,7 +424,7 @@
             min-width: 0;
         }
 
-        /* Authenticated top bar (slim) */
+        /* Authenticated top bar (slim & responsive) */
         .auth-topbar {
             position: sticky;
             top: 0;
@@ -432,29 +432,101 @@
             background: var(--navbar-bg) !important;
             border-bottom: 1px solid var(--sidebar-border) !important;
             backdrop-filter: blur(20px);
-            padding: 0 1.5rem;
-            height: 50px;
+            padding: 0 1.25rem;
+            height: 54px;
             display: flex;
             align-items: center;
-            justify-content: flex-end;
-            gap: 1rem;
+            justify-content: space-between;
+            width: 100%;
+            box-sizing: border-box;
         }
 
-        .auth-topbar a {
+        .topbar-user-area {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            margin-left: auto;
+        }
+
+        .topbar-dash-link {
             color: var(--text-secondary) !important;
             text-decoration: none !important;
-            font-size: 0.85rem;
-            font-weight: 600;
-            transition: color 0.2s !important;
+            font-size: 0.86rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 8px;
+            transition: all 0.2s ease !important;
         }
 
-        .auth-topbar a:hover { color: var(--text-primary) !important; }
+        .topbar-dash-link:hover {
+            color: var(--text-primary) !important;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .topbar-user-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            color: var(--text-primary) !important;
+            text-decoration: none !important;
+            font-weight: 700;
+            font-size: 0.88rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 0.25rem 0.75rem 0.25rem 0.3rem;
+            border-radius: 30px;
+            transition: all 0.2s ease;
+        }
+
+        .topbar-user-link:hover {
+            background: rgba(139, 92, 246, 0.15);
+            border-color: rgba(139, 92, 246, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .topbar-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.88rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            flex-shrink: 0;
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+            overflow: hidden;
+        }
+
+        .topbar-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .topbar-username {
+            max-width: 130px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.85rem;
+            color: #f1f5f9 !important;
+        }
 
         /* Main content area */
         .main-content {
             flex: 1;
-            padding: 1.5rem 2rem 2rem;
+            padding: 1.5rem 1.75rem 2rem;
             max-width: 100%;
+            width: 100%;
+            box-sizing: border-box;
             overflow-x: hidden;
         }
 
@@ -465,6 +537,13 @@
 
         .app-shell.logged-out .main-area {
             margin-left: 0;
+        }
+
+        /* Prevent all horizontal page overflow */
+        html, body, .app-shell, .main-area {
+            max-width: 100vw !important;
+            overflow-x: hidden !important;
+            box-sizing: border-box !important;
         }
 
         /* Public navbar for logged-out pages */
@@ -745,6 +824,18 @@
             }
         }
 
+        @media (max-width: 768px) {
+            .topbar-dash-link {
+                display: none !important;
+            }
+            .topbar-username {
+                max-width: 100px !important;
+            }
+            .auth-topbar {
+                padding: 0 0.85rem !important;
+            }
+        }
+
         /* ── PWA Button Visibility Controls ── */
         @media (display-mode: standalone) {
             #pwaTopBtn, #pwaSidebarBtn, .pwa-install-btn {
@@ -866,9 +957,15 @@
             <div class="sidebar-footer">
                 <div class="sidebar-user">
                     <div class="user-avatar">
-                        {{ user.username|first|upper }}
+                        {% if user.profile_pic %}
+                            <img src="{{ user.profile_pic.url }}" alt="{{ user.username }}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
+                        {% elif user.get_default_avatar %}
+                            <img src="{% static 'avatars/' %}{{ user.get_default_avatar }}.svg" alt="{{ user.username }}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
+                        {% else %}
+                            {{ user.get_avatar_initial }}
+                        {% endif %}
                     </div>
-                    <div>
+                    <div style="min-width: 0; flex: 1;">
                         <div class="user-name">{{ user.username }}</div>
                         <div class="user-role">Free Plan</div>
                     </div>
@@ -885,13 +982,24 @@
                 <button class="mobile-toggle" onclick="toggleSidebar()">
                     <i class="fas fa-bars"></i>
                 </button>
-                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                <div class="topbar-user-area">
                     <!-- Topbar Install App Button -->
                     <button type="button" onclick="triggerPWAInstall()" id="pwaTopBtn" class="btn-primary" style="display:none; padding: 0.35rem 0.85rem; font-size: 0.78rem; border-radius: 8px; font-weight: 700; align-items: center; gap: 0.4rem; cursor: pointer; border: none;">
                         <i class="fas fa-download"></i> Install App
                     </button>
-                    <a href="{% url 'dashboard' %}"><i class="fas fa-th-large"></i> Dashboard</a>
-                    <a href="{% url 'profile' %}"><i class="fas fa-user-circle"></i> {{ user.username }}</a>
+                    <a href="{% url 'dashboard' %}" class="topbar-dash-link"><i class="fas fa-th-large"></i> Dashboard</a>
+                    <a href="{% url 'profile' %}" class="topbar-user-link">
+                        <div class="topbar-avatar">
+                            {% if user.profile_pic %}
+                                <img src="{{ user.profile_pic.url }}" alt="{{ user.username }}">
+                            {% elif user.get_default_avatar %}
+                                <img src="{% static 'avatars/' %}{{ user.get_default_avatar }}.svg" alt="{{ user.username }}">
+                            {% else %}
+                                {{ user.get_avatar_initial }}
+                            {% endif %}
+                        </div>
+                        <span class="topbar-username">{{ user.username }}</span>
+                    </a>
                 </div>
             </div>
             {% endif %}
