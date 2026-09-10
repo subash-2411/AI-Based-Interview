@@ -818,7 +818,8 @@
             width: 100%;
         }
         .control-btn {
-            width: 100%;
+            width: 100% !important;
+            box-sizing: border-box !important;
             font-size: 0.95rem;
             padding: 0.8rem;
         }
@@ -832,6 +833,9 @@
         }
         .transcript-box {
             font-size: 1.05rem !important;
+        }
+        .tooltip-text {
+            display: none !important;
         }
     }
 </style>
@@ -903,6 +907,7 @@
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = SpeechRecognition ? new SpeechRecognition() : null;
     let isListening = false;
+    let finalTranscript = '';
 
     if (recognition) {
         recognition.lang = lang === 'ta-EN' ? 'ta-IN' : lang;
@@ -932,10 +937,15 @@
         };
 
         recognition.onresult = (event) => {
-            const transcript = Array.from(event.results)
-                .map(result => result[0].transcript)
-                .join('');
-            answerInput.value = transcript;
+            let interimTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript + ' ';
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
+                }
+            }
+            answerInput.value = finalTranscript + interimTranscript;
             // Auto scroll to bottom
             answerInput.scrollTop = answerInput.scrollHeight;
         };
@@ -945,7 +955,8 @@
         if (!recognition) return alert("Browser not supported. Use Chrome.");
         
         if (!isListening) {
-            answerInput.value = "";
+            // Keep finalTranscript if they pause and resume, but let's just append
+            finalTranscript = answerInput.value ? answerInput.value + ' ' : '';
             recognition.start();
         } else {
             recognition.stop();
