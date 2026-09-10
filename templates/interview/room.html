@@ -923,11 +923,12 @@
         // Re-instantiate on every click to bypass strict iOS Safari user-gesture requirements
         recognition = new SpeechRecognition();
         
-        const isMobile = window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+        // We only need strict restrictions for Apple/iOS devices. Android Chrome supports full features.
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
         recognition.lang = lang === 'ta-EN' ? 'ta-IN' : lang;
         
-        // Critical Fix: iOS crashes if continuous is true
-        if (isMobile) {
+        // Critical Fix: iOS crashes if continuous is true or interimResults is true
+        if (isIOS) {
             recognition.continuous = false;
             recognition.interimResults = false;
         } else {
