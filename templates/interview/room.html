@@ -628,6 +628,7 @@
         resize: none;
         height: 50px;
         outline: none;
+        box-sizing: border-box; /* Fix overflow */
     }
     .transcript-box::placeholder { color: rgba(255, 255, 255, 0.35); }
 
@@ -907,7 +908,7 @@
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = SpeechRecognition ? new SpeechRecognition() : null;
     let isListening = false;
-    let finalTranscript = '';
+    let mobileTranscriptAccumulator = "";
 
     if (recognition) {
         recognition.lang = lang === 'ta-EN' ? 'ta-IN' : lang;
@@ -937,26 +938,41 @@
         };
 
         recognition.onresult = (event) => {
-            let interimTranscript = '';
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-                if (event.results[i].isFinal) {
-                    finalTranscript += event.results[i][0].transcript + ' ';
-                } else {
-                    interimTranscript += event.results[i][0].transcript;
-                }
+            const currentTranscript = Array.from(event.results)
+                .map(result => result[0].transcript)
+                .join('');
+                
+            // On some mobile devices, event.results gets flushed and starts over.
+            // If the transcript length shrinks significantly, we append to our accumulator.
+            if (currentTranscript.length < answerInput.value.length - 30) {
+                mobileTranscriptAccumulator = answerInput.value + " ";
             }
-            answerInput.value = finalTranscript + interimTranscript;
+            
+            if (mobileTranscriptAccumulator) {
+                 answerInput.value = mobileTranscriptAccumulator + currentTranscript;
+            } else {
+                 answerInput.value = currentTranscript;
+            }
+            
             // Auto scroll to bottom
             answerInput.scrollTop = answerInput.scrollHeight;
+        };
+
+        // Handle silence stops (very common on mobile)
+        recognition.onend = () => {
+            isListening = false;
+            voiceIndicator.style.display = 'none';
+            micBtn.classList.remove('active');
+            micBtn.innerHTML = '<i class="fas fa-microphone"></i> <span>Start Speaking</span>';
+            mobileTranscriptAccumulator = ""; // reset on manual stop
         };
     }
 
     micBtn.onclick = () => {
-        if (!recognition) return alert("Browser not supported. Use Chrome.");
+        if (!recognition) return alert("Browser not supported. Use Chrome or Safari on iOS.");
         
         if (!isListening) {
-            // Keep finalTranscript if they pause and resume, but let's just append
-            finalTranscript = answerInput.value ? answerInput.value + ' ' : '';
+            mobileTranscriptAccumulator = answerInput.value ? answerInput.value + " " : "";
             recognition.start();
         } else {
             recognition.stop();
