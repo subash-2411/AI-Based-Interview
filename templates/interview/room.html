@@ -906,15 +906,27 @@
 
     // Speech Recognition
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+    let recognition = null;
     let isListening = false;
     let mobileTranscriptAccumulator = "";
 
-    if (recognition) {
+    micBtn.onclick = () => {
+        if (!SpeechRecognition) return alert("Browser not supported. Use Chrome or Safari on iOS.");
+        
+        if (isListening && recognition) {
+            recognition.stop();
+            return;
+        }
+
+        mobileTranscriptAccumulator = answerInput.value ? answerInput.value + " " : "";
+        
+        // Re-instantiate on every click to bypass strict iOS Safari user-gesture requirements
+        recognition = new SpeechRecognition();
+        
         const isMobile = window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
         recognition.lang = lang === 'ta-EN' ? 'ta-IN' : lang;
         
-        // Critical Fix: Mobile browsers (especially iOS) crash instantly or fail silently if continuous OR interimResults = true
+        // Critical Fix: iOS crashes if continuous is true
         if (isMobile) {
             recognition.continuous = false;
             recognition.interimResults = false;
@@ -935,8 +947,6 @@
                 .map(result => result[0].transcript)
                 .join('');
                 
-            // On some mobile devices, event.results gets flushed and starts over.
-            // If the transcript length shrinks significantly, we append to our accumulator.
             if (currentTranscript.length < answerInput.value.length - 30) {
                 mobileTranscriptAccumulator = answerInput.value + " ";
             }
@@ -947,20 +957,17 @@
                  answerInput.value = currentTranscript;
             }
             
-            // Auto scroll to bottom
             answerInput.scrollTop = answerInput.scrollHeight;
         };
 
-        // Handle silence stops (very common on mobile)
         recognition.onend = () => {
             isListening = false;
             voiceIndicator.style.display = 'none';
             micBtn.classList.remove('active');
             micBtn.innerHTML = '<i class="fas fa-microphone"></i> <span>Start Speaking</span>';
-            mobileTranscriptAccumulator = ""; // reset on manual stop
+            mobileTranscriptAccumulator = ""; 
         };
         
-        // Handle errors (like HTTP block or permission denial)
         recognition.onerror = (event) => {
             isListening = false;
             micBtn.classList.remove('active');
@@ -971,20 +978,14 @@
                 errMsg = "Error: Microphone blocked! Make sure you have granted permission.";
             }
             
-            // Alert heavily on mobile to ensure we know what the bug is if it persists
-            if (isMobile) alert(errMsg);
-            answerInput.value = errMsg;
+            if (isMobile && event.error !== 'no-speech') alert(errMsg);
+            if (event.error !== 'no-speech') answerInput.value = errMsg;
         };
-    }
 
-    micBtn.onclick = () => {
-        if (!recognition) return alert("Browser not supported. Use Chrome or Safari on iOS.");
-        
-        if (!isListening) {
-            mobileTranscriptAccumulator = answerInput.value ? answerInput.value + " " : "";
+        try {
             recognition.start();
-        } else {
-            recognition.stop();
+        } catch (e) {
+            console.error("Speech recognition failed to start", e);
         }
     };
 
