@@ -17,22 +17,23 @@ def upload_resume_view(request):
         file_path = resume_obj.file.path
         ext = os.path.splitext(file_path)[1].lower()
         text = ""
-        if ext == '.pdf': text = extract_text_from_pdf(file_path)
-        elif ext == '.docx': text = extract_text_from_docx(file_path)
+        if ext in ['.pdf']: 
+            text = extract_text_from_pdf(file_path)
+        elif ext in ['.docx', '.doc']: 
+            text = extract_text_from_docx(file_path)
+        else:
+            # Try reading as text file or PDF fallback
+            try:
+                text = extract_text_from_pdf(file_path)
+            except Exception:
+                text = ""
             
-        # Robust validation: check if the uploaded document resembles a professional resume
-        lower_text = text.lower()
-        has_email = re.search(r'[\w\.-]+@[\w\.-]+', text)
-        has_phone = re.search(r'(\d{10})', text)
-        
-        resume_keywords = ['experience', 'work', 'education', 'skills', 'projects', 'summary', 'profile', 'history', 'university', 'college', 'school', 'developer', 'engineer', 'analyst', 'manager']
-        keyword_count = sum(1 for keyword in resume_keywords if keyword in lower_text)
         found_skills = extract_skills(text)
         
-        if len(text.strip()) < 150 or keyword_count < 3 or (not has_email and not has_phone and len(found_skills) == 0):
-            # Delete the invalid resume object
+        # Only reject if file has virtually zero readable text (corrupted or unreadable image-only scan)
+        if len(text.strip()) < 25:
             resume_obj.delete()
-            messages.error(request, "AI Detection Alert: The uploaded file does not appear to be a valid resume. Please upload a professional resume containing your contact details, education, skills, and work experience to start the mock interview.")
+            messages.error(request, "Could not extract text from the uploaded file. Please make sure you upload a valid PDF or DOCX resume document.")
             return redirect('resume:upload_resume')
             
         resume_obj.extracted_text = text
