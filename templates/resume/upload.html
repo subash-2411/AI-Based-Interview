@@ -3,6 +3,14 @@
 {% block title %}Upload & Verify Resume - AI Interview Pro{% endblock %}
 
 {% block extra_head %}
+<!-- PDF.js for Universal Mobile & Desktop In-Browser PDF Rendering -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+    if (window.pdfjsLib) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+</script>
+
 <style>
     /* ═══════════════════════════════════════════════
        UPLOAD PAGE STYLES (FLUID RESPONSIVE)
@@ -351,19 +359,62 @@
 
     .live-doc-viewer {
         width: 100%;
-        height: 380px;
+        min-height: 380px;
+        max-height: 480px;
         border-radius: 12px;
-        overflow: hidden;
+        overflow-y: auto;
+        overflow-x: hidden;
         border: 1px solid rgba(255, 255, 255, 0.1);
-        background: #ffffff;
+        background: #020617;
         position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0.75rem;
+        -webkit-overflow-scrolling: touch;
     }
 
-    .live-doc-viewer iframe, .live-doc-viewer object {
+    .pdf-preview-wrap {
         width: 100%;
-        height: 100%;
-        border: none;
-        background: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .pdf-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.78rem;
+        color: #94a3b8;
+        margin-bottom: 0.5rem;
+    }
+
+    .pdf-canvas-el {
+        max-width: 100%;
+        height: auto !important;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+        background: #ffffff;
+    }
+
+    .docx-preview-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2.5rem 1.5rem;
+        text-align: center;
+        background: rgba(15, 23, 42, 0.6);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        width: 100%;
     }
 
     /* Processing animation */
@@ -445,7 +496,8 @@
             font-size: 1.8rem;
         }
         .live-doc-viewer {
-            height: 320px;
+            min-height: 340px;
+            max-height: 420px;
         }
     }
 </style>
@@ -557,7 +609,7 @@
             <div class="live-doc-header">
                 <div>
                     <span style="font-size: 0.75rem; font-weight: 800; color: #10b981; text-transform: uppercase; letter-spacing: 1px;">
-                        <i class="fas fa-circle-check me-1"></i> File Preview
+                        <i class="fas fa-circle-check me-1"></i> File Verified
                     </span>
                     <div style="font-size: 0.85rem; font-weight: 700; color: #fff;" id="previewDocTitle">resume.pdf</div>
                 </div>
@@ -571,15 +623,46 @@
                 </div>
             </div>
 
+            <!-- PDF Toolbar (Page switcher) -->
+            <div class="pdf-toolbar" id="pdfToolbar" style="display: none;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <button type="button" onclick="changePdfPage(-1)" id="prevPageBtn" class="btn-action btn-secondary-glass" style="padding: 0.2rem 0.6rem; font-size: 0.75rem;">‹ Prev</button>
+                    <span id="pageCounter" style="font-weight: 600; color: #e2e8f0; font-size: 0.78rem;">Page 1 of 1</span>
+                    <button type="button" onclick="changePdfPage(1)" id="nextPageBtn" class="btn-action btn-secondary-glass" style="padding: 0.2rem 0.6rem; font-size: 0.75rem;">Next ›</button>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.3rem;">
+                    <span style="font-size: 0.72rem; color: #10b981; font-weight: 700;">● Live Canvas Preview</span>
+                </div>
+            </div>
+
             <!-- Live Viewer Frame -->
             <div class="live-doc-viewer" id="docViewerWrapper">
-                <!-- Injected via JavaScript with Blob URL -->
-                <iframe id="liveDocFrame" title="Resume Document Live Preview"></iframe>
+                <!-- PDF Canvas Preview Wrap -->
+                <div class="pdf-preview-wrap" id="pdfPreviewWrap" style="display: none;">
+                    <div id="pdfLoadingSpinner" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 1rem; color: #94a3b8;">
+                        <i class="fas fa-circle-notch fa-spin fa-2x" style="color: #a855f7; margin-bottom: 0.6rem;"></i>
+                        <span style="font-size: 0.82rem; font-weight: 600;">Rendering document preview…</span>
+                    </div>
+                    <canvas id="pdfPreviewCanvas" class="pdf-canvas-el" style="display: none;"></canvas>
+                </div>
+
+                <!-- DOCX Preview Box -->
+                <div class="docx-preview-box" id="docxPreviewWrap" style="display: none;">
+                    <i class="fas fa-file-word fa-3x" style="color: #3b82f6; margin-bottom: 0.75rem;"></i>
+                    <h4 style="color: #fff; font-size: 1rem; margin: 0 0 0.25rem 0;" id="docxFileName">Document.docx</h4>
+                    <p style="color: #94a3b8; font-size: 0.8rem; margin: 0 0 1rem 0;" id="docxFileSize">Word Document</p>
+                    <span style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #34d399; padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.78rem; font-weight: 700;">
+                        ✓ Ready for ATS Evaluation
+                    </span>
+                </div>
+
+                <!-- Fallback iframe for legacy/desktop browsers -->
+                <iframe id="liveDocFrame" title="Resume Document Live Preview" style="display: none; width: 100%; height: 380px; border: none; border-radius: 8px; background: #fff;"></iframe>
             </div>
 
             <div style="margin-top: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
                 <span style="font-size: 0.75rem; color: #64748b;">
-                    <i class="fas fa-shield-halved me-1"></i> Verify all pages before clicking Begin
+                    <i class="fas fa-shield-halved me-1"></i> Ready for instant ATS scoring
                 </span>
                 <button type="button" onclick="document.getElementById('analyzeBtn').click()" style="background: none; border: none; color: #a78bfa; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
                     Confirm & Start →
@@ -621,12 +704,18 @@
             <div style="font-weight: 800; font-size: 0.95rem; color: #fff;">
                 <i class="fas fa-file-lines me-2" style="color: #a855f7;"></i> Fullscreen Resume Inspector
             </div>
-            <button onclick="closeDocFullscreen()" style="background: none; border: none; color: #94a3b8; font-size: 1.3rem; cursor: pointer;">
-                <i class="fas fa-times"></i>
-            </button>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <a id="downloadOriginalLink" href="#" target="_blank" class="btn-action btn-secondary-glass" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">
+                    <i class="fas fa-download"></i> Open Original
+                </a>
+                <button onclick="closeDocFullscreen()" style="background: none; border: none; color: #94a3b8; font-size: 1.3rem; cursor: pointer;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
         </div>
-        <div style="flex: 1; padding: 0.75rem; background: #020617;">
-            <iframe id="fullscreenFrame" style="width: 100%; height: 100%; border: none; border-radius: 8px; background: #fff;"></iframe>
+        <div style="flex: 1; padding: 0.75rem; background: #020617; overflow-y: auto; display: flex; justify-content: center; align-items: flex-start;">
+            <canvas id="fullscreenCanvas" style="max-width: 100%; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); background: #fff;"></canvas>
+            <iframe id="fullscreenFrame" style="display: none; width: 100%; height: 100%; border: none; border-radius: 8px; background: #fff;"></iframe>
         </div>
     </div>
 </div>
@@ -635,9 +724,9 @@
     const dropZone          = document.getElementById('dropZone');
     const fileInput         = document.getElementById('fileInput');
     const fileChip          = document.getElementById('fileChip');
-    const fileChipName       = document.getElementById('fileChipName');
-    const fileChipSize       = document.getElementById('fileChipSize');
-    const fileChipIcon       = document.getElementById('fileChipIcon');
+    const fileChipName      = document.getElementById('fileChipName');
+    const fileChipSize      = document.getElementById('fileChipSize');
+    const fileChipIcon      = document.getElementById('fileChipIcon');
     const clearBtn          = document.getElementById('clearBtn');
     const analyzeBtn        = document.getElementById('analyzeBtn');
     const zoneIcon          = document.getElementById('zoneIcon');
@@ -647,11 +736,21 @@
 
     const aiIdle            = document.getElementById('aiIdle');
     const liveDocContainer  = document.getElementById('liveDocContainer');
-    const liveDocFrame      = document.getElementById('liveDocFrame');
     const previewDocTitle   = document.getElementById('previewDocTitle');
     const aiProcessing      = document.getElementById('aiProcessing');
+    const pdfToolbar        = document.getElementById('pdfToolbar');
+    const pdfPreviewWrap    = document.getElementById('pdfPreviewWrap');
+    const pdfPreviewCanvas  = document.getElementById('pdfPreviewCanvas');
+    const pdfLoadingSpinner = document.getElementById('pdfLoadingSpinner');
+    const docxPreviewWrap   = document.getElementById('docxPreviewWrap');
+    const docxFileName      = document.getElementById('docxFileName');
+    const docxFileSize      = document.getElementById('docxFileSize');
+    const liveDocFrame      = document.getElementById('liveDocFrame');
 
     let currentBlobUrl = null;
+    let currentPdfDoc = null;
+    let currentPdfPage = 1;
+    let totalPdfPages = 1;
     let stepTimer;
 
     function formatBytes(b) {
@@ -660,7 +759,58 @@
         return (b/(1024*1024)).toFixed(1) + ' MB';
     }
 
-    function handleFile(file) {
+    async function renderPdfPage(pageNum) {
+        if (!currentPdfDoc) return;
+        currentPdfPage = pageNum;
+        
+        try {
+            const page = await currentPdfDoc.getPage(pageNum);
+            const containerWidth = document.getElementById('docViewerWrapper').clientWidth - 30 || 320;
+            const unscaledViewport = page.getViewport({ scale: 1.0 });
+            const scale = Math.max(containerWidth / unscaledViewport.width, 0.8);
+            const viewport = page.getViewport({ scale: scale });
+
+            // Use 2x DPR for crisp text on high-density mobile displays
+            const outputScale = window.devicePixelRatio || 1.5;
+            pdfPreviewCanvas.width = Math.floor(viewport.width * outputScale);
+            pdfPreviewCanvas.height = Math.floor(viewport.height * outputScale);
+            pdfPreviewCanvas.style.width = Math.floor(viewport.width) + "px";
+            pdfPreviewCanvas.style.height = Math.floor(viewport.height) + "px";
+
+            const ctx = pdfPreviewCanvas.getContext('2d');
+            const transform = outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null;
+
+            const renderContext = {
+                canvasContext: ctx,
+                transform: transform,
+                viewport: viewport
+            };
+
+            await page.render(renderContext).promise;
+            pdfLoadingSpinner.style.display = 'none';
+            pdfPreviewCanvas.style.display = 'block';
+
+            document.getElementById('pageCounter').textContent = `Page ${currentPdfPage} of ${totalPdfPages}`;
+            document.getElementById('prevPageBtn').disabled = (currentPdfPage <= 1);
+            document.getElementById('nextPageBtn').disabled = (currentPdfPage >= totalPdfPages);
+            document.getElementById('prevPageBtn').style.opacity = (currentPdfPage <= 1) ? '0.4' : '1';
+            document.getElementById('nextPageBtn').style.opacity = (currentPdfPage >= totalPdfPages) ? '0.4' : '1';
+        } catch (err) {
+            console.error("PDF page render error:", err);
+            pdfLoadingSpinner.style.display = 'none';
+            liveDocFrame.src = currentBlobUrl;
+            liveDocFrame.style.display = 'block';
+        }
+    }
+
+    function changePdfPage(delta) {
+        const next = currentPdfPage + delta;
+        if (next >= 1 && next <= totalPdfPages) {
+            renderPdfPage(next);
+        }
+    }
+
+    async function handleFile(file) {
         if (!file) return;
         const name = (file.name || '').toLowerCase();
         const type = (file.type || '').toLowerCase();
@@ -677,8 +827,8 @@
             URL.revokeObjectURL(currentBlobUrl);
         }
 
-        // Create client-side Blob URL for instant zero-latency preview
         currentBlobUrl = URL.createObjectURL(file);
+        document.getElementById('downloadOriginalLink').href = currentBlobUrl;
 
         // Update upload zone card
         fileChipName.textContent = file.name;
@@ -694,7 +844,7 @@
         zoneIcon.querySelector('i').style.color = '#10b981';
         zoneTitle.textContent = 'Document Selected';
         zoneTitle.style.color = '#10b981';
-        zoneHint.textContent = 'Check preview on the right, then begin analysis';
+        zoneHint.textContent = 'Preview verified below, click Begin AI Analysis';
 
         analyzeBtn.disabled = false;
 
@@ -703,18 +853,53 @@
         liveDocContainer.style.display = 'flex';
         previewDocTitle.textContent = `${file.name} (${formatBytes(file.size)})`;
 
-        if (isPDF) {
-            liveDocFrame.src = currentBlobUrl + '#toolbar=0&navpanes=0';
+        // Hide all viewer states first
+        pdfPreviewWrap.style.display = 'none';
+        docxPreviewWrap.style.display = 'none';
+        pdfToolbar.style.display = 'none';
+        liveDocFrame.style.display = 'none';
+        pdfPreviewCanvas.style.display = 'none';
+
+        if (isPDF && window.pdfjsLib) {
+            pdfPreviewWrap.style.display = 'flex';
+            pdfLoadingSpinner.style.display = 'flex';
+            
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+                currentPdfDoc = await loadingTask.promise;
+                totalPdfPages = currentPdfDoc.numPages;
+                currentPdfPage = 1;
+
+                if (totalPdfPages > 1) {
+                    pdfToolbar.style.display = 'flex';
+                }
+
+                await renderPdfPage(1);
+            } catch (pdfErr) {
+                console.warn("PDF.js arrayBuffer load failed, using blob URL fallback:", pdfErr);
+                try {
+                    const loadingTask = pdfjsLib.getDocument(currentBlobUrl);
+                    currentPdfDoc = await loadingTask.promise;
+                    totalPdfPages = currentPdfDoc.numPages;
+                    currentPdfPage = 1;
+                    if (totalPdfPages > 1) pdfToolbar.style.display = 'flex';
+                    await renderPdfPage(1);
+                } catch (fallbackErr) {
+                    console.error("PDF fallback failed:", fallbackErr);
+                    pdfLoadingSpinner.style.display = 'none';
+                    liveDocFrame.src = currentBlobUrl;
+                    liveDocFrame.style.display = 'block';
+                }
+            }
+        } else if (isPDF) {
+            liveDocFrame.src = currentBlobUrl;
+            liveDocFrame.style.display = 'block';
         } else {
-            // DOCX preview placeholder
-            liveDocFrame.srcdoc = `
-                <div style="font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 90vh; color: #334155; text-align: center; padding: 1.5rem;">
-                    <svg width="48" height="48" fill="#2563eb" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/></svg>
-                    <h3 style="margin: 0.75rem 0 0.25rem 0; color: #0f172a;">${file.name}</h3>
-                    <p style="font-size: 0.85rem; color: #64748b; margin: 0 0 1rem 0;">Word Document · ${formatBytes(file.size)}</p>
-                    <span style="background: #e0e7ff; color: #3730a3; padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">✓ Document Ready to Parse</span>
-                </div>
-            `;
+            // DOCX preview card
+            docxFileName.textContent = file.name;
+            docxFileSize.textContent = `Word Document · ${formatBytes(file.size)}`;
+            docxPreviewWrap.style.display = 'flex';
         }
     }
 
@@ -723,6 +908,7 @@
             URL.revokeObjectURL(currentBlobUrl);
             currentBlobUrl = null;
         }
+        currentPdfDoc = null;
         fileInput.value = '';
         fileChip.style.display = 'none';
         verifyBox.style.display = 'none';
@@ -739,6 +925,9 @@
         liveDocFrame.src = 'about:blank';
         aiIdle.style.display = 'flex';
         aiProcessing.style.display = 'none';
+        pdfToolbar.style.display = 'none';
+        pdfPreviewWrap.style.display = 'none';
+        docxPreviewWrap.style.display = 'none';
     }
 
     dropZone.onclick = (e) => {
@@ -762,12 +951,34 @@
     };
 
     // Fullscreen Inspector
-    function openDocFullscreen() {
+    async function openDocFullscreen() {
         if (!currentBlobUrl) return;
         const modal = document.getElementById('fullscreenDocModal');
-        const frame = document.getElementById('fullscreenFrame');
-        frame.src = currentBlobUrl;
+        const fullscreenCanvas = document.getElementById('fullscreenCanvas');
+        const fullscreenFrame = document.getElementById('fullscreenFrame');
+        
         modal.style.display = 'flex';
+
+        if (currentPdfDoc) {
+            fullscreenFrame.style.display = 'none';
+            fullscreenCanvas.style.display = 'block';
+            try {
+                const page = await currentPdfDoc.getPage(currentPdfPage);
+                const viewport = page.getViewport({ scale: 1.5 });
+                const ctx = fullscreenCanvas.getContext('2d');
+                fullscreenCanvas.width = viewport.width;
+                fullscreenCanvas.height = viewport.height;
+                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+            } catch (err) {
+                fullscreenCanvas.style.display = 'none';
+                fullscreenFrame.src = currentBlobUrl;
+                fullscreenFrame.style.display = 'block';
+            }
+        } else {
+            fullscreenCanvas.style.display = 'none';
+            fullscreenFrame.src = currentBlobUrl;
+            fullscreenFrame.style.display = 'block';
+        }
     }
 
     function closeDocFullscreen() {
@@ -788,13 +999,17 @@
             if (idx < steps.length) {
                 if (idx > 0) {
                     const prev = document.getElementById(steps[idx-1]);
-                    prev.classList.remove('active');
-                    prev.classList.add('done');
-                    prev.querySelector('i').className = 'fas fa-check-circle';
+                    if (prev) {
+                        prev.classList.remove('active');
+                        prev.classList.add('done');
+                        prev.querySelector('i').className = 'fas fa-check-circle';
+                    }
                 }
                 const curr = document.getElementById(steps[idx]);
-                curr.classList.add('active');
-                curr.querySelector('i').className = 'fas fa-circle-notch fa-spin';
+                if (curr) {
+                    curr.classList.add('active');
+                    curr.querySelector('i').className = 'fas fa-circle-notch fa-spin';
+                }
                 idx++;
             } else {
                 clearInterval(stepTimer);

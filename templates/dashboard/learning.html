@@ -327,6 +327,92 @@ body { font-family: 'Inter', sans-serif; }
 }
 .roadmap-step-content h5 { color:#f1f5f9; font-weight:700; font-size:0.9rem; margin:0 0 0.2rem; }
 .roadmap-step-content p  { color:#64748b; font-size:0.82rem; margin:0; line-height:1.5; }
+
+/* ═══════════════════════════════
+   MOBILE RESPONSIVE RULES (< 900px)
+═══════════════════════════════ */
+@media (max-width: 900px) {
+    .hub-layout {
+        display: flex !important;
+        flex-direction: column !important;
+        height: auto !important;
+        min-height: calc(100vh - 80px);
+        gap: 1rem !important;
+        margin-top: 0.25rem !important;
+        padding-bottom: 2rem;
+    }
+    .hub-sidebar {
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        padding: 0.6rem !important;
+        gap: 0.5rem !important;
+        white-space: nowrap !important;
+        -webkit-overflow-scrolling: touch !important;
+        border-radius: 14px !important;
+        scrollbar-width: none;
+    }
+    .hub-sidebar::-webkit-scrollbar {
+        display: none;
+    }
+    .hub-sidebar-title, .hub-sidebar-footer {
+        display: none !important;
+    }
+    .nav-item {
+        padding: 0.55rem 0.85rem !important;
+        font-size: 0.82rem !important;
+        flex-shrink: 0 !important;
+        border-left: none !important;
+        border-bottom: 2px solid transparent !important;
+        border-radius: 10px !important;
+    }
+    .nav-item.active {
+        border-left: none !important;
+        border-bottom: 2px solid #a855f7 !important;
+        background: rgba(139,92,246,0.2) !important;
+        color: #fff !important;
+    }
+    .hub-content {
+        min-height: 550px !important;
+        border-radius: 16px !important;
+    }
+    .tab-pane {
+        padding: 1.25rem 1rem !important;
+    }
+    .section-head {
+        gap: 0.75rem !important;
+        margin-bottom: 1.2rem !important;
+        padding-bottom: 0.8rem !important;
+    }
+    .section-icon {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 1.15rem !important;
+    }
+    .section-head h2 {
+        font-size: 1.2rem !important;
+    }
+    .notes-form-row, .challenge-grid, .progress-grid {
+        grid-template-columns: 1fr !important;
+    }
+    .daily-streak {
+        flex-direction: column !important;
+        text-align: center !important;
+        gap: 0.6rem !important;
+    }
+    .streak-count {
+        margin-left: 0 !important;
+        font-size: 2.2rem !important;
+    }
+    .chat-area {
+        min-height: 320px !important;
+        max-height: 420px !important;
+    }
+    .msg {
+        max-width: 95% !important;
+        font-size: 0.88rem !important;
+    }
+}
 </style>
 {% endblock %}
 
@@ -354,7 +440,7 @@ body { font-family: 'Inter', sans-serif; }
             <i class="fas fa-chart-line" style="color:#10b981;"></i> My Progress
         </div>
 
-        <div style="margin-top:auto; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.05);">
+        <div class="hub-sidebar-footer" style="margin-top:auto; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.05);">
             <div style="background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.15); border-radius:10px; padding:0.9rem; text-align:center;">
                 <div style="font-size:0.72rem; color:#334155; font-weight:600; margin-bottom:0.2rem;">✦ AI-Powered Learning</div>
                 <div style="font-size:0.8rem; color:#6ee7b7; font-weight:700;">All features are live</div>

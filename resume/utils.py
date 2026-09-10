@@ -209,6 +209,21 @@ def calculate_ats_score(text, analysis=None):
     composite = int(skill_pts + impact_pts + formatting_pts + footprint_pts + clarity_pts)
     return max(40, min(composite, 95))
 
+def _safe_int(val, default=50):
+    """Safely convert any value (e.g. '85%', '85/100', 85.5, None) to int."""
+    if val is None:
+        return default
+    if isinstance(val, (int, float)):
+        return int(val)
+    try:
+        # Extract the first integer match from string
+        match = re.search(r'\d+', str(val))
+        if match:
+            return int(match.group(0))
+        return int(float(val))
+    except Exception:
+        return default
+
 def analyze_resume_with_ai(text):
     """
     Deep, accurate AI-powered ATS evaluation utilizing Google Gemini.
@@ -295,8 +310,9 @@ def analyze_resume_with_ai(text):
         'skills': extracted_skills
     }
 
-    api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-    if not api_key:
+    raw_api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or ""
+    valid_keys = [k.strip() for k in raw_api_key.split(',') if k.strip()]
+    if not valid_keys:
         return fallback_analysis
 
     # Try calling Gemini with primary and fallback models
@@ -304,8 +320,7 @@ def analyze_resume_with_ai(text):
     
     try:
         import google.generativeai as genai
-        # If API key contains commas (multiple keys), pick the first valid one
-        clean_api_key = [k.strip() for k in api_key.split(',') if k.strip()][0]
+        clean_api_key = valid_keys[0]
         genai.configure(api_key=clean_api_key)
         
         prompt = f"""
@@ -367,7 +382,7 @@ CRITICAL: Return ONLY the JSON object. Do not include markdown blocks or any con
         for model_name in models_to_try:
             try:
                 model = genai.GenerativeModel(model_name)
-                response = model.generate_content(prompt, request_options={"timeout": 15.0})
+                response = model.generate_content(prompt, request_options={"timeout": 9.0})
                 if response and response.text:
                     break
             except Exception as model_err:
@@ -385,13 +400,13 @@ CRITICAL: Return ONLY the JSON object. Do not include markdown blocks or any con
                     if k not in parsed:
                         parsed[k] = v
                 
-                # Clamp scores between realistic ranges (30 to 98)
-                parsed['ats_score'] = max(30, min(int(parsed.get('ats_score', ats_score)), 98))
-                parsed['formatting_score'] = max(30, min(int(parsed.get('formatting_score', formatting_score)), 98))
-                parsed['impact_score'] = max(30, min(int(parsed.get('impact_score', impact_score)), 98))
-                parsed['clarity_score'] = max(30, min(int(parsed.get('clarity_score', clarity_score)), 98))
+                # Clamp scores between realistic ranges (30 to 98) safely
+                parsed['ats_score'] = max(30, min(_safe_int(parsed.get('ats_score'), ats_score), 98))
+                parsed['formatting_score'] = max(30, min(_safe_int(parsed.get('formatting_score'), formatting_score), 98))
+                parsed['impact_score'] = max(30, min(_safe_int(parsed.get('impact_score'), impact_score), 98))
+                parsed['clarity_score'] = max(30, min(_safe_int(parsed.get('clarity_score'), clarity_score), 98))
                 
-                if not parsed.get('skills'):
+                if not parsed.get('skills') or not isinstance(parsed.get('skills'), list):
                     parsed['skills'] = extracted_skills
                 
                 return parsed
