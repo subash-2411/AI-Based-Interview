@@ -2,26 +2,260 @@
 {% load i18n %}
 {% load account socialaccount %}
 
-{% block title %}{% trans "Sign Up" %} - AI Interview Pro{% endblock %}
+{% block title %}{% trans "Sign Up" %} — AI Interview Pro{% endblock %}
+
+{% block extra_head %}
+<style>
+    .auth-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 100px);
+        padding: 2rem 1rem;
+    }
+
+    .auth-card {
+        width: 100%;
+        max-width: 440px;
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
+        padding: 2.5rem 2rem;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(20px);
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .auth-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #22d3ee;
+        background: rgba(6,182,212,0.1);
+        border: 1px solid rgba(6,182,212,0.25);
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+    }
+
+    .auth-title {
+        font-size: 1.85rem;
+        font-weight: 900;
+        color: #ffffff;
+        margin-bottom: 0.35rem;
+        letter-spacing: -0.5px;
+    }
+
+    .auth-subtitle {
+        color: #64748b;
+        font-size: 0.88rem;
+    }
+
+    /* ── GOOGLE BUTTON ── */
+    .google-signin-wrapper {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1.25rem;
+    }
+
+    .google-signin {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        width: 100%;
+        min-height: 48px;
+        padding: 0.75rem 1.25rem;
+        background: #ffffff;
+        color: #3c4043 !important;
+        border: 1px solid #dadce0;
+        border-radius: 12px;
+        font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-weight: 700;
+        font-size: 0.95rem;
+        letter-spacing: 0.2px;
+        text-decoration: none !important;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
+        box-sizing: border-box;
+        text-align: center;
+    }
+
+    .google-signin:hover {
+        background-color: #f8fafc;
+        border-color: #a5f3fc;
+        color: #1e293b !important;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    }
+
+    .google-signin:active {
+        transform: translateY(0);
+        background-color: #f1f5f9;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    }
+
+    .google-signin svg {
+        flex-shrink: 0;
+        width: 20px;
+        height: 20px;
+    }
+
+    .or-separator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        margin: 1.25rem 0;
+        color: rgba(255,255,255,0.3);
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-align: center;
+    }
+
+    .or-separator::before, .or-separator::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: rgba(255,255,255,0.08);
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.76rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.7px;
+        margin-bottom: 0.4rem;
+    }
+
+    .auth-input {
+        width: 100%;
+        background: rgba(10,15,30,0.8);
+        border: 1.5px solid rgba(255,255,255,0.06);
+        padding: 0.85rem 1rem;
+        border-radius: 12px;
+        color: #f1f5f9;
+        font-size: 16px;
+        font-weight: 500;
+        transition: all 0.25s;
+        outline: none;
+        box-sizing: border-box;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .auth-input:focus {
+        border-color: #06b6d4;
+        background: rgba(10,15,30,1);
+        box-shadow: 0 0 0 4px rgba(6,182,212,0.12);
+    }
+
+    .submit-btn {
+        width: 100%;
+        min-height: 48px;
+        padding: 0.9rem;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #06b6d4, #7c3aed);
+        color: #fff;
+        font-weight: 800;
+        font-size: 0.97rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.25s;
+        margin-top: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        box-shadow: 0 6px 20px rgba(6,182,212,0.3);
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(6,182,212,0.45);
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 1.5rem;
+        color: #64748b;
+        font-size: 0.88rem;
+    }
+
+    .auth-footer a {
+        color: #06b6d4;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .auth-footer a:hover {
+        color: #22d3ee;
+        text-decoration: underline;
+    }
+
+    .alert-error {
+        background: rgba(239,68,68,0.1);
+        border: 1px solid rgba(239,68,68,0.25);
+        color: #fca5a5;
+        padding: 0.5rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        margin-top: 0.4rem;
+    }
+
+    @media (max-width: 480px) {
+        .auth-card {
+            padding: 2rem 1.25rem;
+            border-radius: 20px;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="form-container">
-    <div class="glass-card">
-        <h2 class="hero-title" style="font-size: 2.5rem; margin-bottom: 0.5rem;">{% trans "Get Started" %}</h2>
-        <p class="hero-subtitle" style="margin-bottom: 2rem;">{% trans "Create your account for AI-powered interviews" %}</p>
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-badge">
+                <i class="fas fa-rocket"></i> {% trans "Get Started" %}
+            </div>
+            <h2 class="auth-title">{% trans "Create Account" %}</h2>
+            <p class="auth-subtitle">{% trans "Create your account for AI-powered interviews" %}</p>
+        </div>
 
         {% get_providers as socialaccount_providers %}
 
         {% if socialaccount_providers %}
-            <div class="socialaccount_ballot">
-                <a title="Google" class="socialaccount_provider google btn-google" 
-                   href="{% provider_login_url 'google' %}">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google">
-                    <span>Continue with Google</span>
+            <div class="google-signin-wrapper">
+                <a title="Google" class="google-signin" href="{% provider_login_url 'google' %}">
+                    <svg viewBox="0 0 48 48" width="20" height="20">
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.79l7.97-6.2z"/>
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                    </svg>
+                    <span>{% trans "Continue with Google" %}</span>
                 </a>
             </div>
 
-            <div class="separator" style="margin: 2rem 0;">
+            <div class="or-separator">
                 <span>{% trans "OR" %}</span>
             </div>
         {% endif %}
@@ -30,16 +264,16 @@
             {% csrf_token %}
             
             {% for field in form %}
-                <div class="input-group">
-                    <label for="{{ field.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">{{ field.label }}</label>
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
                     <input type="{{ field.field.widget.input_type }}" 
                            name="{{ field.name }}" 
                            placeholder="{{ field.label }}" 
-                           class="input-field" 
+                           class="auth-input" 
                            {% if field.field.required %}required{% endif %} 
                            id="{{ field.id_for_label }}">
                     {% if field.errors %}
-                        <div class="alert alert-error" style="padding: 0.5rem; margin-top: 0.5rem; font-size: 0.8rem;">
+                        <div class="alert-error">
                             {{ field.errors|striptags }}
                         </div>
                     {% endif %}
@@ -50,14 +284,14 @@
                 <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
             {% endif %}
 
-            <button class="btn-primary" type="submit" style="width: 100%; margin-top: 1rem;">
-                {% trans "Sign Up" %}
+            <button class="submit-btn" type="submit">
+                <i class="fas fa-user-plus"></i> {% trans "Sign Up" %}
             </button>
         </form>
 
-        <div style="text-align: center; margin-top: 2rem; color: var(--text-muted);">
+        <div class="auth-footer">
             <p>{% trans "Already have an account?" %} 
-                <a href="{{ login_url }}" style="color: var(--primary); text-decoration: none; font-weight: 600;">{% trans "Sign In" %}</a>
+                <a href="{{ login_url }}">{% trans "Sign In" %}</a>
             </p>
         </div>
     </div>

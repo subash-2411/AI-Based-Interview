@@ -52,6 +52,29 @@
         color: #94a3b8;
         font-size: 0.9rem;
     }
+
+    @media (max-width: 768px) {
+        .studio-header {
+            margin-bottom: 1.5rem;
+        }
+        .studio-header h1 {
+            font-size: 1.85rem !important;
+            margin-bottom: 0.5rem;
+        }
+        .action-cards {
+            grid-template-columns: 1fr !important;
+            gap: 1rem !important;
+            margin-bottom: 2rem;
+        }
+        .studio-card {
+            padding: 1.5rem 1.25rem !important;
+            border-radius: 16px !important;
+        }
+        .studio-card i {
+            font-size: 2.2rem !important;
+            margin-bottom: 0.8rem !important;
+        }
+    }
 </style>
 {% endblock %}
 

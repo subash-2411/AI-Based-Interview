@@ -597,6 +597,49 @@
             color: var(--btn-secondary-text) !important;
             border: 1px solid var(--btn-secondary-border) !important;
         }
+
+        /* Official White Google Button Global Style */
+        .btn-google, .google-signin {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            background: #ffffff !important;
+            color: #3c4043 !important;
+            border: 1px solid #dadce0 !important;
+            border-radius: 12px;
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 0.2px;
+            text-decoration: none !important;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
+            box-sizing: border-box;
+            user-select: none;
+            text-align: center;
+        }
+
+        .btn-google span, .google-signin span {
+            color: #1f2937 !important;
+            font-weight: 700 !important;
+        }
+
+        .btn-google:hover, .google-signin:hover {
+            background-color: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            color: #1e293b !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+        }
+
+        .btn-google:active, .google-signin:active {
+            transform: translateY(0);
+            background-color: #f1f5f9 !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+        }
+
         .input-field, input[type="text"], input[type="email"], input[type="password"],
         input[type="tel"], textarea, select {
             background: var(--input-bg) !important;
@@ -699,6 +742,18 @@
             .nav-links .btn-primary {
                 padding: 0.4rem 0.9rem !important;
                 font-size: 0.8rem !important;
+            }
+        }
+
+        /* ── PWA Button Visibility Controls ── */
+        @media (display-mode: standalone) {
+            #pwaTopBtn, #pwaSidebarBtn, .pwa-install-btn {
+                display: none !important;
+            }
+        }
+        @media (max-width: 1024px) {
+            #pwaTopBtn, #pwaSidebarBtn, .pwa-install-btn {
+                display: none !important;
             }
         }
     </style>
@@ -903,28 +958,42 @@
         // ═══════════════════════════════════════════════
         let deferredPrompt = null;
 
+        function checkPwaDisplay() {
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                                 window.navigator.standalone === true || 
+                                 localStorage.getItem('pwa_installed') === 'true';
+            const isDesktop = window.innerWidth > 1024;
+            const topBtn = document.getElementById('pwaTopBtn');
+            const sideBtn = document.getElementById('pwaSidebarBtn');
+
+            if (isStandalone || !isDesktop) {
+                if (topBtn) topBtn.style.display = 'none';
+                if (sideBtn) sideBtn.style.display = 'none';
+            } else if (topBtn && deferredPrompt) {
+                topBtn.style.display = 'inline-flex';
+            }
+        }
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/static/sw.js')
                     .then((reg) => console.log('PWA ServiceWorker registered:', reg.scope))
                     .catch((err) => console.log('PWA ServiceWorker registration failed:', err));
+                checkPwaDisplay();
             });
         }
 
+        window.addEventListener('resize', checkPwaDisplay);
+
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent Chrome 67 and earlier from automatically showing the prompt
             e.preventDefault();
             deferredPrompt = e;
-
-            // Show install buttons in sidebar and topbar
-            const sideBtn = document.getElementById('pwaSidebarBtn');
-            const topBtn = document.getElementById('pwaTopBtn');
-            if (sideBtn) sideBtn.style.display = 'flex';
-            if (topBtn) topBtn.style.display = 'inline-flex';
+            checkPwaDisplay();
         });
 
         window.addEventListener('appinstalled', () => {
             console.log('AI Interview Pro PWA installed successfully!');
+            localStorage.setItem('pwa_installed', 'true');
             deferredPrompt = null;
             const sideBtn = document.getElementById('pwaSidebarBtn');
             const topBtn = document.getElementById('pwaTopBtn');
@@ -949,13 +1018,13 @@
                 deferredPrompt.prompt();
                 deferredPrompt.userChoice.then((choiceResult) => {
                     if (choiceResult.outcome === 'accepted') {
-                        console.log('User accepted the PWA install prompt');
+                        localStorage.setItem('pwa_installed', 'true');
+                        checkPwaDisplay();
                     }
                     deferredPrompt = null;
                 });
             } else {
-                // Fallback for browsers that support install via menu
-                alert("To install this app on your mobile home screen, tap your browser's 3-dot menu (⋮) and select 'Install app' or 'Add to Home screen'!");
+                alert("To install this app, tap your browser menu (⋮) and select 'Install app' or 'Add to Home screen'!");
             }
         }
     </script>
