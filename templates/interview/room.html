@@ -914,9 +914,14 @@
         const isMobile = window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
         recognition.lang = lang === 'ta-EN' ? 'ta-IN' : lang;
         
-        // Critical Fix: Mobile browsers (especially iOS) crash instantly if continuous = true
-        recognition.continuous = !isMobile;
-        recognition.interimResults = true;
+        // Critical Fix: Mobile browsers (especially iOS) crash instantly or fail silently if continuous OR interimResults = true
+        if (isMobile) {
+            recognition.continuous = false;
+            recognition.interimResults = false;
+        } else {
+            recognition.continuous = true;
+            recognition.interimResults = true;
+        }
 
         recognition.onstart = () => {
             isListening = true;
@@ -961,11 +966,14 @@
             micBtn.classList.remove('active');
             micBtn.innerHTML = '<i class="fas fa-microphone"></i> <span>Start Speaking</span>';
             
+            let errMsg = "Speech recognition error: " + event.error;
             if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-                answerInput.value = "Error: Microphone blocked! Make sure you are using a secure HTTPS connection and have granted permission.";
-            } else {
-                answerInput.value = "Speech recognition error: " + event.error + ". (On mobile, this often happens if not on HTTPS)";
+                errMsg = "Error: Microphone blocked! Make sure you have granted permission.";
             }
+            
+            // Alert heavily on mobile to ensure we know what the bug is if it persists
+            if (isMobile) alert(errMsg);
+            answerInput.value = errMsg;
         };
     }
 
