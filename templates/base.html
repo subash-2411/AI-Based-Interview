@@ -13,8 +13,14 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2.0">
+    <!-- PWA & Mobile Web App Support -->
+    <link rel="manifest" href="{% static 'manifest.json' %}">
+    <meta name="theme-color" content="#8b5cf6">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AI Interview">
+    <link rel="apple-touch-icon" href="{% static 'icons/icon.svg' %}">
 
     <!-- Favicon (AI Brain Emoji) -->
     <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='.9em' font-size='90'&gt;🧠&lt;/text&gt;&lt;/svg&gt;">
@@ -789,6 +795,12 @@
                     <i class="fas fa-palette"></i> Appearance
                 </a>
 
+                <!-- PWA Install App Button (Sidebar) -->
+                <a href="javascript:void(0)" onclick="triggerPWAInstall()" class="nav-item pwa-install-btn" id="pwaSidebarBtn" style="display:none; background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(6,182,212,0.1)); border: 1px solid rgba(139,92,246,0.35); color: #c4b5fd !important; margin: 0.5rem 0.6rem; border-radius: 10px;">
+                    <i class="fas fa-mobile-screen-button" style="color: #22d3ee;"></i> Install App
+                    <span style="margin-left: auto; background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: #fff; font-size: 0.62rem; padding: 0.15rem 0.45rem; border-radius: 6px; font-weight: 800;">FREE</span>
+                </a>
+
                 <!-- Logout at bottom -->
                 <a href="{% url 'logout' %}" class="nav-item logout-item">
                     <i class="fas fa-sign-out-alt"></i> Logout
@@ -818,7 +830,11 @@
                 <button class="mobile-toggle" onclick="toggleSidebar()">
                     <i class="fas fa-bars"></i>
                 </button>
-                <div style="display: flex; gap: 1rem; align-items: center;">
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <!-- Topbar Install App Button -->
+                    <button type="button" onclick="triggerPWAInstall()" id="pwaTopBtn" class="btn-primary" style="display:none; padding: 0.35rem 0.85rem; font-size: 0.78rem; border-radius: 8px; font-weight: 700; align-items: center; gap: 0.4rem; cursor: pointer; border: none;">
+                        <i class="fas fa-download"></i> Install App
+                    </button>
                     <a href="{% url 'dashboard' %}"><i class="fas fa-th-large"></i> Dashboard</a>
                     <a href="{% url 'profile' %}"><i class="fas fa-user-circle"></i> {{ user.username }}</a>
                 </div>
@@ -843,6 +859,25 @@
 
     </div>
 
+    <!-- ═══════════════════════════════════════════════
+         PWA IOS INSTRUCTION MODAL
+         ═══════════════════════════════════════════════ -->
+    <div id="pwaIosModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(2,6,23,0.85); backdrop-filter:blur(10px); z-index:99999; align-items:center; justify-content:center; padding:1rem;">
+        <div style="background:#0b1329; border:1px solid rgba(255,255,255,0.15); border-radius:18px; padding:1.75rem; max-width:400px; width:100%; text-align:center; color:#fff; box-shadow:0 20px 60px rgba(0,0,0,0.8);">
+            <div style="width:56px; height:56px; border-radius:50%; background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.3); display:flex; align-items:center; justify-content:center; font-size:1.6rem; color:#a855f7; margin:0 auto 1rem;">
+                <i class="fas fa-arrow-up-from-bracket"></i>
+            </div>
+            <h3 style="font-size:1.2rem; font-weight:800; margin:0 0 0.5rem 0;">Install on iPhone / iPad</h3>
+            <p style="color:#94a3b8; font-size:0.88rem; line-height:1.5; margin-bottom:1.25rem;">
+                1. Safari browser-la keezha irukkura <strong>Share</strong> button (<i class="fas fa-arrow-up-from-bracket"></i>) click pannunga.<br>
+                2. Keezha scroll panni <strong>"Add to Home Screen"</strong> (<i class="fas fa-plus-square"></i>) select pannunga.
+            </p>
+            <button onclick="document.getElementById('pwaIosModal').style.display='none'" class="btn-primary" style="width:100%; padding:0.65rem; border-radius:10px; font-weight:700; border:none; cursor:pointer;">
+                Got it!
+            </button>
+        </div>
+    </div>
+
     {% block extra_js %}{% endblock %}
     <script>
         function toggleSidebar() {
@@ -863,6 +898,66 @@
             }
         });
 
+        // ═══════════════════════════════════════════════
+        // PWA SERVICE WORKER & INSTALL PROMPT LOGIC
+        // ═══════════════════════════════════════════════
+        let deferredPrompt = null;
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then((reg) => console.log('PWA ServiceWorker registered:', reg.scope))
+                    .catch((err) => console.log('PWA ServiceWorker registration failed:', err));
+            });
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault();
+            deferredPrompt = e;
+
+            // Show install buttons in sidebar and topbar
+            const sideBtn = document.getElementById('pwaSidebarBtn');
+            const topBtn = document.getElementById('pwaTopBtn');
+            if (sideBtn) sideBtn.style.display = 'flex';
+            if (topBtn) topBtn.style.display = 'inline-flex';
+        });
+
+        window.addEventListener('appinstalled', () => {
+            console.log('AI Interview Pro PWA installed successfully!');
+            deferredPrompt = null;
+            const sideBtn = document.getElementById('pwaSidebarBtn');
+            const topBtn = document.getElementById('pwaTopBtn');
+            if (sideBtn) sideBtn.style.display = 'none';
+            if (topBtn) topBtn.style.display = 'none';
+        });
+
+        function triggerPWAInstall() {
+            const isIos = () => {
+                const userAgent = window.navigator.userAgent.toLowerCase();
+                return /iphone|ipad|ipod/.test(userAgent);
+            };
+
+            const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+
+            if (isIos() && !isInStandaloneMode()) {
+                document.getElementById('pwaIosModal').style.display = 'flex';
+                return;
+            }
+
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the PWA install prompt');
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                // Fallback for browsers that support install via menu
+                alert("To install this app on your mobile home screen, tap your browser's 3-dot menu (⋮) and select 'Install app' or 'Add to Home screen'!");
+            }
+        }
     </script>
 </body>
 
