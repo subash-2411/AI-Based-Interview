@@ -29,14 +29,19 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-mdw((yxgrc6pxps@22$0z+=512
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-# Allow hosts from environment, fallback to localhost for development
+# Allow hosts from environment, fallback to all hosts for local network & multi-device development
 allowed_hosts_env = os.getenv('ALLOWED_HOSTS', '')
-if allowed_hosts_env == '*':
-    ALLOWED_HOSTS = ['*']
-elif allowed_hosts_env:
+if allowed_hosts_env:
     ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',') if host.strip()]
 else:
-    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+    ALLOWED_HOSTS = ['*']
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.onrender.com',
+    'https://*.railway.app',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
 
 
 # Application definition
@@ -85,6 +90,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'core.urls'
+X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 TEMPLATES = [
     {
@@ -160,6 +166,7 @@ SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
 SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
 ACCOUNT_LOGOUT_ON_GET = True
+SOCIALACCOUNT_ADAPTER = 'accounts.adapters.CustomSocialAccountAdapter'
 LOGIN_REDIRECT_URL = 'dashboard'
 
 SOCIALACCOUNT_PROVIDERS = {

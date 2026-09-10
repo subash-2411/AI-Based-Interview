@@ -1,23 +1,27 @@
 {% extends 'base.html' %}
 
-{% block title %}AI Resume Analysis - AI Interview Pro{% endblock %}
+{% block title %}Upload & Verify Resume - AI Interview Pro{% endblock %}
 
 {% block extra_head %}
 <style>
-    /* Override: upload page should be centered, compact */
+    /* ═══════════════════════════════════════════════
+       UPLOAD PAGE STYLES (FLUID RESPONSIVE)
+       ═══════════════════════════════════════════════ */
     .main-content {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: flex-start;
-        padding: 1.5rem 2rem !important;
+        padding: 1.5rem 1rem !important;
+        width: 100%;
     }
 
-    /* ── PAGE HEADER ── */
+    /* Page Header */
     .upload-header {
         text-align: center;
         margin-bottom: 1.5rem;
         width: 100%;
+        max-width: 1050px;
     }
 
     .upload-eyebrow {
@@ -26,11 +30,11 @@
         text-transform: uppercase;
         letter-spacing: 3px;
         color: #fb7185;
-        margin-bottom: 0.4rem;
+        margin-bottom: 0.35rem;
     }
 
     .upload-title {
-        font-size: 2rem;
+        font-size: 2.2rem;
         font-weight: 900;
         background: linear-gradient(135deg, #fff 30%, #a5b4fc 100%);
         -webkit-background-clip: text;
@@ -40,28 +44,31 @@
     }
 
     .upload-desc {
-        color: #64748b;
-        font-size: 0.9rem;
+        color: #94a3b8;
+        font-size: 0.92rem;
         margin: 0;
     }
 
-    /* ── TWO COLUMN LAYOUT ── */
+    /* ── TWO COLUMN RESPONSIVE LAYOUT ── */
     .upload-layout {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1.5rem;
         width: 100%;
-        max-width: 900px;
+        max-width: 1050px;
     }
 
-    /* ── UPLOAD CARD ── */
+    /* ── UPLOAD CARD (LEFT) ── */
     .upload-card {
-        background: rgba(10,15,30,0.7);
-        border: 1px solid rgba(255,255,255,0.07);
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 20px;
-        padding: 1.75rem;
+        padding: 1.5rem;
         position: relative;
         overflow: hidden;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
     }
 
     .upload-card::before {
@@ -74,25 +81,24 @@
     }
 
     .card-heading {
-        font-size: 0.9rem;
+        font-size: 0.92rem;
         font-weight: 800;
         color: #e2e8f0;
-        margin-bottom: 1.25rem;
+        margin-bottom: 1rem;
         display: flex;
         align-items: center;
         gap: 0.5rem;
     }
-
     .card-heading i { color: #8b5cf6; }
 
-    /* Upload Zone */
+    /* Upload Drop Zone */
     .upload-zone {
-        border: 2px dashed rgba(139,92,246,0.25);
+        border: 2px dashed rgba(139, 92, 246, 0.3);
         border-radius: 16px;
-        padding: 2.5rem 1.5rem;
+        padding: 2.2rem 1.25rem;
         cursor: pointer;
-        transition: all 0.3s ease;
-        background: rgba(2,6,23,0.4);
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        background: rgba(2, 6, 23, 0.4);
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -103,31 +109,29 @@
 
     .upload-zone:hover, .upload-zone.dragover {
         border-color: #8b5cf6;
-        background: rgba(139,92,246,0.05);
-        box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
+        background: rgba(139, 92, 246, 0.06);
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
         transform: translateY(-2px);
     }
-
-    .upload-zone.dragover { border-style: solid; transform: scale(1.01); }
+    .upload-zone.dragover { border-style: solid; }
 
     .upload-zone-icon {
-        width: 60px;
-        height: 60px;
+        width: 56px;
+        height: 56px;
         border-radius: 50%;
-        background: rgba(139,92,246,0.1);
-        border: 1px solid rgba(139,92,246,0.2);
+        background: rgba(139, 92, 246, 0.1);
+        border: 1px solid rgba(139, 92, 246, 0.2);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.6rem;
+        font-size: 1.5rem;
         color: #a78bfa;
         transition: all 0.3s;
     }
 
     .upload-zone:hover .upload-zone-icon {
-        background: rgba(139,92,246,0.2);
-        transform: scale(1.08) translateY(-3px);
-        box-shadow: 0 8px 20px rgba(139,92,246,0.2);
+        background: rgba(139, 92, 246, 0.2);
+        transform: scale(1.08);
     }
 
     .zone-title {
@@ -139,7 +143,7 @@
 
     .zone-hint {
         font-size: 0.78rem;
-        color: #475569;
+        color: #64748b;
         margin: 0;
     }
 
@@ -148,17 +152,17 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: rgba(139,92,246,0.08);
-        border: 1px solid rgba(139,92,246,0.2);
-        border-radius: 10px;
-        padding: 0.7rem 1rem;
-        margin-top: 0.75rem;
+        background: rgba(139, 92, 246, 0.1);
+        border: 1px solid rgba(139, 92, 246, 0.25);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        margin-top: 0.85rem;
         animation: slideUp 0.3s ease;
     }
 
     @keyframes slideUp {
-        from { opacity:0; transform:translateY(6px); }
-        to { opacity:1; transform:translateY(0); }
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
     .file-chip-info {
@@ -166,33 +170,30 @@
         align-items: center;
         gap: 0.6rem;
     }
-
-    .file-chip-icon { font-size: 1.2rem; }
-    .file-chip-name { font-size: 0.85rem; font-weight: 700; color: #e2e8f0; }
-    .file-chip-size { font-size: 0.75rem; color: #64748b; }
+    .file-chip-name { font-size: 0.85rem; font-weight: 700; color: #e2e8f0; word-break: break-all; }
+    .file-chip-size { font-size: 0.72rem; color: #94a3b8; }
 
     .file-clear-btn {
         background: none;
         border: none;
         color: #ef4444;
         cursor: pointer;
-        font-size: 0.9rem;
-        padding: 0.2rem;
+        font-size: 1.1rem;
+        padding: 0.3rem;
         transition: transform 0.2s;
     }
-
-    .file-clear-btn:hover { transform: scale(1.2); }
+    .file-clear-btn:hover { transform: scale(1.15); }
 
     /* Analyze button */
     .btn-analyze {
         width: 100%;
-        padding: 0.9rem;
+        padding: 0.85rem;
         border-radius: 14px;
         background: linear-gradient(135deg, #8b5cf6, #ec4899);
         border: none;
         color: #fff;
         font-weight: 800;
-        font-size: 0.97rem;
+        font-size: 0.95rem;
         cursor: pointer;
         transition: all 0.3s ease;
         margin-top: 1rem;
@@ -200,74 +201,71 @@
         align-items: center;
         justify-content: center;
         gap: 0.5rem;
-        box-shadow: 0 6px 20px rgba(139,92,246,0.3);
+        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3);
     }
-
     .btn-analyze:disabled {
-        opacity: 0.3;
+        opacity: 0.35;
         cursor: not-allowed;
         box-shadow: none;
     }
-
     .btn-analyze:not(:disabled):hover {
         transform: translateY(-2px);
-        box-shadow: 0 12px 28px rgba(139,92,246,0.5);
+        box-shadow: 0 10px 25px rgba(139, 92, 246, 0.45);
     }
 
-    /* Divider */
     .or-divider {
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        margin: 1.25rem 0;
-        color: rgba(255,255,255,0.1);
+        margin: 1rem 0;
+        color: rgba(255, 255, 255, 0.15);
         font-size: 0.7rem;
         font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 2px;
     }
-
     .or-divider::before, .or-divider::after {
         content: '';
         flex: 1;
         height: 1px;
-        background: rgba(255,255,255,0.06);
+        background: rgba(255, 255, 255, 0.08);
     }
 
-    /* Build with AI link */
     .build-link {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.6rem;
-        padding: 0.78rem;
+        gap: 0.5rem;
+        padding: 0.75rem;
         border-radius: 14px;
-        border: 1px solid rgba(6,182,212,0.3);
-        background: rgba(6,182,212,0.05);
+        border: 1px solid rgba(6, 182, 212, 0.3);
+        background: rgba(6, 182, 212, 0.05);
         color: #22d3ee !important;
         text-decoration: none !important;
         font-weight: 700;
-        font-size: 0.9rem;
+        font-size: 0.88rem;
         transition: all 0.25s;
     }
-
     .build-link:hover {
-        background: rgba(6,182,212,0.12);
+        background: rgba(6, 182, 212, 0.12);
         border-color: #22d3ee;
         transform: translateY(-2px);
     }
 
-    /* ── RIGHT: AI PREVIEW CARD ── */
+    /* ── RIGHT: LIVE DOCUMENT PREVIEW CARD ── */
     .ai-preview-card {
-        background: rgba(10,15,30,0.7);
-        border: 1px solid rgba(255,255,255,0.07);
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 20px;
-        padding: 1.75rem;
+        padding: 1.5rem;
         display: flex;
         flex-direction: column;
-        gap: 0;
         position: relative;
         overflow: hidden;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        min-height: 480px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
     }
 
     .ai-preview-card::before {
@@ -287,63 +285,85 @@
         justify-content: center;
         flex: 1;
         text-align: center;
-        padding: 2rem 1rem;
+        padding: 1.5rem 1rem;
     }
 
     .ai-idle-icon {
-        width: 70px;
-        height: 70px;
+        width: 64px;
+        height: 64px;
         border-radius: 50%;
-        background: rgba(6,182,212,0.08);
-        border: 1px solid rgba(6,182,212,0.15);
+        background: rgba(6, 182, 212, 0.08);
+        border: 1px solid rgba(6, 182, 212, 0.15);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.8rem;
+        font-size: 1.6rem;
         color: #22d3ee;
         margin: 0 auto 1rem;
     }
-
-    .ai-idle h4 {
-        color: #e2e8f0;
-        font-size: 0.95rem;
-        font-weight: 700;
-        margin-bottom: 0.35rem;
-    }
-
-    .ai-idle p {
-        color: #475569;
-        font-size: 0.82rem;
-        line-height: 1.5;
-        max-width: 220px;
-    }
+    .ai-idle h4 { color: #e2e8f0; font-size: 0.95rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .ai-idle p { color: #64748b; font-size: 0.82rem; line-height: 1.5; max-width: 250px; }
 
     /* Feature checklist */
     .feature-list {
         display: flex;
         flex-direction: column;
-        gap: 0.6rem;
-        margin-top: 1.5rem;
+        gap: 0.5rem;
+        margin-top: 1rem;
     }
-
     .feature-row {
         display: flex;
         align-items: center;
         gap: 0.6rem;
-        padding: 0.6rem 0.8rem;
-        background: rgba(255,255,255,0.02);
-        border: 1px solid rgba(255,255,255,0.04);
+        padding: 0.55rem 0.75rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.04);
         border-radius: 10px;
-        font-size: 0.83rem;
+        font-size: 0.8rem;
         color: #94a3b8;
         font-weight: 500;
     }
 
-    .feature-row i {
-        width: 22px;
-        text-align: center;
-        font-size: 0.85rem;
-        flex-shrink: 0;
+    /* LIVE DOCUMENT INSPECTOR (SHOWN IMMEDIATELY UPON FILE SELECT) */
+    .live-doc-container {
+        display: none;
+        flex-direction: column;
+        flex: 1;
+        width: 100%;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .live-doc-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .live-doc-viewer {
+        width: 100%;
+        height: 380px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: #ffffff;
+        position: relative;
+    }
+
+    .live-doc-viewer iframe, .live-doc-viewer object {
+        width: 100%;
+        height: 100%;
+        border: none;
+        background: #fff;
     }
 
     /* Processing animation */
@@ -358,15 +378,14 @@
     }
 
     .process-ring {
-        width: 64px;
-        height: 64px;
-        border: 3px solid rgba(139,92,246,0.15);
+        width: 56px;
+        height: 56px;
+        border: 3px solid rgba(139, 92, 246, 0.15);
         border-top-color: #8b5cf6;
         border-radius: 50%;
-        animation: spin 0.9s linear infinite;
+        animation: spin 0.8s linear infinite;
         margin: 0 auto 1rem;
     }
-
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .process-steps {
@@ -376,61 +395,58 @@
         margin-top: 1rem;
         width: 100%;
     }
-
     .process-step {
         display: flex;
         align-items: center;
         gap: 0.5rem;
         font-size: 0.8rem;
         color: #64748b;
-        padding: 0.4rem 0.6rem;
+        padding: 0.35rem 0.6rem;
         border-radius: 8px;
         transition: all 0.3s;
     }
+    .process-step.done { color: #10b981; background: rgba(16, 185, 129, 0.06); }
+    .process-step.active { color: #a78bfa; background: rgba(139, 92, 246, 0.06); }
 
-    .process-step.done { color: #10b981; background: rgba(16,185,129,0.05); }
-    .process-step.active { color: #a78bfa; background: rgba(139,92,246,0.05); }
-    .process-step i { width: 14px; font-size: 0.75rem; }
-
-    /* Detected info preview */
-    .detected-info {
+    /* Fullscreen Modal for Document Inspection */
+    .doc-modal-backdrop {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background: rgba(2, 6, 23, 0.9);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        z-index: 99999;
         display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
     }
 
-    .detected-name {
-        font-size: 1.1rem;
-        font-weight: 800;
-        color: #fff;
-        margin-bottom: 0.2rem;
-    }
-
-    .detected-role {
-        font-size: 0.85rem;
-        color: #8b5cf6;
-        font-weight: 600;
-        margin-bottom: 1rem;
-    }
-
-    .detected-skills {
+    .doc-modal-content {
+        background: #0b1329;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 18px;
+        width: 100%;
+        max-width: 900px;
+        height: 90vh;
         display: flex;
-        flex-wrap: wrap;
-        gap: 0.4rem;
-        margin-bottom: 1rem;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.8);
     }
 
-    .skill-tag {
-        background: rgba(139,92,246,0.1);
-        border: 1px solid rgba(139,92,246,0.2);
-        border-radius: 20px;
-        padding: 0.25rem 0.7rem;
-        font-size: 0.74rem;
-        font-weight: 700;
-        color: #c4b5fd;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .upload-layout { grid-template-columns: 1fr; }
+    /* Responsive Queries */
+    @media (max-width: 820px) {
+        .upload-layout {
+            grid-template-columns: 1fr !important;
+        }
+        .upload-title {
+            font-size: 1.8rem;
+        }
+        .live-doc-viewer {
+            height: 320px;
+        }
     }
 </style>
 {% endblock %}
@@ -439,9 +455,9 @@
 
 <!-- Page Header -->
 <div class="upload-header">
-    <div class="upload-eyebrow"><i class="fas fa-sparkles"></i> AI Resume Engine</div>
-    <h1 class="upload-title">Analyze Your Resume</h1>
-    <p class="upload-desc">Upload once — get ATS score, skill detection, formatting audit & a custom mock interview</p>
+    <div class="upload-eyebrow"><i class="fas fa-sparkles"></i> Step 1: Upload & Verify Resume</div>
+    <h1 class="upload-title">Verify & Analyze Your Resume</h1>
+    <p class="upload-desc">Select your file to preview it instantly before beginning AI evaluation and ATS scoring.</p>
 </div>
 
 <div class="upload-layout">
@@ -450,35 +466,47 @@
     <div class="upload-card">
         <div class="card-heading">
             <i class="fas fa-cloud-arrow-up"></i>
-            Upload Resume
+            Select Document
         </div>
 
         <form method="POST" enctype="multipart/form-data" id="uploadForm">
             {% csrf_token %}
             <input type="file" name="resume" id="fileInput" accept=".pdf,.docx" hidden>
 
+            <!-- Drop Zone -->
             <div class="upload-zone" id="dropZone">
                 <div class="upload-zone-icon" id="zoneIcon">
                     <i class="fas fa-cloud-arrow-up"></i>
                 </div>
                 <p class="zone-title" id="zoneTitle">Drop your resume here</p>
-                <p class="zone-hint" id="zoneHint">PDF or DOCX &nbsp;·&nbsp; Max 5MB</p>
+                <p class="zone-hint" id="zoneHint">PDF or DOCX · Max 5MB</p>
             </div>
 
             <!-- File chip (hidden until file selected) -->
             <div class="file-chip" id="fileChip" style="display:none;">
                 <div class="file-chip-info">
-                    <i class="fas fa-file-pdf file-chip-icon" id="fileChipIcon" style="color:#e11d48;"></i>
+                    <i class="fas fa-file-pdf" id="fileChipIcon" style="color:#e11d48; font-size: 1.3rem;"></i>
                     <div>
                         <div class="file-chip-name" id="fileChipName">resume.pdf</div>
                         <div class="file-chip-size" id="fileChipSize">0 KB</div>
                     </div>
                 </div>
-                <button type="button" class="file-clear-btn" id="clearBtn">
+                <button type="button" class="file-clear-btn" id="clearBtn" title="Remove file">
                     <i class="fas fa-times-circle"></i>
                 </button>
             </div>
 
+            <!-- Confirmation Checklist Box -->
+            <div id="verifyBox" style="display:none; margin-top: 1rem; background: rgba(16, 185, 129, 0.06); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 0.75rem 1rem;">
+                <div style="font-size: 0.8rem; font-weight: 700; color: #10b981; display: flex; align-items: center; gap: 0.4rem;">
+                    <i class="fas fa-check-double"></i> Document Ready for AI Audit
+                </div>
+                <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.2rem;">
+                    Please check the live preview on the right to make sure this is your correct resume.
+                </div>
+            </div>
+
+            <!-- Submit Button -->
             <button type="submit" class="btn-analyze" id="analyzeBtn" disabled>
                 <i class="fas fa-wand-magic-sparkles"></i> Begin AI Analysis
             </button>
@@ -488,96 +516,94 @@
 
         <a href="{% url 'resume:resume_builder' %}" class="build-link">
             <i class="fas fa-pen-to-square"></i>
-            Build Resume with AI Builder
+            Create New Resume with AI Builder
         </a>
     </div>
 
-    <!-- ── RIGHT: AI PREVIEW CARD ── -->
+    <!-- ── RIGHT: LIVE DOCUMENT PREVIEW CARD ── -->
     <div class="ai-preview-card" id="aiPreviewCard">
         <div class="card-heading">
-            <i class="fas fa-brain" style="color:#06b6d4;"></i>
-            AI Detection Preview
+            <i class="fas fa-eye" style="color:#06b6d4;"></i>
+            Live Resume Document Preview
         </div>
 
-        <!-- Idle state -->
+        <!-- 1. Idle State (Shown before file select) -->
         <div class="ai-idle" id="aiIdle">
             <div class="ai-idle-icon">
-                <i class="fas fa-file-circle-question"></i>
+                <i class="fas fa-file-magnifying-glass"></i>
             </div>
-            <h4>Upload a resume to begin</h4>
-            <p>Our AI will instantly detect your skills, experience level, and give you a preview before analysis.</p>
-        </div>
+            <h4>Upload your resume to see live preview</h4>
+            <p>You will see a live interactive document view here so you can verify your resume before running AI analysis.</p>
 
-        <!-- Feature list (idle) -->
-        <div class="feature-list" id="featureList">
-            <div class="feature-row">
-                <i class="fas fa-check-circle" style="color:#10b981;"></i>
-                ATS compatibility score (0–100)
-            </div>
-            <div class="feature-row">
-                <i class="fas fa-check-circle" style="color:#10b981;"></i>
-                Auto-detect skills & technologies
-            </div>
-            <div class="feature-row">
-                <i class="fas fa-check-circle" style="color:#10b981;"></i>
-                Section audit (Education, Exp, Projects…)
-            </div>
-            <div class="feature-row">
-                <i class="fas fa-check-circle" style="color:#10b981;"></i>
-                Custom mock interview from your resume
-            </div>
-            <div class="feature-row">
-                <i class="fas fa-check-circle" style="color:#10b981;"></i>
-                AI recommendations to improve score
+            <!-- Feature list -->
+            <div class="feature-list" style="width: 100%; text-align: left;">
+                <div class="feature-row">
+                    <i class="fas fa-check-circle" style="color:#10b981;"></i>
+                    Live In-Browser Document Inspection
+                </div>
+                <div class="feature-row">
+                    <i class="fas fa-check-circle" style="color:#10b981;"></i>
+                    Strict ATS Compatibility Score (0–100)
+                </div>
+                <div class="feature-row">
+                    <i class="fas fa-check-circle" style="color:#10b981;"></i>
+                    Skill & Technology Stack Extraction
+                </div>
             </div>
         </div>
 
-        <!-- Processing animation -->
+        <!-- 2. Live Document Preview State (Shown IMMEDIATELY when file is selected) -->
+        <div class="live-doc-container" id="liveDocContainer">
+            <div class="live-doc-header">
+                <div>
+                    <span style="font-size: 0.75rem; font-weight: 800; color: #10b981; text-transform: uppercase; letter-spacing: 1px;">
+                        <i class="fas fa-circle-check me-1"></i> File Preview
+                    </span>
+                    <div style="font-size: 0.85rem; font-weight: 700; color: #fff;" id="previewDocTitle">resume.pdf</div>
+                </div>
+                <div style="display: flex; gap: 0.4rem;">
+                    <button type="button" onclick="openDocFullscreen()" class="btn-action btn-secondary-glass" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">
+                        <i class="fas fa-expand"></i> Fullscreen
+                    </button>
+                    <button type="button" onclick="resetZone()" class="btn-action btn-secondary-glass" style="padding: 0.35rem 0.75rem; font-size: 0.78rem; color: #fca5a5 !important;">
+                        <i class="fas fa-rotate-left"></i> Change File
+                    </button>
+                </div>
+            </div>
+
+            <!-- Live Viewer Frame -->
+            <div class="live-doc-viewer" id="docViewerWrapper">
+                <!-- Injected via JavaScript with Blob URL -->
+                <iframe id="liveDocFrame" title="Resume Document Live Preview"></iframe>
+            </div>
+
+            <div style="margin-top: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.75rem; color: #64748b;">
+                    <i class="fas fa-shield-halved me-1"></i> Verify all pages before clicking Begin
+                </span>
+                <button type="button" onclick="document.getElementById('analyzeBtn').click()" style="background: none; border: none; color: #a78bfa; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
+                    Confirm & Start →
+                </button>
+            </div>
+        </div>
+
+        <!-- 3. AI Processing Animation (Shown on submit) -->
         <div class="ai-processing" id="aiProcessing">
             <div class="process-ring"></div>
-            <p style="color:#a78bfa; font-weight:700; font-size:0.9rem; margin-bottom:0.25rem;">AI is reading your resume…</p>
-            <p style="color:#475569; font-size:0.8rem;">This takes a few seconds</p>
+            <p style="color:#a78bfa; font-weight:700; font-size:0.95rem; margin-bottom:0.25rem;">AI is auditing your resume…</p>
+            <p style="color:#64748b; font-size:0.8rem;">Deep analysis takes ~1.5 - 2 seconds</p>
             <div class="process-steps" id="processSteps">
                 <div class="process-step active" id="step1">
-                    <i class="fas fa-circle-notch fa-spin"></i> Extracting text content
+                    <i class="fas fa-circle-notch fa-spin"></i> Reading & extracting document text
                 </div>
                 <div class="process-step" id="step2">
-                    <i class="fas fa-clock"></i> Detecting skills & experience
+                    <i class="fas fa-clock"></i> Evaluating skills & technical depth
                 </div>
                 <div class="process-step" id="step3">
-                    <i class="fas fa-clock"></i> Calculating ATS score
+                    <i class="fas fa-clock"></i> Computing calibrated ATS benchmark
                 </div>
                 <div class="process-step" id="step4">
-                    <i class="fas fa-clock"></i> Generating AI recommendations
-                </div>
-            </div>
-        </div>
-
-        <!-- File detected preview (shown on file select) -->
-        <div class="detected-info" id="detectedInfo">
-            <p style="font-size:0.72rem; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:1px; margin-bottom:0.75rem;">
-                <i class="fas fa-check-circle" style="color:#10b981;"></i> File Ready for Analysis
-            </p>
-            <div style="background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.12); border-radius:12px; padding:1rem 1.1rem; margin-bottom:1rem;">
-                <div class="detected-name" id="detectedFileName">resume.pdf</div>
-                <div style="display:flex; gap:1rem; margin-top:0.4rem; flex-wrap:wrap;">
-                    <span style="font-size:0.78rem; color:#64748b;"><i class="fas fa-weight-hanging" style="margin-right:0.25rem;"></i><span id="detectedFileSize">0 KB</span></span>
-                    <span style="font-size:0.78rem; color:#64748b;"><i class="fas fa-file-alt" style="margin-right:0.25rem;"></i><span id="detectedFileType">PDF</span></span>
-                </div>
-            </div>
-            <p style="color:#94a3b8; font-size:0.83rem; margin-bottom:0.6rem; font-weight:600;">
-                <i class="fas fa-robot" style="color:#8b5cf6; margin-right:0.3rem;"></i>
-                Click <strong>"Begin AI Analysis"</strong> to get your full report:
-            </p>
-            <div style="display:flex; flex-direction:column; gap:0.4rem;">
-                <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.8rem; color:#64748b;">
-                    <i class="fas fa-arrow-right" style="color:#8b5cf6; font-size:0.7rem;"></i> ATS Score & Skills detected
-                </div>
-                <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.8rem; color:#64748b;">
-                    <i class="fas fa-arrow-right" style="color:#06b6d4; font-size:0.7rem;"></i> Formatting & impact audit
-                </div>
-                <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.8rem; color:#64748b;">
-                    <i class="fas fa-arrow-right" style="color:#10b981; font-size:0.7rem;"></i> Personalized mock interview
+                    <i class="fas fa-clock"></i> Generating recruiter improvement roadmap
                 </div>
             </div>
         </div>
@@ -586,24 +612,46 @@
 
 </div><!-- /upload-layout -->
 
-<script>
-    const dropZone    = document.getElementById('dropZone');
-    const fileInput   = document.getElementById('fileInput');
-    const fileChip    = document.getElementById('fileChip');
-    const fileChipName = document.getElementById('fileChipName');
-    const fileChipSize = document.getElementById('fileChipSize');
-    const fileChipIcon = document.getElementById('fileChipIcon');
-    const clearBtn    = document.getElementById('clearBtn');
-    const analyzeBtn  = document.getElementById('analyzeBtn');
-    const zoneIcon    = document.getElementById('zoneIcon');
-    const zoneTitle   = document.getElementById('zoneTitle');
-    const zoneHint    = document.getElementById('zoneHint');
-    const aiIdle      = document.getElementById('aiIdle');
-    const featureList = document.getElementById('featureList');
-    const detectedInfo = document.getElementById('detectedInfo');
-    const aiProcessing = document.getElementById('aiProcessing');
+<!-- ═════════════════════════════════════════════════════════ -->
+<!-- FULLSCREEN DOCUMENT INSPECTION MODAL -->
+<!-- ═════════════════════════════════════════════════════════ -->
+<div class="doc-modal-backdrop" id="fullscreenDocModal" onclick="closeDocFullscreen(event)">
+    <div class="doc-modal-content" onclick="event.stopPropagation()">
+        <div style="padding: 0.85rem 1.25rem; background: rgba(15,23,42,0.9); border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-weight: 800; font-size: 0.95rem; color: #fff;">
+                <i class="fas fa-file-lines me-2" style="color: #a855f7;"></i> Fullscreen Resume Inspector
+            </div>
+            <button onclick="closeDocFullscreen()" style="background: none; border: none; color: #94a3b8; font-size: 1.3rem; cursor: pointer;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div style="flex: 1; padding: 0.75rem; background: #020617;">
+            <iframe id="fullscreenFrame" style="width: 100%; height: 100%; border: none; border-radius: 8px; background: #fff;"></iframe>
+        </div>
+    </div>
+</div>
 
-    // Step animations
+<script>
+    const dropZone          = document.getElementById('dropZone');
+    const fileInput         = document.getElementById('fileInput');
+    const fileChip          = document.getElementById('fileChip');
+    const fileChipName       = document.getElementById('fileChipName');
+    const fileChipSize       = document.getElementById('fileChipSize');
+    const fileChipIcon       = document.getElementById('fileChipIcon');
+    const clearBtn          = document.getElementById('clearBtn');
+    const analyzeBtn        = document.getElementById('analyzeBtn');
+    const zoneIcon          = document.getElementById('zoneIcon');
+    const zoneTitle         = document.getElementById('zoneTitle');
+    const zoneHint          = document.getElementById('zoneHint');
+    const verifyBox         = document.getElementById('verifyBox');
+
+    const aiIdle            = document.getElementById('aiIdle');
+    const liveDocContainer  = document.getElementById('liveDocContainer');
+    const liveDocFrame      = document.getElementById('liveDocFrame');
+    const previewDocTitle   = document.getElementById('previewDocTitle');
+    const aiProcessing      = document.getElementById('aiProcessing');
+
+    let currentBlobUrl = null;
     let stepTimer;
 
     function formatBytes(b) {
@@ -614,39 +662,67 @@
 
     function handleFile(file) {
         if (!file) return;
-        const isPDF = file.name.endsWith('.pdf');
-        const isDOCX = file.name.endsWith('.docx');
-        if (!isPDF && !isDOCX) { alert('Please upload a PDF or DOCX file.'); return; }
+        const isPDF = file.name.toLowerCase().endsWith('.pdf');
+        const isDOCX = file.name.toLowerCase().endsWith('.docx');
+        if (!isPDF && !isDOCX) {
+            alert('Please upload a PDF or DOCX file.');
+            return;
+        }
 
-        // Update zone
+        // Revoke previous blob URL if any
+        if (currentBlobUrl) {
+            URL.revokeObjectURL(currentBlobUrl);
+        }
+
+        // Create client-side Blob URL for instant zero-latency preview
+        currentBlobUrl = URL.createObjectURL(file);
+
+        // Update upload zone card
         fileChipName.textContent = file.name;
         fileChipSize.textContent = formatBytes(file.size);
         fileChipIcon.style.color = isPDF ? '#e11d48' : '#2563eb';
-        fileChipIcon.className = isPDF ? 'fas fa-file-pdf file-chip-icon' : 'fas fa-file-word file-chip-icon';
+        fileChipIcon.className = isPDF ? 'fas fa-file-pdf' : 'fas fa-file-word';
         fileChip.style.display = 'flex';
+        verifyBox.style.display = 'block';
 
         zoneIcon.querySelector('i').className = 'fas fa-check-circle';
         zoneIcon.style.background = 'rgba(16,185,129,0.12)';
         zoneIcon.style.borderColor = 'rgba(16,185,129,0.3)';
         zoneIcon.querySelector('i').style.color = '#10b981';
-        zoneTitle.textContent = 'File selected';
-        zoneHint.textContent = 'Click "Begin AI Analysis" to continue';
+        zoneTitle.textContent = 'Document Selected';
         zoneTitle.style.color = '#10b981';
+        zoneHint.textContent = 'Check preview on the right, then begin analysis';
 
         analyzeBtn.disabled = false;
 
-        // Show detected info in right panel
+        // Render live preview on the right side
         aiIdle.style.display = 'none';
-        featureList.style.display = 'none';
-        detectedInfo.style.display = 'block';
-        document.getElementById('detectedFileName').textContent = file.name;
-        document.getElementById('detectedFileSize').textContent = formatBytes(file.size);
-        document.getElementById('detectedFileType').textContent = isPDF ? 'PDF Document' : 'Word Document';
+        liveDocContainer.style.display = 'flex';
+        previewDocTitle.textContent = `${file.name} (${formatBytes(file.size)})`;
+
+        if (isPDF) {
+            liveDocFrame.src = currentBlobUrl + '#toolbar=0&navpanes=0';
+        } else {
+            // DOCX preview placeholder
+            liveDocFrame.srcdoc = `
+                <div style="font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 90vh; color: #334155; text-align: center; padding: 1.5rem;">
+                    <svg width="48" height="48" fill="#2563eb" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/></svg>
+                    <h3 style="margin: 0.75rem 0 0.25rem 0; color: #0f172a;">${file.name}</h3>
+                    <p style="font-size: 0.85rem; color: #64748b; margin: 0 0 1rem 0;">Word Document · ${formatBytes(file.size)}</p>
+                    <span style="background: #e0e7ff; color: #3730a3; padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">✓ Document Ready to Parse</span>
+                </div>
+            `;
+        }
     }
 
     function resetZone() {
+        if (currentBlobUrl) {
+            URL.revokeObjectURL(currentBlobUrl);
+            currentBlobUrl = null;
+        }
         fileInput.value = '';
         fileChip.style.display = 'none';
+        verifyBox.style.display = 'none';
         zoneIcon.querySelector('i').className = 'fas fa-cloud-arrow-up';
         zoneIcon.style.background = '';
         zoneIcon.style.borderColor = '';
@@ -655,9 +731,10 @@
         zoneTitle.style.color = '#e2e8f0';
         zoneHint.textContent = 'PDF or DOCX · Max 5MB';
         analyzeBtn.disabled = true;
+
+        liveDocContainer.style.display = 'none';
+        liveDocFrame.src = 'about:blank';
         aiIdle.style.display = 'flex';
-        featureList.style.display = 'flex';
-        detectedInfo.style.display = 'none';
         aiProcessing.style.display = 'none';
     }
 
@@ -675,18 +752,34 @@
         e.preventDefault();
         dropZone.classList.remove('dragover');
         const file = e.dataTransfer.files[0];
-        if (file) { fileInput.files = e.dataTransfer.files; handleFile(file); }
+        if (file) {
+            fileInput.files = e.dataTransfer.files;
+            handleFile(file);
+        }
     };
 
-    // On form submit — show processing animation
+    // Fullscreen Inspector
+    function openDocFullscreen() {
+        if (!currentBlobUrl) return;
+        const modal = document.getElementById('fullscreenDocModal');
+        const frame = document.getElementById('fullscreenFrame');
+        frame.src = currentBlobUrl;
+        modal.style.display = 'flex';
+    }
+
+    function closeDocFullscreen() {
+        const modal = document.getElementById('fullscreenDocModal');
+        modal.style.display = 'none';
+    }
+
+    // On Form Submit: Show Animated Step Progress
     document.getElementById('uploadForm').addEventListener('submit', function() {
-        detectedInfo.style.display = 'none';
+        liveDocContainer.style.display = 'none';
         aiProcessing.style.display = 'flex';
-        analyzeBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Analysing…';
+        analyzeBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Auditing Document…';
         analyzeBtn.disabled = true;
 
-        // Animate steps
-        const steps = ['step1','step2','step3','step4'];
+        const steps = ['step1', 'step2', 'step3', 'step4'];
         let idx = 0;
         stepTimer = setInterval(() => {
             if (idx < steps.length) {
@@ -703,7 +796,7 @@
             } else {
                 clearInterval(stepTimer);
             }
-        }, 1200);
+        }, 800);
     });
 </script>
 {% endblock %}

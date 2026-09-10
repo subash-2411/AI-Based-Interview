@@ -68,18 +68,16 @@ def ats_checker(request):
             if not text.strip():
                 return JsonResponse({'error': 'Could not extract text from file.'}, status=400)
                 
-            score = calculate_ats_score(text)
-            found_skills = extract_skills(text)
-            
-            # Simple missing keywords check
-            all_keywords = ['docker', 'ci/cd', 'aws', 'kubernetes', 'cloud', 'graphql', 'typescript', 'microservices', 'redis', 'testing']
-            missing = [kw.title() for kw in all_keywords if kw not in text.lower()][:4]
+            analysis = analyze_resume_with_ai(text)
+            score = analysis.get('ats_score', calculate_ats_score(text))
+            found_skills = analysis.get('skills', extract_skills(text))
+            missing = analysis.get('missing_keywords', ['Docker', 'CI/CD Pipelines', 'Cloud (AWS/GCP)', 'Unit Testing'])
             
             return JsonResponse({
                 'status': 'success',
                 'ats_score': score,
-                'strong_keywords': found_skills[:8],
-                'missing_keywords': missing
+                'strong_keywords': found_skills[:10],
+                'missing_keywords': missing[:6]
             })
         except Exception as e:
             if os.path.exists(temp_path):

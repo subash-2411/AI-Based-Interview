@@ -32,13 +32,6 @@ def _rotated_generate_content(self, *args, **kwargs):
                 
         raise last_error
     except Exception as outer_err:
-        import traceback
-        try:
-            # Write traceback to a file in the conversation directory
-            with open(r'C:\Users\steve\.gemini\antigravity-ide\brain\4fb89168-ba12-44f0-b60d-72f864b65ad0\scratch\patch_crash.txt', 'w') as log_f:
-                traceback.print_exc(file=log_f)
-        except:
-            pass
         raise outer_err
 
 # Monkeypatch the method
