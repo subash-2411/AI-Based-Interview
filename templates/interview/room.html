@@ -911,30 +911,18 @@
     let mobileTranscriptAccumulator = "";
 
     if (recognition) {
+        const isMobile = window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
         recognition.lang = lang === 'ta-EN' ? 'ta-IN' : lang;
+        
+        // Critical Fix: Mobile browsers (especially iOS) crash instantly if continuous = true
+        recognition.continuous = !isMobile;
         recognition.interimResults = true;
-        recognition.continuous = true;
 
         recognition.onstart = () => {
             isListening = true;
             voiceIndicator.style.display = 'block';
             micBtn.classList.add('active');
             micBtn.innerHTML = '<i class="fas fa-stop-circle"></i> <span>Stop Recording</span>';
-        };
-
-        recognition.onend = () => {
-            isListening = false;
-            voiceIndicator.style.display = 'none';
-            micBtn.classList.remove('active');
-            micBtn.innerHTML = '<i class="fas fa-microphone"></i> <span>Start Speaking</span>';
-        };
-
-        recognition.onerror = (event) => {
-            isListening = false;
-            micBtn.classList.remove('active');
-            if (event.error === 'not-allowed') {
-                alert("Microphone blocked! Please allow access.");
-            }
         };
 
         recognition.onresult = (event) => {
@@ -965,6 +953,19 @@
             micBtn.classList.remove('active');
             micBtn.innerHTML = '<i class="fas fa-microphone"></i> <span>Start Speaking</span>';
             mobileTranscriptAccumulator = ""; // reset on manual stop
+        };
+        
+        // Handle errors (like HTTP block or permission denial)
+        recognition.onerror = (event) => {
+            isListening = false;
+            micBtn.classList.remove('active');
+            micBtn.innerHTML = '<i class="fas fa-microphone"></i> <span>Start Speaking</span>';
+            
+            if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                answerInput.value = "Error: Microphone blocked! Make sure you are using a secure HTTPS connection and have granted permission.";
+            } else {
+                answerInput.value = "Speech recognition error: " + event.error + ". (On mobile, this often happens if not on HTTPS)";
+            }
         };
     }
 
