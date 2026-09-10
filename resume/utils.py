@@ -300,7 +300,7 @@ def analyze_resume_with_ai(text):
         return fallback_analysis
 
     # Try calling Gemini with primary and fallback models
-    models_to_try = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']
+    models_to_try = ['gemini-2.5-flash', 'gemini-2.5-pro']
     
     try:
         import google.generativeai as genai
