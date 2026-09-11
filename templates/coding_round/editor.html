@@ -564,14 +564,25 @@
         try {
             const resp = await fetch("{% url 'coding:submit_code_api' problem.id %}", {
                 method: 'POST',
-                headers: { 'Content-Type':'application/json', 'X-CSRFToken':'{{ csrf_token }}' },
+                headers: { 
+                    'Content-Type':'application/json',
+                    'X-CSRFToken':'{{ csrf_token }}'
+                },
                 body: JSON.stringify({ code: document.getElementById('codeEditor').value })
             });
-            const data = await resp.json();
-            if (data.status === 'success') {
-                showResult(data.score, data.output, data.error, data.feedback);
+            
+            const contentType = resp.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                const data = await resp.json();
+                if (data.status === 'success') {
+                    showResult(data.score, data.output, data.error, data.feedback);
+                } else {
+                    showResult(30, "", data.message || "Evaluation error occurred.", "Please check your code syntax.");
+                }
             } else {
-                showResult(30, "", data.message || "Evaluation error occurred.", "Please check your code syntax.");
+                const htmlText = await resp.text();
+                console.error("Non-JSON Server response:", htmlText);
+                showResult(25, "", "Server returned non-JSON response (HTTP " + resp.status + ")", "Please refresh the page and try submitting again.");
             }
         } catch(e) {
             console.error(e);

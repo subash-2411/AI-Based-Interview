@@ -470,10 +470,16 @@ def coding_editor_view(request, problem_id):
     problem = get_object_or_404(CodingProblem, id=problem_id)
     return render(request, 'coding_round/editor.html', {'problem': problem})
 
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
 @login_required
 def submit_code_api(request, problem_id):
     if request.method == 'POST':
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            data = {}
         code = data.get('code', '').strip()
         
         problem = get_object_or_404(CodingProblem, id=problem_id)
