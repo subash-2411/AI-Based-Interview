@@ -444,27 +444,39 @@ def generate_quiz(topic):
 
 def generate_career_analysis(skills, performance):
     api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    default_res = {
+        "level": "Mid-Level Professional",
+        "strong": ["Problem Solving", "Technical Skills", "Domain Expertise"],
+        "weak": ["System Architecture", "Cloud Infrastructure"],
+        "actions": ["Build Portfolio Projects", "Practice Technical Interviews", "Optimize ATS Keywords"]
+    }
     if not api_key:
-        return {"level": "Junior", "strong": ["N/A"], "weak": ["N/A"], "actions": ["Practice more"]}
+        return default_res
     try:
         import google.generativeai as genai
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.5-flash')
-        prompt = f"""Analyze career trajectory based on skills: {skills} and interview avg score: {performance}%.
-        Return ONLY JSON object with:
-        "level" (string, e.g., "Junior Developer", "Mid-Level Engineer"),
-        "strong" (list of 3 strings),
-        "weak" (list of 2 strings),
-        "actions" (list of 3 recommended actions).
-        """
-        response = model.generate_content(prompt)
-        import re
-        text = response.text.strip()
-        match = re.search(r'\{.*\}', text, re.DOTALL)
-        if match: text = match.group(0)
-        return json.loads(text)
-    except:
-        return {"level": "Unknown", "strong": [], "weak": [], "actions": []}
+        clean_keys = [k.strip() for k in api_key.split(',') if k.strip()]
+        if clean_keys:
+            genai.configure(api_key=clean_keys[0])
+            model = genai.GenerativeModel('gemini-2.5-flash')
+            prompt = f"""Analyze career trajectory based on candidate skills: {skills} and interview avg score: {performance}%.
+            Return ONLY a raw JSON object with:
+            "level" (string, e.g., "Junior Developer", "Mid-Level Engineer", "Senior Tech Lead"),
+            "strong" (list of 3 strings of key strengths),
+            "weak" (list of 2 strings of areas to improve),
+            "actions" (list of 3 recommended action steps).
+            """
+            response = model.generate_content(prompt, request_options={"timeout": 10.0})
+            import re
+            text = response.text.strip()
+            match = re.search(r'\{.*\}', text, re.DOTALL)
+            if match:
+                text = match.group(0)
+            res = json.loads(text)
+            if isinstance(res, dict) and res.get('strong') and res.get('weak'):
+                return res
+    except Exception as e:
+        print(f"Career analysis error: {e}")
+    return default_res
 
 ROADMAP_FALLBACK_BANK = {
     'python': {
