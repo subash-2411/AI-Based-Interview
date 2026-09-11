@@ -527,8 +527,8 @@ FALLBACK_CODING_PROBLEMS = {
     ]
 }
 
-def get_coding_hint(problem_title, problem_desc, user_code, language='ta-EN'):
-    """Provides a fast, helpful hint and solution breakdown to the user."""
+def get_coding_hint(problem_title, problem_desc, user_code, prog_language='Python', explanation_lang='ta-EN'):
+    """Provides a fast, helpful hint and solution breakdown to the user in their target programming language."""
     api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     
     if api_key:
@@ -537,63 +537,45 @@ def get_coding_hint(problem_title, problem_desc, user_code, language='ta-EN'):
             clean_keys = [k.strip() for k in api_key.split(',') if k.strip()]
             if clean_keys:
                 genai.configure(api_key=clean_keys[0])
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel('gemini-2.5-flash')
                 
-                lang_instruction = "Explain in Tanglish (Tamil + English blend, simple and encouraging words)." if language == 'ta-EN' else "Explain in concise, encouraging English."
+                lang_instruction = "Explain step-by-step logic in simple Tanglish (Tamil + English blend)." if explanation_lang == 'ta-EN' else "Explain in clear English."
                 
                 prompt = f"""
-                You are a friendly expert AI coding tutor.
+                You are an expert friendly coding tutor.
                 Problem Title: {problem_title}
                 Problem Description: {problem_desc[:400]}
-                Language: {language}
-                Student Code:
+                Target Programming Language: {prog_language}
+                Candidate Code:
+                ```{prog_language}
                 {user_code[:400] if user_code else 'No code written yet'}
+                ```
 
                 Task:
-                1. Provide the exact working solution code block in {language}.
-                2. Explain the 2-3 key steps simply in {lang_instruction}.
+                1. Provide the exact working solution code block in {prog_language}.
+                2. Explain the 2-3 key logic steps simply in {lang_instruction}.
                 """
                 
                 response = model.generate_content(
                     prompt,
-                    generation_config={"max_output_tokens": 550, "temperature": 0.2},
-                    request_options={"timeout": 7.0}
+                    generation_config={"max_output_tokens": 600, "temperature": 0.2},
+                    request_options={"timeout": 8.0}
                 )
                 if response and response.text:
                     return response.text.strip()
         except Exception as e:
-            print(f"Error in fast Gemini hint: {e}")
+            print(f"Error in Gemini coding hint: {e}")
 
-    # Instant smart fallback based on language & problem title
-    if language == 'ta-EN':
-        return f"""💡 **AI Hint & Solution for {problem_title}:**
+    # Fallback hint tailored to programming language
+    return f"""💡 **AI Hint & Solution for {problem_title} ({prog_language}):**
 
-1. **Logic Steps:**
-   - Input data-va read panni variables-la store pannunga.
-   - Loop/Conditions use panni target/output check pannunga.
-   - Matching result-ai return/print pannunga.
+1. **Logic Steps (Tanglish):**
+   - Problem requirement & inputs-ai read panni variables-la store pannunga.
+   - Loop/Conditions check panni solution logic execute pannunga.
+   - Output/result-ai return or print pannunga.
 
-2. **Sample Working Solution:**
-```python
-def solution(nums, target):
-    seen = {{}}
-    for i, num in enumerate(nums):
-        diff = target - num
-        if diff in seen:
-            return [seen[diff], i]
-        seen[num] = i
-    return []
-```"""
-    else:
-        return f"""💡 **Quick Solution Guide for {problem_title}:**
-
-1. **Approach:** Understand the input/output constraints.
-2. **Key Steps:**
-   - Initialize the necessary variables or data structures.
-   - Iterate through the inputs and apply the condition or transformation.
-   - Return or print the expected result.
-
-Review your code structure and click Submit to evaluate!"""
+2. **Sample Solution Approach in {prog_language}:**
+Write your implementation using {prog_language} syntax and click Submit!"""
 
 def get_fallback_coding_problems(skills, count=3):
     problems = []
