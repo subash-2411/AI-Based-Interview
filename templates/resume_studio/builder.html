@@ -61,18 +61,26 @@
 
     @media (max-width: 768px) {
         .toolbar-top {
-            flex-wrap: wrap !important;
-            padding: 0.5rem 0.75rem !important;
+            flex-direction: column !important;
+            padding: 0.6rem !important;
             gap: 0.5rem !important;
             height: auto !important;
         }
-        .toolbar-top > div {
+        .toolbar-top > div:first-child {
             width: 100% !important;
             justify-content: space-between !important;
         }
+        .toolbar-top > div:last-child {
+            width: 100% !important;
+            overflow-x: auto !important;
+            white-space: nowrap !important;
+            padding-bottom: 0.25rem !important;
+            justify-content: flex-start !important;
+        }
         .btn-tool {
-            padding: 0.4rem 0.6rem !important;
-            font-size: 0.75rem !important;
+            padding: 0.45rem 0.75rem !important;
+            font-size: 0.78rem !important;
+            flex-shrink: 0 !important;
         }
         .builder-content-row {
             flex-direction: column !important;
@@ -81,18 +89,24 @@
         .builder-sidebar {
             width: 100% !important;
             min-width: 100% !important;
-            max-height: 260px !important;
+            max-height: 280px !important;
             border-right: none !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-bottom: 2px solid rgba(168, 85, 247, 0.3) !important;
         }
         .builder-workspace {
-            padding: 1rem 0.5rem !important;
+            padding: 1rem 0.25rem !important;
             overflow-x: auto !important;
+            display: flex !important;
+            justify-content: center !important;
         }
         .doc-canvas {
-            transform: scale(0.85);
+            transform: scale(0.92);
             transform-origin: top center;
             margin: 0 auto !important;
+            width: 100% !important;
+            min-width: 100% !important;
+            box-sizing: border-box !important;
+            padding: 1rem !important;
         }
     }
 

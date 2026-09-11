@@ -965,26 +965,35 @@
         };
 
         recognition.onend = () => {
-            isListening = false;
             voiceIndicator.style.display = 'none';
+            // Auto-restart if user did not manually tap Stop (fixes mobile 3-4 second cut-off issue)
+            if (isListening) {
+                console.log("Speech recognition ended unexpectedly on mobile, auto-restarting...");
+                try {
+                    recognition.start();
+                    return;
+                } catch (e) {
+                    console.log("Auto-restart error:", e);
+                }
+            }
+            isListening = false;
             micBtn.classList.remove('active');
             micBtn.innerHTML = '<i class="fas fa-microphone"></i> <span>Start Speaking</span>';
             mobileTranscriptAccumulator = ""; 
         };
         
         recognition.onerror = (event) => {
-            isListening = false;
-            micBtn.classList.remove('active');
-            micBtn.innerHTML = '<i class="fas fa-microphone"></i> <span>Start Speaking</span>';
-            
-            let errMsg = "Speech recognition error: " + event.error;
-            if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-                errMsg = "Error: Microphone blocked! Make sure you have granted permission.";
+            console.warn("Speech recognition error:", event.error);
+            if (event.error === 'no-speech' && isListening) {
+                // Ignore no-speech pause and keep listening on mobile
+                try { recognition.start(); } catch(e) {}
+                return;
             }
-            
-            if (event.error !== 'no-speech') {
-                if (window.innerWidth <= 768) alert(errMsg);
-                answerInput.value = errMsg;
+            if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                isListening = false;
+                micBtn.classList.remove('active');
+                micBtn.innerHTML = '<i class="fas fa-microphone"></i> <span>Start Speaking</span>';
+                alert("Microphone permission blocked! Please allow microphone access in your mobile browser settings.");
             }
         };
     }
