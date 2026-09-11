@@ -514,10 +514,15 @@ def submit_code_api(request, problem_id):
                 }}
                 """
                 response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
-                result = json.loads(response.text)
+                raw_text = response.text.strip()
+                import re
+                match = re.search(r'\{.*\}', raw_text, re.DOTALL)
+                if match:
+                    raw_text = match.group(0)
+                result = json.loads(raw_text)
                 
                 score = int(result.get('score', 70))
-                output_text = str(result.get('output', 'Code executed successfully.'))
+                output_text = str(result.get('output', 'Code executed.'))
                 error_text = str(result.get('error', ''))
                 feedback_text = str(result.get('feedback', ''))
             except Exception as e:

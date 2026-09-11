@@ -568,9 +568,14 @@
                 body: JSON.stringify({ code: document.getElementById('codeEditor').value })
             });
             const data = await resp.json();
-            showResult(data.score, data.output, data.error, data.feedback);
+            if (data.status === 'success') {
+                showResult(data.score, data.output, data.error, data.feedback);
+            } else {
+                showResult(30, "", data.message || "Evaluation error occurred.", "Please check your code syntax.");
+            }
         } catch(e) {
-            alert('Submission failed. Please try again.');
+            console.error(e);
+            showResult(20, "", "Server Evaluation Error: " + e.message, "Network or server processing failed.");
         } finally {
             runBtn.innerHTML = '<i class="fas fa-play"></i> Submit';
             runBtn.disabled = false;
