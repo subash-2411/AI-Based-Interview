@@ -206,7 +206,7 @@
             const data = await response.json();
             
             if (data.status === 'success') {
-                window.location.href = "{% url 'coding:coding_list' %}";
+                window.location.href = "{% url 'coding:coding_dashboard' %}";
             } else {
                 alert("Error generating problems: " + data.message);
                 window.location.reload();

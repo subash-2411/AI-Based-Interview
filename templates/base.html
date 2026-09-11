@@ -378,6 +378,10 @@
             padding: 0.75rem 1.2rem 1rem;
             border-top: 1px solid var(--sidebar-border);
             flex-shrink: 0;
+            cursor: pointer;
+        }
+        .sidebar-footer:hover {
+            background: rgba(255,255,255,0.03);
         }
 
         .sidebar-user {
@@ -612,6 +616,28 @@
             font-size: 0.88rem;
             font-weight: 700;
             animation: none !important;
+        }
+
+        .topbar-user-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            padding: 0.35rem 0.8rem 0.35rem 0.35rem;
+            border-radius: 20px;
+            color: #f1f5f9;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.2s;
+            max-width: 140px; /* Prevent overflow on small screens */
+        }
+        
+        .topbar-user-badge span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         /* ── MESSAGES ── */
@@ -919,8 +945,8 @@
                    class="nav-item {% if 'upload_resume' in request.resolver_match.url_name|default:'' or 'resume_analysis' in request.resolver_match.url_name|default:'' %}active{% endif %}">
                     <i class="fas fa-user-tie"></i> AI Interview
                 </a>
-                <a href="{% url 'coding:coding_list' %}"
-                   class="nav-item {% if request.resolver_match.url_name == 'coding_list' %}active{% endif %}">
+                <a href="{% url 'coding:coding_dashboard' %}"
+                   class="nav-item {% if 'coding' in request.resolver_match.url_name|default:'' %}active{% endif %}">
                     <i class="fas fa-code"></i> Coding Round
                 </a>
 
@@ -954,7 +980,7 @@
             </nav>
 
             <!-- User info at bottom -->
-            <div class="sidebar-footer">
+            <a href="{% url 'profile' %}" class="sidebar-footer" style="text-decoration: none; color: inherit; display: block; transition: background 0.2s;">
                 <div class="sidebar-user">
                     <div class="user-avatar">
                         {% if user.profile_pic %}
@@ -970,7 +996,7 @@
                         <div class="user-role">Free Plan</div>
                     </div>
                 </div>
-            </div>
+            </a>
         </aside>
         {% endif %}
 

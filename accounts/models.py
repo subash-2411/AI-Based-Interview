@@ -53,3 +53,15 @@ class ThemePreference(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.theme_name}"
 
+class DailyQuizLimit(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='quiz_limits')
+    skill_name = models.CharField(max_length=100)
+    date = models.DateField(auto_now_add=True)
+    attempts = models.IntegerField(default=0)
+    score = models.IntegerField(default=0)
+
+    class Meta:
+        unique_together = ('user', 'skill_name', 'date')
+        
+    def __str__(self):
+        return f"{self.user.username} - {self.skill_name} ({self.date}) - {self.attempts}/3"

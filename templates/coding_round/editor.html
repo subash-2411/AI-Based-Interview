@@ -396,7 +396,7 @@
     <!-- Top Bar -->
     <div class="editor-topbar">
         <div class="topbar-left">
-            <a href="{% url 'coding:coding_list' %}" class="back-btn">
+            <a href="{% url 'coding:coding_dashboard' %}" class="back-btn">
                 <i class="fas fa-arrow-left"></i> Back
             </a>
             <div class="problem-title-bar">
@@ -512,7 +512,7 @@
         <div class="result-msg" id="resultMsg"></div>
         <div class="result-actions">
             <button class="btn-result-secondary" onclick="closeModal()">Try Again</button>
-            <button class="btn-result-primary" onclick="window.location.href='{% url 'coding:coding_list' %}'">
+            <button class="btn-result-primary" onclick="window.location.href='{% url 'coding:coding_dashboard' %}'">
                 <i class="fas fa-list"></i> All Problems
             </button>
         </div>
@@ -619,6 +619,9 @@
         hintBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Thinking...';
         hintBtn.disabled = true;
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 7000);
+
         try {
             const hintLang = document.getElementById('hintLangSelect').value;
             const resp = await fetch("{% url 'coding:get_hint_api' problem.id %}", {
@@ -627,19 +630,24 @@
                 body: JSON.stringify({ 
                     code: document.getElementById('codeEditor').value,
                     language: hintLang
-                })
+                }),
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
             const data = await resp.json();
             document.getElementById('hintLoading').style.display = 'none';
-            if (data.status === 'success') {
+            if (data.status === 'success' && data.hint) {
                 document.getElementById('tutorHintText').textContent = data.hint;
                 document.getElementById('hintContent').style.display = 'block';
             } else {
-                document.getElementById('hintEmpty').style.display = 'block';
+                document.getElementById('tutorHintText').textContent = "💡 Tip: Check your variable names and condition statements. Test each line step by step!";
+                document.getElementById('hintContent').style.display = 'block';
             }
         } catch(e) {
+            clearTimeout(timeoutId);
             document.getElementById('hintLoading').style.display = 'none';
-            document.getElementById('hintEmpty').style.display = 'block';
+            document.getElementById('tutorHintText').textContent = "💡 Quick Guide: Understand the problem constraints, use appropriate loops or data structures, and click Submit to test!";
+            document.getElementById('hintContent').style.display = 'block';
         } finally {
             hintBtn.innerHTML = '<i class="fas fa-lightbulb"></i> AI Hint';
             hintBtn.disabled = false;

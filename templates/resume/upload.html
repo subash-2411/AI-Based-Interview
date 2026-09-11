@@ -10,6 +10,8 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     }
 </script>
+<!-- Mammoth.js for Universal Word (.DOCX) In-Browser Document Rendering -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 
 <style>
     /* ═══════════════════════════════════════════════
@@ -556,25 +558,27 @@
             </div>
 
             <!-- File chip (hidden until file selected) -->
-            <div class="file-chip" id="fileChip" style="display:none;">
-                <div class="file-chip-info">
-                    <i class="fas fa-file-pdf" id="fileChipIcon" style="color:#e11d48; font-size: 1.3rem;"></i>
+            <div class="file-chip" id="fileChip" style="display: none;">
+                <div class="file-chip-left">
+                    <div class="file-chip-icon">
+                        <i class="fas fa-file-pdf" id="fileChipIcon"></i>
+                    </div>
                     <div>
                         <div class="file-chip-name" id="fileChipName">resume.pdf</div>
                         <div class="file-chip-size" id="fileChipSize">0 KB</div>
                     </div>
                 </div>
-                <button type="button" class="file-clear-btn" id="clearBtn" title="Remove file">
-                    <i class="fas fa-times-circle"></i>
+                <button type="button" class="btn-clear-file" id="clearBtn" title="Remove file">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
 
-            <!-- Confirmation Checklist Box -->
-            <div id="verifyBox" style="display:none; margin-top: 1rem; background: rgba(16, 185, 129, 0.06); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 0.75rem 1rem;">
-                <div style="font-size: 0.8rem; font-weight: 700; color: #10b981; display: flex; align-items: center; gap: 0.4rem;">
-                    <i class="fas fa-check-double"></i> Document Ready for AI Audit
+            <!-- Success Verification Callout -->
+            <div id="verifyBox" style="display: none; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: 12px; padding: 0.85rem 1rem; margin-top: 1.25rem;">
+                <div style="font-size: 0.82rem; font-weight: 700; color: #34d399; display: flex; align-items: center; gap: 0.4rem;">
+                    <i class="fas fa-check-circle"></i> Document Ready for AI Audit
                 </div>
-                <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.2rem;">
+                <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.2rem; line-height: 1.4;">
                     Please check the live preview on the right to make sure this is your correct resume.
                 </div>
             </div>
@@ -667,14 +671,13 @@
                     <canvas id="pdfPreviewCanvas" class="pdf-canvas-el" style="display: none;"></canvas>
                 </div>
 
-                <!-- DOCX Preview Box -->
+                <!-- DOCX Live Rendered Preview Box -->
                 <div class="docx-preview-box" id="docxPreviewWrap" style="display: none;">
-                    <i class="fas fa-file-word fa-3x" style="color: #3b82f6; margin-bottom: 0.75rem;"></i>
-                    <h4 style="color: #fff; font-size: 1rem; margin: 0 0 0.25rem 0;" id="docxFileName">Document.docx</h4>
-                    <p style="color: #94a3b8; font-size: 0.8rem; margin: 0 0 1rem 0;" id="docxFileSize">Word Document</p>
-                    <span style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #34d399; padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.78rem; font-weight: 700;">
-                        ✓ Ready for ATS Evaluation
-                    </span>
+                    <div id="docxLoadingSpinner" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 1rem; color: #94a3b8;">
+                        <i class="fas fa-circle-notch fa-spin fa-2x" style="color: #3b82f6; margin-bottom: 0.6rem;"></i>
+                        <span style="font-size: 0.82rem; font-weight: 600;">Extracting & rendering Word document…</span>
+                    </div>
+                    <div id="docxRenderedPaper" class="docx-rendered-paper" style="display: none;"></div>
                 </div>
 
                 <!-- Fallback iframe for legacy/desktop browsers -->
@@ -735,6 +738,7 @@
         </div>
         <div style="flex: 1; padding: 0.75rem; background: #020617; overflow-y: auto; display: flex; justify-content: center; align-items: flex-start;">
             <canvas id="fullscreenCanvas" style="max-width: 100%; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); background: #fff;"></canvas>
+            <div id="fullscreenDocxPaper" class="docx-rendered-paper" style="display: none; width: 100%; max-width: 800px; max-height: none; min-height: 500px;"></div>
             <iframe id="fullscreenFrame" style="display: none; width: 100%; height: 100%; border: none; border-radius: 8px; background: #fff;"></iframe>
         </div>
     </div>
@@ -763,14 +767,15 @@
     const pdfPreviewCanvas  = document.getElementById('pdfPreviewCanvas');
     const pdfLoadingSpinner = document.getElementById('pdfLoadingSpinner');
     const docxPreviewWrap   = document.getElementById('docxPreviewWrap');
-    const docxFileName      = document.getElementById('docxFileName');
-    const docxFileSize      = document.getElementById('docxFileSize');
+    const docxRenderedPaper = document.getElementById('docxRenderedPaper');
+    const docxLoadingSpinner= document.getElementById('docxLoadingSpinner');
     const liveDocFrame      = document.getElementById('liveDocFrame');
 
     let currentBlobUrl = null;
     let currentPdfDoc = null;
     let currentPdfPage = 1;
     let totalPdfPages = 1;
+    let currentDocxHtml = "";
     let stepTimer;
 
     function formatBytes(b) {
@@ -848,7 +853,14 @@
         }
 
         currentBlobUrl = URL.createObjectURL(file);
-        document.getElementById('downloadOriginalLink').href = currentBlobUrl;
+        // Only expose blob URL for PDF (DOCX blob href causes auto-download in some browsers)
+        if (isPDF) {
+            document.getElementById('downloadOriginalLink').href = currentBlobUrl;
+            document.getElementById('downloadOriginalLink').style.display = '';
+        } else {
+            document.getElementById('downloadOriginalLink').href = '#';
+            document.getElementById('downloadOriginalLink').style.display = 'none';
+        }
 
         // Update upload zone card
         fileChipName.textContent = file.name;
@@ -879,6 +891,7 @@
         pdfToolbar.style.display = 'none';
         liveDocFrame.style.display = 'none';
         pdfPreviewCanvas.style.display = 'none';
+        currentDocxHtml = "";
 
         if (isPDF && window.pdfjsLib) {
             pdfPreviewWrap.style.display = 'flex';
@@ -915,11 +928,62 @@
         } else if (isPDF) {
             liveDocFrame.src = currentBlobUrl;
             liveDocFrame.style.display = 'block';
-        } else {
-            // DOCX preview card
-            docxFileName.textContent = file.name;
-            docxFileSize.textContent = `Word Document · ${formatBytes(file.size)}`;
+        } else if (isDOCX && window.mammoth) {
+            // Live Word Document Rendering with Mammoth.js
             docxPreviewWrap.style.display = 'flex';
+            docxLoadingSpinner.style.display = 'flex';
+            docxRenderedPaper.style.display = 'none';
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const mammothOptions = {
+                    styleMap: [
+                        "p[style-name='Heading 1'] => h1.doc-h1:fresh",
+                        "p[style-name='Heading 2'] => h2.doc-h2:fresh",
+                        "p[style-name='Heading 3'] => h3.doc-h3:fresh",
+                        "p[style-name='Title'] => h1.doc-title:fresh",
+                        "p[style-name='Subtitle'] => p.doc-subtitle:fresh",
+                        "r[style-name='Strong'] => strong",
+                        "p:unordered-list(1) => ul > li:fresh",
+                        "p:ordered-list(1) => ol > li:fresh"
+                    ]
+                };
+                const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer }, mammothOptions);
+                docxLoadingSpinner.style.display = 'none';
+                
+                let htmlVal = result.value || '';
+                // Format common resume section titles into bold styled headers
+                htmlVal = htmlVal.replace(/<p>\s*(EXPERIENCE|WORK EXPERIENCE|EDUCATION|SKILLS|TECHNICAL SKILLS|PROJECTS|KEY PROJECTS|CERTIFICATIONS|SUMMARY|PROFESSIONAL SUMMARY|ACHIEVEMENTS|CONTACT)\s*<\/p>/gi, 
+                    '<h2 class="doc-h2"><i class="fas fa-bookmark" style="font-size:0.8rem; margin-right:0.4rem; color:#8b5cf6;"></i>$1</h2>');
+                
+                currentDocxHtml = htmlVal || '<p style="color:#64748b; font-style:italic;">No formatted text detected in Word document.</p>';
+                docxRenderedPaper.innerHTML = currentDocxHtml;
+                docxRenderedPaper.style.display = 'block';
+            } catch (docxErr) {
+                console.warn("Mammoth parse error, reading text:", docxErr);
+                try {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        docxLoadingSpinner.style.display = 'none';
+                        currentDocxHtml = `<div style="white-space: pre-wrap; font-family: monospace; font-size: 0.8rem;">${e.target.result.slice(0, 3000)}</div>`;
+                        docxRenderedPaper.innerHTML = currentDocxHtml;
+                        docxRenderedPaper.style.display = 'block';
+                    };
+                    reader.readAsText(file);
+                } catch (readErr) {
+                    docxLoadingSpinner.style.display = 'none';
+                    currentDocxHtml = `<div style="text-align:center; padding:1.5rem;"><i class="fas fa-file-word fa-3x" style="color:#3b82f6;"></i><h4 style="margin-top:0.5rem; color:#0f172a;">${file.name}</h4><p style="color:#64748b; font-size:0.8rem;">Ready for AI ATS Evaluation</p></div>`;
+                    docxRenderedPaper.innerHTML = currentDocxHtml;
+                    docxRenderedPaper.style.display = 'block';
+                }
+            }
+        } else {
+            // Fallback for doc/text
+            docxPreviewWrap.style.display = 'flex';
+            docxLoadingSpinner.style.display = 'none';
+            currentDocxHtml = `<div style="text-align:center; padding:1.5rem;"><i class="fas fa-file-word fa-3x" style="color:#3b82f6;"></i><h4 style="margin-top:0.5rem; color:#0f172a;">${file.name}</h4><p style="color:#64748b; font-size:0.8rem;">Ready for AI ATS Evaluation</p></div>`;
+            docxRenderedPaper.innerHTML = currentDocxHtml;
+            docxRenderedPaper.style.display = 'block';
         }
     }
 
@@ -929,6 +993,7 @@
             currentBlobUrl = null;
         }
         currentPdfDoc = null;
+        currentDocxHtml = "";
         fileInput.value = '';
         fileChip.style.display = 'none';
         verifyBox.style.display = 'none';
@@ -972,15 +1037,17 @@
 
     // Fullscreen Inspector
     async function openDocFullscreen() {
-        if (!currentBlobUrl) return;
+        if (!currentBlobUrl && !currentDocxHtml) return;
         const modal = document.getElementById('fullscreenDocModal');
         const fullscreenCanvas = document.getElementById('fullscreenCanvas');
+        const fullscreenDocxPaper = document.getElementById('fullscreenDocxPaper');
         const fullscreenFrame = document.getElementById('fullscreenFrame');
         
         modal.style.display = 'flex';
 
         if (currentPdfDoc) {
             fullscreenFrame.style.display = 'none';
+            fullscreenDocxPaper.style.display = 'none';
             fullscreenCanvas.style.display = 'block';
             try {
                 const page = await currentPdfDoc.getPage(currentPdfPage);
@@ -994,8 +1061,14 @@
                 fullscreenFrame.src = currentBlobUrl;
                 fullscreenFrame.style.display = 'block';
             }
+        } else if (currentDocxHtml) {
+            fullscreenCanvas.style.display = 'none';
+            fullscreenFrame.style.display = 'none';
+            fullscreenDocxPaper.innerHTML = currentDocxHtml;
+            fullscreenDocxPaper.style.display = 'block';
         } else {
             fullscreenCanvas.style.display = 'none';
+            fullscreenDocxPaper.style.display = 'none';
             fullscreenFrame.src = currentBlobUrl;
             fullscreenFrame.style.display = 'block';
         }
@@ -1006,35 +1079,72 @@
         modal.style.display = 'none';
     }
 
-    // On Form Submit: Show Animated Step Progress
-    document.getElementById('uploadForm').addEventListener('submit', function() {
+    // On Form Submit: Animate ALL 4 steps completely, THEN submit
+    let _formSubmitting = false;
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        // If already in the "real submit" phase, let it through
+        if (_formSubmitting) return;
+
+        // Intercept first click to run animation
+        e.preventDefault();
+
         liveDocContainer.style.display = 'none';
         aiProcessing.style.display = 'flex';
         analyzeBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Auditing Document…';
         analyzeBtn.disabled = true;
 
         const steps = ['step1', 'step2', 'step3', 'step4'];
-        let idx = 0;
-        stepTimer = setInterval(() => {
-            if (idx < steps.length) {
-                if (idx > 0) {
-                    const prev = document.getElementById(steps[idx-1]);
-                    if (prev) {
-                        prev.classList.remove('active');
-                        prev.classList.add('done');
-                        prev.querySelector('i').className = 'fas fa-check-circle';
-                    }
-                }
-                const curr = document.getElementById(steps[idx]);
-                if (curr) {
-                    curr.classList.add('active');
-                    curr.querySelector('i').className = 'fas fa-circle-notch fa-spin';
-                }
-                idx++;
-            } else {
-                clearInterval(stepTimer);
+        const STEP_MS = 700; // ms per step
+
+        // Reset all steps to idle first
+        steps.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.classList.remove('active', 'done');
+                el.querySelector('i').className = 'fas fa-clock';
             }
-        }, 800);
+        });
+
+        let idx = 0;
+        const form = this;
+
+        function activateNext() {
+            if (idx >= steps.length) {
+                // All steps done — mark last as done and actually submit
+                const last = document.getElementById(steps[steps.length - 1]);
+                if (last) {
+                    last.classList.remove('active');
+                    last.classList.add('done');
+                    last.querySelector('i').className = 'fas fa-check-circle';
+                }
+                setTimeout(() => {
+                    _formSubmitting = true;
+                    form.submit();
+                }, 300);
+                return;
+            }
+
+            // Mark previous as done
+            if (idx > 0) {
+                const prev = document.getElementById(steps[idx - 1]);
+                if (prev) {
+                    prev.classList.remove('active');
+                    prev.classList.add('done');
+                    prev.querySelector('i').className = 'fas fa-check-circle';
+                }
+            }
+
+            // Activate current
+            const curr = document.getElementById(steps[idx]);
+            if (curr) {
+                curr.classList.add('active');
+                curr.querySelector('i').className = 'fas fa-circle-notch fa-spin';
+            }
+            idx++;
+            setTimeout(activateNext, STEP_MS);
+        }
+
+        activateNext();
     });
 </script>
 {% endblock %}

@@ -3,7 +3,8 @@ from . import views
 app_name = 'coding'
 
 urlpatterns = [
-    path('list/', views.coding_list_view, name='coding_list'),
+    path('', views.coding_dashboard_view, name='coding_dashboard'),
+    path('list/<str:language>/', views.coding_list_view, name='coding_list'),
     path('setup/', views.coding_setup_view, name='coding_setup'),
     path('generate/', views.generate_practice_api, name='generate_practice_api'),
     path('generate-single/', views.generate_single_challenge_api, name='generate_single_challenge_api'),

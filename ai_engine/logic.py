@@ -46,6 +46,27 @@ QUESTION_BANK = {
         "What is an Index in SQL and how does it improve performance?",
         "Explain the ACID properties in database transactions."
     ],
+    'Accounting': [
+        "Explain the 3 Golden Rules of Accounting with examples.",
+        "What is the difference between Trial Balance and Balance Sheet?",
+        "Explain the concept of Bank Reconciliation Statement (BRS).",
+        "What are the different types of GST (CGST, SGST, IGST) and how are they applied?",
+        "What is the difference between Accrual Accounting and Cash Accounting?",
+        "How do you calculate and analyze Working Capital in a business?"
+    ],
+    'Finance': [
+        "Explain the difference between Cash Flow and Fund Flow statements.",
+        "What is EBITDA and why is it an important metric for evaluating businesses?",
+        "How do you evaluate capital budgeting decisions using Net Present Value (NPV) and IRR?",
+        "What is Depreciation and what are the main methods of calculating it?",
+        "Explain the concept of Debt-to-Equity Ratio and its significance."
+    ],
+    'Operations': [
+        "How do you manage inventory levels using Economic Order Quantity (EOQ) or JIT?",
+        "Explain how you handle vendor management and resolve vendor delivery delays.",
+        "What KPIs do you track to measure daily operational efficiency?",
+        "How do you handle unexpected workflow bottlenecks in a high-pressure environment?"
+    ],
     'HR': [
         "Tell me about yourself and your background.",
         "Why should we hire you for this role?",
@@ -96,6 +117,12 @@ QUESTION_BANK_TAMIL = {
         "SQL Query-ஐ எப்படி ஆப்டிமைஸ் செய்வது?",
         "SQL-ல் Index என்றால் என்ன மற்றும் அது செயல்திறனை (Performance) எப்படி மேம்படுத்துகிறது?",
         "டேட்டாபேஸ் டிரான்சாக்ஷன்களில் ACID பண்புகளை விளக்குங்கள்."
+    ],
+    'Accounting': [
+        "கணக்கியலின் 3 பொன் விதிகளை (3 Golden Rules of Accounting) உதாரணங்களுடன் விளக்குங்கள்.",
+        "இருப்பாய்வு (Trial Balance) மற்றும் இருப்புநிலைக் குறிப்பு (Balance Sheet) இடையிலான வித்தியாசம் என்ன?",
+        "வங்கி சமரசப் பட்டியல் (Bank Reconciliation Statement - BRS) என்றால் என்ன?",
+        "ஜிஎஸ்டி (GST) பிரிவுகள் (CGST, SGST, IGST) எவ்வாறு கணக்கிடப்படுகின்றன?"
     ],
     'HR': [
         "உங்களைப் பற்றியும் உங்கள் பின்னணியைப் பற்றியும் சொல்லுங்கள்.",
@@ -148,6 +175,13 @@ QUESTION_BANK_TANGLISH = {
         "SQL-ல Index-னா என்ன? அது performance-ஐ எப்படி improve பண்ணுது?",
         "Database transactions-ல ACID properties-ஐ explain பண்ணுங்க."
     ],
+    'Accounting': [
+        "Accounting-ல இருக்குற 3 Golden Rules-ஐ examples-ஓட explain பண்ணுங்க.",
+        "Trial Balance-க்கும் Balance Sheet-க்கும் இருக்குற main difference என்ன?",
+        "Bank Reconciliation Statement (BRS) எப்போ create பண்ணுவாங்க?",
+        "GST-ல CGST, SGST, IGST எப்போ apply பண்ணுவாங்க?",
+        "Working Capital-னா என்ன? அதை எப்படி calculate பண்ணுவீங்க?"
+    ],
     'HR': [
         "உங்கள பத்தியும் உங்க background பத்தியும் சொல்லுங்க.",
         "நாங்க ஏன் உங்கள இந்த role-க்கு hire பண்ணனும்?",
@@ -158,67 +192,238 @@ QUESTION_BANK_TANGLISH = {
     ]
 }
 
-def generate_questions(skills, count=5, language='en-US', difficulty='Intermediate'):
+def non_it_keywords_from_text(resume_text):
+    """
+    When resume.skills is empty (no SKILL_DB match), extract domain keywords
+    from the raw resume text using degree and job title patterns.
+    Returns a list of domain-relevant skill strings for question generation.
+    """
+    text_lower = resume_text.lower()
+    extracted = []
+
+    # Degree detection
+    degree_map = [
+        (['b.com', 'bcom', 'bachelor of commerce', 'b.com.', 'b com'], ['Financial Accounting', 'GST', 'Tally', 'Taxation']),
+        (['m.com', 'mcom', 'master of commerce'], ['Financial Accounting', 'Cost Accounting', 'GST', 'Auditing']),
+        (['mba', 'm.b.a', 'master of business'], ['Business Development', 'Sales', 'Operations Management', 'HR Operations']),
+        (['bba', 'b.b.a', 'bachelor of business'], ['Business Development', 'Sales', 'CRM']),
+        (['b.sc accounting', 'accounting and finance'], ['Financial Accounting', 'Bookkeeping', 'Auditing']),
+    ]
+    for keywords, skills in degree_map:
+        if any(k in text_lower for k in keywords):
+            extracted.extend(skills)
+
+    # Job title / domain detection from text
+    domain_title_map = [
+        (['accountant', 'accounts executive', 'audit', 'accounts assistant', 'finance executive'], ['Financial Accounting', 'Tally', 'GST', 'Bookkeeping', 'Bank Reconciliation']),
+        (['hr executive', 'hr manager', 'human resources', 'recruiter', 'talent acquisition'], ['Human Resources', 'Recruitment', 'Payroll Management', 'Employee Relations']),
+        (['sales executive', 'sales manager', 'business development'], ['Sales', 'Business Development', 'CRM', 'Lead Generation']),
+        (['digital marketing', 'seo specialist', 'content writer', 'marketing executive'], ['Digital Marketing', 'SEO', 'Content Marketing']),
+        (['operations', 'supply chain', 'logistics', 'procurement'], ['Operations Management', 'Vendor Management']),
+    ]
+    for keywords, skills in domain_title_map:
+        if any(k in text_lower for k in keywords):
+            extracted.extend(skills)
+
+    # Direct non-IT skill keyword presence in raw text
+    direct_non_it = [
+        'tally', 'gst', 'taxation', 'auditing', 'bookkeeping', 'ledger',
+        'payroll', 'bank reconciliation', 'balance sheet', 'trial balance',
+        'sap fico', 'quickbooks', 'zoho books', 'vlookup', 'pivot tables',
+        'mis report', 'accounts payable', 'accounts receivable'
+    ]
+    for kw in direct_non_it:
+        if kw in text_lower and kw.title() not in extracted:
+            extracted.append(kw.title())
+
+    # Deduplicate
+    seen = set()
+    result = []
+    for s in extracted:
+        if s.lower() not in seen:
+            seen.add(s.lower())
+            result.append(s)
+
+    return result if result else []
+
+
+def _detect_domain(skills, resume_text=''):
+    """
+    Returns (is_non_tech, domain_area, domain_key) based on skills list.
+    Uses word-boundary matching to avoid false positives like 'ai' in 'email'.
+    """
+    if isinstance(skills, str):
+        skills = [s.strip() for s in skills.split(',') if s.strip()]
+
+    # Build a set of exact lowercase skill names for precise matching
+    skill_set = {s.strip().lower() for s in skills}
+
+    # Non-IT / Commerce / Business skill indicators (exact match)
+    non_tech_exact = {
+        'tally', 'tally prime', 'tally erp', 'gst', 'gst filing', 'tds',
+        'accounting', 'financial accounting', 'cost accounting', 'management accounting',
+        'auditing', 'taxation', 'ledger', 'balance sheet', 'trial balance', 'bookkeeping',
+        'brs', 'bank reconciliation', 'accounts payable', 'accounts receivable',
+        'payroll management', 'payroll', 'vlookup', 'pivot tables', 'mis reporting',
+        'sap fico', 'quickbooks', 'zoho books', 'advanced excel',
+        'human resources', 'hr operations', 'talent acquisition', 'recruitment',
+        'employee relations', 'performance management',
+        'business development', 'sales', 'lead generation', 'client relations',
+        'digital marketing', 'seo', 'content marketing',
+        'operations management', 'vendor management',
+        'mba', 'bba', 'b.com', 'crm'
+    }
+
+    # Core IT / Programming skill indicators (exact match - no substring)
+    tech_exact = {
+        'python', 'java', 'react', 'react.js', 'c++', 'c#', 'django', 'flask', 'fastapi',
+        'javascript', 'typescript', 'node.js', 'express', 'flutter', 'kotlin', 'swift',
+        'golang', 'go', 'php', 'ruby', 'rust', '.net', 'asp.net', 'spring', 'spring boot',
+        'machine learning', 'deep learning', 'tensorflow', 'pytorch', 'keras',
+        'artificial intelligence', 'nlp', 'natural language processing', 'computer vision',
+        'docker', 'kubernetes', 'aws', 'azure', 'gcp', 'google cloud',
+        'react native', 'angular', 'vue', 'vue.js', 'next.js', 'tailwindcss',
+        'scikit-learn', 'langchain', 'openai', 'huggingface'
+    }
+    # Note: 'excel', 'github', 'git', 'sql', 'mysql', 'html', 'css' are ambiguous
+    # (used by both IT and non-IT) — do NOT put them in tech_exact
+
+    has_non_tech = bool(skill_set & non_tech_exact)
+    has_tech = bool(skill_set & tech_exact)
+
+    # Also check raw resume text for degree/education if skills alone are inconclusive
+    if resume_text and not has_non_tech and not has_tech:
+        text_lower = resume_text.lower()
+        degree_indicators = ['b.com', 'bcom', 'mba', 'bba', 'm.com', 'mcom', 'bachelor of commerce',
+                             'master of business', 'accountant', 'accounts executive', 'audit',
+                             'hr executive', 'human resources', 'sales executive', 'digital marketing',
+                             'tally', 'gst', 'taxation', 'bookkeeping', 'payroll']
+        it_indicators = ['computer science', 'b.e', 'b.tech', 'btech', 'software engineer',
+                         'full stack', 'backend developer', 'frontend developer', 'python developer']
+        text_has_non_it = any(d in text_lower for d in degree_indicators)
+        text_has_it = any(i in text_lower for i in it_indicators)
+        if text_has_non_it and not text_has_it:
+            has_non_tech = True
+    elif resume_text and has_non_tech and not has_tech:
+        # Confirm no IT degree in resume text even if skills look non-IT
+        text_lower = resume_text.lower()
+        it_indicators = ['computer science', 'b.e', 'b.tech', 'btech', 'software engineer',
+                         'full stack', 'python developer', 'java developer']
+        if any(i in text_lower for i in it_indicators):
+            has_tech = True  # override — IT resume
+    # Determine domain
+    if has_non_tech and not has_tech:
+        # Pure Non-IT
+        if skill_set & {'tally', 'tally prime', 'tally erp', 'gst', 'gst filing', 'tds',
+                        'accounting', 'financial accounting', 'cost accounting', 'auditing',
+                        'taxation', 'ledger', 'balance sheet', 'trial balance', 'bookkeeping',
+                        'brs', 'bank reconciliation', 'sap fico', 'quickbooks', 'zoho books'}:
+            return True, "Accounting, Financial Statements, GST/TDS filing, Tally, Bank Reconciliation, Balance Sheet", "Accounting"
+        elif skill_set & {'human resources', 'hr operations', 'talent acquisition', 'recruitment',
+                          'employee relations', 'performance management', 'payroll', 'payroll management'}:
+            return True, "HR Operations, Recruitment, Talent Acquisition, Payroll, Employee Relations", "HR"
+        elif skill_set & {'sales', 'business development', 'lead generation', 'client relations', 'crm'}:
+            return True, "Sales strategies, Client Relations, CRM tools, Lead Generation, Business Development", "HR"
+        elif skill_set & {'digital marketing', 'seo', 'content marketing'}:
+            return True, "Digital Marketing, SEO, Content Strategy, Social Media, Campaign Analytics", "HR"
+        elif skill_set & {'operations management', 'vendor management'}:
+            return True, "Operations Management, Vendor Relationships, Supply Chain, Process Optimization", "Operations"
+        else:
+            return True, "Business operations, Professional communication, Problem-solving", "HR"
+
+    # Pure IT or mixed (IT skills present) → treat as IT
+    return False, None, None
+
+
+def generate_questions(skills, count=5, language='en-US', difficulty='Beginner', company='General', resume_text=''):
     # Normalize skills
     if isinstance(skills, str):
         skills = [s.strip() for s in skills.split(',') if s.strip()]
     if not skills:
-        skills = ['Python', 'SQL', 'Django']
+        skills = []
 
     api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-    
+
+    # Detect domain — pass resume_text for degree-based detection
+    is_non_tech, domain_area, domain_key = _detect_domain(skills, resume_text=resume_text)
+
+    # If non-IT but no skills extracted, derive from resume text
+    if is_non_tech and not skills and resume_text:
+        skills = non_it_keywords_from_text(resume_text) or ['Financial Accounting', 'GST', 'Tally']
+    elif not skills:
+        # Last fallback — general professional
+        skills = ['Communication', 'Problem Solving', 'Time Management']
+
     if api_key:
         try:
             import google.generativeai as genai
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-2.5-flash')
-            
+            model = genai.GenerativeModel('gemini-1.5-flash')
+
             skill_str = ", ".join(skills)
-            
-            prompt = f"You are an expert technical interviewer. The candidate's resume highlights the following skills: {skill_str}. "
-            prompt += f"Generate exactly {count} unique, non-repeating interview questions STRICTLY based on these specific skills. Do NOT ask questions about technologies not listed here. "
-            
+
+            if is_non_tech:
+                domain_desc = (
+                    f"The candidate has a NON-IT / Commerce / Business background with skills: {skill_str}. "
+                    f"Generate interview questions STRICTLY about: {domain_area}. "
+                    f"IMPORTANT: DO NOT ask any programming, coding, software, or IT questions. "
+                    f"Only ask domain-specific professional questions."
+                )
+            else:
+                domain_desc = (
+                    f"The candidate has a Technical software background with skills: {skill_str}. "
+                    f"Generate technical interview questions covering these specific technologies."
+                )
+
+            prompt = f"You are an expert interviewer. {domain_desc} "
+            if company and company != 'General':
+                prompt += f"Interview is for {company}. Tailor context slightly if possible. "
+
+            prompt += f"Generate exactly {count} unique, non-repeating interview questions STRICTLY based on these skills. "
+
             if difficulty.lower() == 'beginner':
-                prompt += "Keep the questions VERY SIMPLE, short, and direct. Ask basic foundational questions (e.g., 'What is...', 'Explain the difference between...'). Avoid long scenario-based questions. "
+                prompt += "Keep questions VERY SIMPLE and direct. Ask basic foundational questions ('What is...', 'Explain the difference between...'). "
             elif difficulty.lower() == 'intermediate':
-                prompt += "Keep the questions moderately difficult but CONCISE. Ask a mix of theory and simple practical applications. Do not write overly long scenarios. "
+                prompt += "Moderately difficult, mix of theory and practical. Concise, no long scenarios. "
             else:
-                prompt += "Ask complex, in-depth, scenario-based, or architectural questions suitable for an advanced professional. The questions can be detailed. "
-            
+                prompt += "In-depth, scenario-based questions for experienced professionals. "
+
             if language == 'ta-IN':
-                prompt += "Provide the questions translated into formal Tamil. Ensure EVERY single question is written strictly in formal Tamil script."
+                prompt += "Translate questions into formal Tamil script."
             elif language == 'ta-EN':
-                prompt += "Provide the questions translated into Tanglish (Tamil written in English/Latin script). Tanglish is a blend of Tamil and English, using Latin characters (e.g., 'Python-ல Decorators-னா என்ன, அது ஏன் use பண்றாங்க?', 'உங்கள பத்தியும் உங்க background பத்தியும் சொல்லுங்க.'). Keep technical terms in English but write the surrounding sentence structure and connecting words in Tamil written with Latin characters. Ensure EVERY single question is strictly in Tanglish. Do NOT write any questions in pure English or pure Tamil script."
+                prompt += "Write in Tanglish (Tamil + English blend). Keep technical terms in English, connectors in Tamil-English."
             else:
-                prompt += "Provide the questions in English. Ensure EVERY single question is strictly in English."
-                
-            prompt += " Format the output as a simple list of questions, one per line. Do NOT include numbers, bullet points, asterisks, or intro/outro text. Just the questions. Each question must be highly concise, limited to a maximum of 2 short sentences and under 30 words total, so it is fully readable on screen."
-            
-            response = model.generate_content(prompt, request_options={"timeout": 15.0})
-            
-            # Parse response
+                prompt += "Write in clear English."
+
+            prompt += " Format: one question per line, no numbers or bullet points, each under 30 words."
+
+            response = model.generate_content(prompt, request_options={"timeout": 12.0})
+
             raw_questions = [q.strip() for q in response.text.strip().split('\n') if q.strip()]
             cleaned_questions = [re.sub(r'^[\d\.\-\*\s]+', '', q).strip() for q in raw_questions]
-            
+
             if len(cleaned_questions) >= count:
                 return cleaned_questions[:count]
             elif cleaned_questions:
-                # If we got fewer than requested, pad with fallback
                 fallback_needed = count - len(cleaned_questions)
-                fallback_qs = get_fallback_questions(skills, fallback_needed, language)
+                fallback_qs = get_fallback_questions(skills, fallback_needed, language, is_non_tech=is_non_tech, domain_key=domain_key)
                 return cleaned_questions + fallback_qs
         except Exception as e:
-            print(f"Gemini generation failed: {e}")
-            pass # Fallback below
-            
-    return get_fallback_questions(skills, count, language)
+            print(f"Gemini question generation failed: {e}")
 
-def get_fallback_questions(skills, count=5, language='en-US'):
+    return get_fallback_questions(skills, count, language, is_non_tech=is_non_tech, domain_key=domain_key)
+
+
+def get_fallback_questions(skills, count=5, language='en-US', is_non_tech=None, domain_key=None):
     # Normalize skills
     if isinstance(skills, str):
         skills = [s.strip() for s in skills.split(',') if s.strip()]
     if not skills:
         skills = ['Python', 'SQL', 'Django']
+
+    # Auto-detect if not passed
+    if is_non_tech is None:
+        is_non_tech, _, domain_key = _detect_domain(skills)
 
     questions = []
     if language == 'ta-IN':
@@ -227,39 +432,61 @@ def get_fallback_questions(skills, count=5, language='en-US'):
         bank = QUESTION_BANK_TANGLISH
     else:
         bank = QUESTION_BANK
-    
-    # Always include HR
+
+    # Always include 2 HR questions
     questions.extend(random.sample(bank['HR'], min(2, len(bank['HR']))))
-    
-    # Include Technical based on skills
-    found_tech = False
-    for skill in skills:
-        if skill in bank:
-            questions.extend(random.sample(bank[skill], min(2, len(bank[skill]))))
-            found_tech = True
-            
-    # Fallback if no skills matched or we need more questions
-    if len(questions) < count:
-        # Try to fill with other technical questions first
-        tech_categories = [k for k in bank.keys() if k != 'HR']
-        random.shuffle(tech_categories)
-        for cat in tech_categories:
+
+    if is_non_tech:
+        # Non-IT: pull from Accounting, Finance, Operations — never from Python/Java/React
+        non_it_categories = []
+        if domain_key and domain_key in bank:
+            non_it_categories.append(domain_key)
+        # Always supplement with available non-IT banks
+        for cat in ['Accounting', 'Finance', 'Operations']:
+            if cat in bank and cat not in non_it_categories:
+                non_it_categories.append(cat)
+
+        for cat in non_it_categories:
             if len(questions) >= count:
                 break
-            available_qs = list(set(bank[cat]) - set(questions))
-            if available_qs:
-                needed = count - len(questions)
-                questions.extend(random.sample(available_qs, min(needed, 2)))
+            avail = list(set(bank.get(cat, [])) - set(questions))
+            if avail:
+                needed = min(count - len(questions), 3)
+                questions.extend(random.sample(avail, min(needed, len(avail))))
+    else:
+        # IT: match skills to question bank categories
+        skill_set = {s.strip().lower() for s in skills}
+        it_categories = ['Python', 'Django', 'React', 'Java', 'SQL']
+        matched = False
 
-    # Fallback to HR questions if we still don't have enough
+        for cat in it_categories:
+            if cat.lower() in skill_set and cat in bank:
+                avail = list(set(bank[cat]) - set(questions))
+                if avail:
+                    questions.extend(random.sample(avail, min(2, len(avail))))
+                    matched = True
+
+        # If nothing matched, fill from all IT categories
+        if not matched or len(questions) < count:
+            it_cats = [k for k in bank.keys() if k not in ('HR', 'Accounting', 'Finance', 'Operations')]
+            random.shuffle(it_cats)
+            for cat in it_cats:
+                if len(questions) >= count:
+                    break
+                avail = list(set(bank[cat]) - set(questions))
+                if avail:
+                    questions.extend(random.sample(avail, min(2, len(avail))))
+
+    # Fill remaining with HR if still short
     if len(questions) < count:
         remaining = count - len(questions)
-        available_hr = list(set(bank['HR']) - set(questions))
-        if available_hr:
-            questions.extend(random.sample(available_hr, min(remaining, len(available_hr))))
-        
+        avail_hr = list(set(bank['HR']) - set(questions))
+        if avail_hr:
+            questions.extend(random.sample(avail_hr, min(remaining, len(avail_hr))))
+
     random.shuffle(questions)
     return questions[:count]
+
 
 FALLBACK_CODING_PROBLEMS = {
     'Python': [
@@ -301,59 +528,63 @@ FALLBACK_CODING_PROBLEMS = {
 }
 
 def get_coding_hint(problem_title, problem_desc, user_code, language='ta-EN'):
-    """Provides a helpful hint to the user based on their current code."""
+    """Provides a fast, helpful hint and solution breakdown to the user."""
     api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-    if not api_key:
-        return "API Key missing. Cannot provide hints."
-        
-    try:
-        import google.generativeai as genai
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.5-flash')
-        
-        prompt = f"""
-        You are an expert, friendly, and encouraging AI coding tutor.
-        The student has ABSOLUTE ZERO CODING KNOWLEDGE (a complete beginner). You must guide them step-by-step and provide the full code solution.
-        
-        The student is trying to solve this problem:
-        Title: {problem_title}
-        Description: {problem_desc}
-        
-        This is their current code:
-        {user_code}
-        """
-        
-        if language == 'ta-EN':
-            prompt += """
-            Use simple, encouraging, and clear language. You MUST explain the concepts and lines in Tanglish (easy-to-understand English mixed with Tamil, e.g. "Intha problem-la loop use panni run pannanum", "line 3-la empty list template target variable match panni compare panrom", etc.).
-            
-            You MUST provide:
-            1. The **FULL COMPLETED SOLUTION CODE** FIRST, so the student can see exactly how it should be written.
-            2. A **simple, step-by-step line-by-line explanation** of that code in friendly Tanglish/English.
-            3. Explain what each line does conceptually (e.g., what variables, lists, dicts, or loops do in simple terms).
-            """
-        else:
-            prompt += """
-            Use simple, encouraging, and clear language. You MUST explain the concepts and lines strictly in English.
-            
-            You MUST provide:
-            1. The **FULL COMPLETED SOLUTION CODE** FIRST, so the student can see exactly how it should be written.
-            2. A **simple, step-by-step line-by-line explanation** of that code in friendly, basic English.
-            3. Explain what each line does conceptually (e.g., what variables, lists, dicts, or loops do in simple terms).
-            """
-            
-        response = model.generate_content(prompt, request_options={"timeout": 60.0})
-        return response.text.strip()
-    except Exception as e:
-        import traceback
-        tb = traceback.format_exc()
+    
+    if api_key:
         try:
-            with open("scratch/gemini_hint_error.log", "w") as f:
-                f.write(f"Exception in get_coding_hint:\n{tb}\n")
-        except:
-            pass
-        print(f"Error getting hint: {e}")
-        return "I'm having trouble analyzing your code right now. Make sure your syntax is mostly correct and try again!"
+            import google.generativeai as genai
+            clean_keys = [k.strip() for k in api_key.split(',') if k.strip()]
+            if clean_keys:
+                genai.configure(api_key=clean_keys[0])
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                
+                lang_instruction = "Explain in Tanglish (Tamil + English blend, simple and encouraging words)." if language == 'ta-EN' else "Explain in concise, encouraging English."
+                
+                prompt = f"""
+                You are a fast, friendly AI coding tutor.
+                Problem: {problem_title}
+                Details: {problem_desc[:300]}
+                Student Code:
+                {user_code[:400] if user_code else 'No code written yet'}
+
+                Task:
+                1. Give the exact solution code (short and clean).
+                2. Explain the 2-3 key steps simply ({lang_instruction}).
+                Keep the response concise and direct (under 180 words).
+                """
+                
+                response = model.generate_content(
+                    prompt,
+                    generation_config={"max_output_tokens": 400, "temperature": 0.3},
+                    request_options={"timeout": 6.0}
+                )
+                if response and response.text:
+                    return response.text.strip()
+        except Exception as e:
+            print(f"Error in fast Gemini hint: {e}")
+
+    # Instant smart fallback based on language & problem title
+    if language == 'ta-EN':
+        return f"""💡 **Quick Solution Guide for {problem_title}:**
+
+1. **Approach:** Intha problem-ku core logic approach use pannanum.
+2. **Steps:**
+   - First, input data-va read panni variables-la store pannunga.
+   - Loop or conditions use panni logic check pannunga.
+   - Result-ai return or print pannunga.
+
+Keep going! Unga syntax correct-ah irukanu check panni Submit click pannunga."""
+    else:
+        return f"""💡 **Quick Solution Guide for {problem_title}:**
+
+1. **Approach:** Understand the input/output constraints.
+2. **Key Steps:**
+   - Initialize the necessary variables or data structures.
+   - Iterate through the inputs and apply the condition or transformation.
+   - Return or print the expected result.
+
+Review your code structure and click Submit to evaluate!"""
 
 def get_fallback_coding_problems(skills, count=3):
     problems = []

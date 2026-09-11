@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}Coding Round - AI Interview Pro{% endblock %}
+
+{% block extra_head %}
+<style>
+    .coding-hero {
+        position: relative;
+        margin-bottom: 3rem;
+        padding: 3rem;
+        background: linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(6,182,212,0.05) 100%);
+        border: 1px solid rgba(139,92,246,0.15);
+        border-radius: 32px;
+        overflow: hidden;
+    }
+    .coding-hero::before {
+        content: '';
+        position: absolute;
+        top: -60px; right: -60px;
+        width: 250px; height: 250px;
+        background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+    .coding-hero::after {
+        content: '</>';
+        position: absolute;
+        right: 3rem; top: 50%;
+        transform: translateY(-50%);
+        font-size: 7rem;
+        font-weight: 900;
+        font-family: 'Consolas', monospace;
+        color: rgba(139,92,246,0.07);
+        letter-spacing: -4px;
+        pointer-events: none;
+    }
+    .hero-eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 4px;
+        color: #8b5cf6;
+        font-weight: 800;
+        font-size: 0.75rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+    .hero-eyebrow::before {
+        content: '';
+        width: 24px; height: 2px;
+        background: #8b5cf6;
+        border-radius: 2px;
+    }
+    .hero-title {
+        font-size: clamp(2.2rem, 4vw, 3.5rem);
+        font-weight: 900;
+        margin: 0 0 1rem;
+        background: linear-gradient(135deg, #fff 30%, #a78bfa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .hero-desc {
+        color: #94a3b8;
+        font-size: 1.1rem;
+        max-width: 560px;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+
+    .lang-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .lang-card {
+        background: rgba(15,23,42,0.5);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 24px;
+        padding: 2.5rem 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .lang-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 4px;
+        background: var(--card-color, rgba(255,255,255,0.1));
+        transition: 0.35s;
+    }
+
+    .lang-card:hover {
+        transform: translateY(-8px);
+        background: rgba(15,23,42,0.8);
+        border-color: rgba(255,255,255,0.15);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+    }
+    
+    .lang-card:hover::before {
+        height: 100%;
+        opacity: 0.05;
+    }
+
+    .lang-icon {
+        font-size: 3.5rem;
+        margin-bottom: 1.25rem;
+        color: var(--card-color, #fff);
+        transition: transform 0.3s;
+    }
+    
+    .lang-card:hover .lang-icon {
+        transform: scale(1.1);
+    }
+
+    .lang-name {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #f1f5f9;
+        margin-bottom: 0.5rem;
+    }
+
+    .lang-subtitle {
+        font-size: 0.85rem;
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+        .coding-hero {
+            padding: 1.5rem 1.25rem !important;
+            border-radius: 20px !important;
+            margin-bottom: 1.5rem !important;
+        }
+        .hero-title {
+            font-size: 1.85rem !important;
+        }
+        .hero-desc {
+            font-size: 0.9rem !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="coding-hero">
+    <div class="hero-eyebrow">Algorithm Mastery</div>
+    <h1 class="hero-title">Select a Language</h1>
+    <p class="hero-desc">
+        Choose a programming language to practice coding challenges, sharpen your problem-solving skills, and prepare for technical interviews.
+    </p>
+</div>
+
+<!-- Languages Grid -->
+<div class="lang-grid">
+    {% for lang in languages %}
+        <a href="{% url 'coding:coding_list' lang.param|default:lang.name %}" class="lang-card" style="--card-color: {{ lang.color }};">
+            <i class="{{ lang.icon }} lang-icon"></i>
+            <div class="lang-name">{{ lang.name }}</div>
+            <div class="lang-subtitle">Practice Challenges <i class="fas fa-arrow-right ml-1"></i></div>
+        </a>
+    {% endfor %}
+</div>
+{% endblock %}

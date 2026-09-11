@@ -31,6 +31,7 @@ def start_interview_view(request):
     if request.method == 'POST':
         lang = request.POST.get('language', 'en-US')
         diff = request.POST.get('difficulty', 'Beginner')   # Default: Beginner
+        company = request.POST.get('company', 'General')
 
         # Create session — resume may be None for general interviews
         session = InterviewSession.objects.create(
@@ -40,20 +41,28 @@ def start_interview_view(request):
             difficulty=diff
         )
 
-        # Use resume skills if available, else use general topics
+        # Use resume skills if available, else derive from resume text for non-IT
+        skill_context = []
         if resume and resume.skills:
             skill_context = resume.skills
-        else:
-            skill_context = "Python, Data Structures, Problem Solving, Communication, SQL"
+        elif resume and resume.extracted_text:
+            # No structured skills extracted — derive from resume text (e.g. B.Com keywords)
+            from ai_engine.logic import _detect_domain, non_it_keywords_from_text
+            skill_context = non_it_keywords_from_text(resume.extracted_text)
+        
+        # Pass extracted_text so _detect_domain gets full context (degree, education etc.)
+        resume_text = (resume.extracted_text or '') if resume else ''
 
         # Pre-generate questions
         try:
-            qs = generate_questions(skill_context, language=lang, difficulty=diff)
+            qs = generate_questions(skill_context, language=lang, difficulty=diff, company=company, resume_text=resume_text)
             for text in qs:
                 InterviewQuestion.objects.create(session=session, question_text=text)
         except Exception as e:
             print(f"Pre-generation failed: {e}")
-            fallback = get_fallback_questions(skill_context, count=5, language=lang)
+            from ai_engine.logic import _detect_domain
+            is_non_tech, _, domain_key = _detect_domain(skill_context, resume_text=resume_text)
+            fallback = get_fallback_questions(skill_context, count=5, language=lang, is_non_tech=is_non_tech, domain_key=domain_key)
             for text in fallback:
                 InterviewQuestion.objects.create(session=session, question_text=text)
 
@@ -119,10 +128,13 @@ def generate_questions_api(request, session_id):
     lang = session.language
     diff = session.difficulty
     resume = session.resume
-    skill_context = (resume.skills if resume and resume.skills else
-                     "Python, Problem Solving, Communication, Data Structures")
+    resume_text = (resume.extracted_text or '') if resume else ''
+    skill_context = resume.skills if resume and resume.skills else []
+    if not skill_context and resume_text:
+        from ai_engine.logic import non_it_keywords_from_text
+        skill_context = non_it_keywords_from_text(resume_text)
 
-    qs = generate_questions(skill_context, language=lang, difficulty=diff)
+    qs = generate_questions(skill_context, language=lang, difficulty=diff, resume_text=resume_text)
     for text in qs:
         InterviewQuestion.objects.create(session=session, question_text=text)
 
@@ -182,16 +194,21 @@ def quick_start_interview_view(request):
         difficulty=diff
     )
 
-    skill_context = (resume.skills if resume and resume.skills else
-                     "Python, Problem Solving, Communication, Data Structures")
+    skill_context = resume.skills if resume and resume.skills else []
+    resume_text = (resume.extracted_text or '') if resume else ''
+    if not skill_context and resume_text:
+        from ai_engine.logic import non_it_keywords_from_text
+        skill_context = non_it_keywords_from_text(resume_text)
 
     try:
-        qs = generate_questions(skill_context, language=lang, difficulty=diff)
+        qs = generate_questions(skill_context, language=lang, difficulty=diff, resume_text=resume_text)
         for text in qs:
             InterviewQuestion.objects.create(session=session, question_text=text)
     except Exception as e:
         print(f"Quick-start error: {e}")
-        fallback = get_fallback_questions(skill_context, count=5, language=lang)
+        from ai_engine.logic import _detect_domain
+        is_non_tech, _, domain_key = _detect_domain(skill_context, resume_text=resume_text)
+        fallback = get_fallback_questions(skill_context, count=5, language=lang, is_non_tech=is_non_tech, domain_key=domain_key)
         for text in fallback:
             InterviewQuestion.objects.create(session=session, question_text=text)
 

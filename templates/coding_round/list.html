@@ -345,51 +345,20 @@
 
 <!-- Hero Section -->
 <div class="coding-hero">
-    <div class="hero-eyebrow">Algorithm Mastery</div>
-    <h1 class="hero-title">Coding Round</h1>
+    <div class="hero-eyebrow">
+        <a href="{% url 'coding:coding_dashboard' %}" style="color: inherit; text-decoration: none; transition: 0.2s;"><i class="fas fa-arrow-left"></i> All Languages</a>
+    </div>
+    <h1 class="hero-title">{{ language }} Challenges</h1>
     <p class="hero-desc">
-        Resume-personalized coding challenges to sharpen your problem-solving skills before your technical interview.
+        Practice coding challenges in {{ language }} to sharpen your problem-solving skills before your technical interview.
     </p>
     <div class="hero-stats">
         <div class="hero-stat">
             <span class="hero-stat-num">{{ problems|length }}</span>
             <span class="hero-stat-label">Challenges</span>
         </div>
-        {% if has_coding_profile %}
-        <div class="hero-stat">
-            <span class="hero-stat-num" style="color:#10b981;">AI</span>
-            <span class="hero-stat-label">Personalized</span>
-        </div>
-        {% endif %}
-        <div class="hero-stat">
-            <span class="hero-stat-num">{{ user_skills|length }}</span>
-            <span class="hero-stat-label">Skills Detected</span>
-        </div>
     </div>
 </div>
-
-<!-- Personalization Status -->
-{% if has_coding_profile %}
-    <div class="status-banner personalized">
-        <i class="fas fa-check-circle"></i>
-        <div>
-            <strong>AI Personalization Active</strong> — Challenges tailored to your resume skills.
-        </div>
-        <a href="{% url 'coding:coding_setup' %}">
-            <i class="fas fa-sync-alt"></i> Refresh
-        </a>
-    </div>
-{% else %}
-    <div class="status-banner setup-needed">
-        <i class="fas fa-magic"></i>
-        <div>
-            <strong>Unlock Personalized Challenges</strong> — Upload your resume and get AI-generated problems matched to your skills.
-        </div>
-        <a href="{% url 'coding:coding_setup' %}">
-            <i class="fas fa-upload"></i> Set Up Now
-        </a>
-    </div>
-{% endif %}
 
 <!-- Problem List -->
 <div class="section-title">
@@ -406,11 +375,6 @@
                     <span class="diff-badge {% if problem.difficulty == 'Easy' %}diff-easy{% elif problem.difficulty == 'Medium' %}diff-medium{% else %}diff-hard{% endif %}">
                         {{ problem.difficulty }}
                     </span>
-                    {% if problem.is_recommended %}
-                        <span class="badge-recommended">
-                            <i class="fas fa-star" style="font-size:0.6rem;"></i> For You
-                        </span>
-                    {% endif %}
                 </div>
                 <div class="problem-title">{{ problem.title }}</div>
                 <div class="problem-desc">{{ problem.description|truncatewords:18 }}</div>
@@ -428,9 +392,9 @@
     {% empty %}
         <div class="empty-state">
             <i class="fas fa-terminal"></i>
-            <p>No challenges yet. Upload your resume to generate personalized problems!</p>
-            <a href="{% url 'coding:coding_setup' %}" class="solve-btn">
-                <i class="fas fa-upload"></i> Get Started
+            <p>No challenges yet for {{ language }}. Check back soon!</p>
+            <a href="{% url 'coding:coding_dashboard' %}" class="solve-btn">
+                <i class="fas fa-arrow-left"></i> Go Back
             </a>
         </div>
     {% endfor %}
