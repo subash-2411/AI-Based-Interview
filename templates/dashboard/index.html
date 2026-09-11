@@ -257,6 +257,17 @@
             justify-content: space-between !important;
             align-items: center !important;
         }
+        /* Mobile fixes for AI Career Coach & Roadmap */
+        #coachContent > div[style*="grid-template-columns"],
+        .ai-card div[style*="grid-template-columns"] {
+            grid-template-columns: 1fr !important;
+            gap: 1rem !important;
+        }
+        .badge-tag {
+            white-space: normal !important;
+            word-break: break-word !important;
+            max-width: 100% !important;
+        }
     }
 </style>
 
@@ -491,7 +502,7 @@
 
         <div style="display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1.5rem;">
             <input type="text" id="roadmapGoal" value="Full Stack Developer" style="background: #020617; border: 1px solid rgba(255,255,255,0.05); color: #fff; padding: 0.8rem 1.2rem; border-radius: 12px; outline: none; font-size: 1.05rem; width: 100%;">
-            <button id="btnGenerateRoadmap" class="btn-primary" style="padding: 0.8rem 1.5rem; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%;"><i class="fas fa-wand-magic-sparkles"></i> Generate Roadmap</button>
+            <button id="btnGenerateRoadmap" class="btn-primary" style="padding: 0.86rem 1.5rem; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%; font-weight: 700;"><i class="fas fa-wand-magic-sparkles"></i> Generate Roadmap</button>
         </div>
 
         <div id="roadmapLoader" style="display: none; text-align: center; padding: 4rem 2rem;">

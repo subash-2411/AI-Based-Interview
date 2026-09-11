@@ -32,8 +32,29 @@
         align-items: start;
     }
     @media (max-width: 768px) {
+        .cover-letter-container {
+            padding: 1rem 0.5rem !important;
+        }
+        .page-header {
+            margin-bottom: 1.5rem !important;
+        }
+        .page-header h1 {
+            font-size: 1.75rem !important;
+        }
+        .page-header p {
+            font-size: 0.88rem !important;
+        }
         .grid-layout {
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr !important;
+            gap: 1.25rem !important;
+        }
+        .input-card, .output-card {
+            padding: 1.2rem !important;
+            border-radius: 14px !important;
+        }
+        .letter-body {
+            font-size: 0.88rem !important;
+            padding: 1rem !important;
         }
     }
     .input-card {
