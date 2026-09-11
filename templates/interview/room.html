@@ -664,6 +664,21 @@
         box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
     }
 
+    .voice-indicator {
+        display: none;
+        background: rgba(239, 68, 68, 0.15);
+        color: #fca5a5;
+        padding: 0.35rem 0.85rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+        animation: pulse-border 1.5s infinite;
+        margin-left: 10px;
+        position: relative; /* removed absolute to avoid overlap */
+    }
+
     .next-btn {
         background: linear-gradient(135deg, var(--secondary), #3b82f6);
         color: white;
@@ -906,23 +921,11 @@
 
     // Speech Recognition
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let recognition = null;
+    const recognition = SpeechRecognition ? new SpeechRecognition() : null;
     let isListening = false;
     let mobileTranscriptAccumulator = "";
 
-    micBtn.onclick = () => {
-        if (!SpeechRecognition) return alert("Browser not supported. Use Chrome or Safari on iOS.");
-        
-        if (isListening && recognition) {
-            recognition.stop();
-            return;
-        }
-
-        mobileTranscriptAccumulator = answerInput.value ? answerInput.value + " " : "";
-        
-        // Re-instantiate on every click to bypass strict iOS Safari user-gesture requirements
-        recognition = new SpeechRecognition();
-        
+    if (recognition) {
         // We only need strict restrictions for Apple/iOS devices. Android Chrome supports full features.
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
         recognition.lang = lang === 'ta-EN' ? 'ta-IN' : lang;
@@ -938,7 +941,7 @@
 
         recognition.onstart = () => {
             isListening = true;
-            voiceIndicator.style.display = 'block';
+            voiceIndicator.style.display = 'inline-flex';
             micBtn.classList.add('active');
             micBtn.innerHTML = '<i class="fas fa-stop-circle"></i> <span>Stop Recording</span>';
         };
@@ -979,14 +982,25 @@
                 errMsg = "Error: Microphone blocked! Make sure you have granted permission.";
             }
             
-            if (isMobile && event.error !== 'no-speech') alert(errMsg);
-            if (event.error !== 'no-speech') answerInput.value = errMsg;
+            if (event.error !== 'no-speech') {
+                if (window.innerWidth <= 768) alert(errMsg);
+                answerInput.value = errMsg;
+            }
         };
+    }
 
-        try {
-            recognition.start();
-        } catch (e) {
-            console.error("Speech recognition failed to start", e);
+    micBtn.onclick = () => {
+        if (!recognition) return alert("Browser not supported. Use Chrome or Safari on iOS.");
+        
+        if (!isListening) {
+            mobileTranscriptAccumulator = answerInput.value ? answerInput.value + " " : "";
+            try {
+                recognition.start();
+            } catch (e) {
+                console.error("Speech recognition failed to start", e);
+            }
+        } else {
+            recognition.stop();
         }
     };
 
