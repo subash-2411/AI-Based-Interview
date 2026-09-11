@@ -491,7 +491,7 @@
 
 <!-- Result Modal -->
 <div class="result-modal-overlay" id="resultModal">
-    <div class="result-modal">
+    <div class="result-modal" style="max-width: 520px;">
         <div class="score-ring">
             <svg viewBox="0 0 100 100" width="100" height="100">
                 <circle class="score-ring-bg" cx="50" cy="50" r="40"/>
@@ -509,7 +509,20 @@
             <div class="score-num" id="scoreNum">0%</div>
         </div>
         <div class="result-title" id="resultTitle">Submission Result</div>
-        <div class="result-msg" id="resultMsg"></div>
+        <div class="result-msg" id="resultMsg" style="margin-bottom: 1rem;"></div>
+        
+        <!-- Execution Output & Error Box -->
+        <div id="codeResultDetails" style="text-align: left; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; max-height: 180px; overflow-y: auto;">
+            <div id="codeOutputSec" style="display: none; margin-bottom: 0.75rem;">
+                <span style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: #38bdf8; display: block; margin-bottom: 0.25rem;"><i class="fas fa-terminal"></i> Execution Output</span>
+                <pre id="codeOutputText" style="color: #e2e8f0; font-family: 'Consolas', monospace; font-size: 0.82rem; margin: 0; white-space: pre-wrap; word-break: break-all;"></pre>
+            </div>
+            <div id="codeErrorSec" style="display: none;">
+                <span style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: #f87171; display: block; margin-bottom: 0.25rem;"><i class="fas fa-exclamation-triangle"></i> Error Details</span>
+                <pre id="codeErrorText" style="color: #fca5a5; font-family: 'Consolas', monospace; font-size: 0.82rem; margin: 0; white-space: pre-wrap; word-break: break-all;"></pre>
+            </div>
+        </div>
+
         <div class="result-actions">
             <button class="btn-result-secondary" onclick="closeModal()">Try Again</button>
             <button class="btn-result-primary" onclick="window.location.href='{% url 'coding:coding_dashboard' %}'">
@@ -555,7 +568,7 @@
                 body: JSON.stringify({ code: document.getElementById('codeEditor').value })
             });
             const data = await resp.json();
-            showResult(data.score);
+            showResult(data.score, data.output, data.error, data.feedback);
         } catch(e) {
             alert('Submission failed. Please try again.');
         } finally {
@@ -564,12 +577,17 @@
         }
     };
 
-    function showResult(score) {
+    function showResult(score, output = '', error = '', feedback = '') {
         const modal = document.getElementById('resultModal');
         const fill = document.getElementById('scoreRingFill');
         const scoreNum = document.getElementById('scoreNum');
         const title = document.getElementById('resultTitle');
         const msg = document.getElementById('resultMsg');
+
+        const outputSec = document.getElementById('codeOutputSec');
+        const outputText = document.getElementById('codeOutputText');
+        const errorSec = document.getElementById('codeErrorSec');
+        const errorText = document.getElementById('codeErrorText');
 
         modal.classList.add('show');
 
@@ -587,15 +605,31 @@
         if (score >= 80) {
             title.textContent = 'Great Work!';
             title.style.color = '#10b981';
-            msg.textContent = 'Your solution passed the evaluation. Strong logic and structure!';
+            msg.textContent = feedback || 'Your solution passed the evaluation. Strong logic and structure!';
         } else if (score >= 50) {
             title.textContent = 'Almost There!';
             title.style.color = '#f59e0b';
-            msg.textContent = 'Your solution partially passed. Try refining your logic or edge cases.';
+            msg.textContent = feedback || 'Your solution partially passed. Try refining your logic or edge cases.';
         } else {
             title.textContent = 'Keep Trying!';
             title.style.color = '#ef4444';
-            msg.textContent = 'Use the AI Hint to understand the approach. You\'ve got this!';
+            msg.textContent = feedback || 'Use the AI Hint to understand the approach. You\'ve got this!';
+        }
+
+        // Handle output display
+        if (output && output.trim()) {
+            outputText.textContent = output;
+            outputSec.style.display = 'block';
+        } else {
+            outputSec.style.display = 'none';
+        }
+
+        // Handle error display
+        if (error && error.trim()) {
+            errorText.textContent = error;
+            errorSec.style.display = 'block';
+        } else {
+            errorSec.style.display = 'none';
         }
     }
 

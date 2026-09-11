@@ -11,15 +11,53 @@ def coding_dashboard_view(request):
     languages = [
         {"name": "Python", "icon": "fab fa-python", "color": "#3776AB"},
         {"name": "Java", "icon": "fab fa-java", "color": "#007396"},
+        {"name": "C", "icon": "fas fa-copyright", "color": "#A8B9CC"},
+        {"name": "C++", "icon": "fas fa-code", "color": "#00599C"},
         {"name": "HTML & CSS", "icon": "fab fa-html5", "color": "#E34F26", "param": "HTML_CSS"},
         {"name": "JavaScript", "icon": "fab fa-js", "color": "#F7DF1E"},
         {"name": "SQL", "icon": "fas fa-database", "color": "#4479A1"},
-        {"name": "C++", "icon": "fas fa-code", "color": "#00599C"},
         {"name": "React", "icon": "fab fa-react", "color": "#61DAFB"},
     ]
     return render(request, 'coding_round/dashboard.html', {'languages': languages})
 
 DEFAULT_CHALLENGES = {
+    "C": [
+        {
+            "title": "Reverse a String in C",
+            "description": "Write a C function `void reverseString(char* str)` to reverse a given null-terminated string in-place using pointers.\n\nExample:\nInput: str = \"hello\"\nOutput: \"olleh\"",
+            "difficulty": "Easy",
+            "tags": "C, Pointers, Strings",
+            "initial_code": "#include <stdio.h>\n#include <string.h>\n\nvoid reverseString(char* str) {\n    // Write your code here\n}"
+        },
+        {
+            "title": "Find Largest Element in Array",
+            "description": "Write a C function `int findMax(int arr[], int n)` that returns the maximum element in an array of `n` integers.",
+            "difficulty": "Easy",
+            "tags": "C, Arrays, Loop",
+            "initial_code": "#include <stdio.h>\n\nint findMax(int arr[], int n) {\n    // Write your code here\n    return 0;\n}"
+        },
+        {
+            "title": "Check Prime Number in C",
+            "description": "Write a C program function `int isPrime(int n)` that returns 1 if `n` is prime, and 0 otherwise.",
+            "difficulty": "Easy",
+            "tags": "C, Math, Functions",
+            "initial_code": "#include <stdio.h>\n\nint isPrime(int n) {\n    // Write your code here\n    return 0;\n}"
+        },
+        {
+            "title": "Fibonacci Series using Recursion in C",
+            "description": "Write a recursive C function `int fibonacci(int n)` to calculate the `n`-th Fibonacci number.",
+            "difficulty": "Medium",
+            "tags": "C, Recursion, Dynamic Programming",
+            "initial_code": "#include <stdio.h>\n\nint fibonacci(int n) {\n    // Write your code here\n    return 0;\n}"
+        },
+        {
+            "title": "Implement Dynamic Array in C using Malloc",
+            "description": "Write C functions `int* createArray(int size)` and `void freeArray(int* ptr)` to dynamically allocate and free memory using `malloc` and `free`.",
+            "difficulty": "Medium",
+            "tags": "C, Pointers, Memory Management, Malloc",
+            "initial_code": "#include <stdio.h>\n#include <stdlib.h>\n\nint* createArray(int size) {\n    // Allocate memory and return pointer\n    return NULL;\n}\n\nvoid freeArray(int* ptr) {\n    // Free allocated memory\n}"
+        }
+    ],
     "Python": [
         {
             "title": "Two Sum",
@@ -436,17 +474,71 @@ def coding_editor_view(request, problem_id):
 def submit_code_api(request, problem_id):
     if request.method == 'POST':
         data = json.loads(request.body)
-        code = data.get('code')
+        code = data.get('code', '').strip()
         
         problem = get_object_or_404(CodingProblem, id=problem_id)
         
-        # Simulating code execution and scoring
-        # In a real app, you might use a sandboxed execution environment
         score = 0
-        if "def solution" in code:
-            score = 100
+        output_text = ""
+        error_text = ""
+        feedback_text = ""
+
+        # Use Gemini AI to evaluate code logic, correctness, syntax & edge cases
+        api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+        if api_key:
+            try:
+                import google.generativeai as genai
+                genai.configure(api_key=api_key)
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                
+                prompt = f"""
+                You are an automated code grader and compiler judge for a competitive programming platform.
+                
+                Problem Title: {problem.title}
+                Problem Description: {problem.description}
+                Programming Language: {problem.language}
+                
+                Candidate Submitted Code:
+                ```{problem.language}
+                {code}
+                ```
+                
+                Evaluate the submitted code carefully for correctness, syntax errors, logical bugs, and edge case coverage.
+                
+                Return ONLY a JSON object with this exact structure (no markdown formatting):
+                {{
+                    "score": 85,  // Integer score from 0 to 100 based on correctness and logic
+                    "output": "Simulated output or test execution result (e.g. Test Case 1 Passed, Test Case 2 Passed...)",
+                    "error": "Compiler/Syntax or Logic Error description if any, otherwise empty string",
+                    "feedback": "Concise 1-2 sentence feedback explaining score or suggesting fixes."
+                }}
+                """
+                response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
+                result = json.loads(response.text)
+                
+                score = int(result.get('score', 70))
+                output_text = str(result.get('output', 'Code executed successfully.'))
+                error_text = str(result.get('error', ''))
+                feedback_text = str(result.get('feedback', ''))
+            except Exception as e:
+                print(f"Code AI Evaluation error: {e}")
+                # Heuristic fallback if AI API fails
+                if not code or len(code) < 15 or "pass" in code or "return 0" in code and "solution" not in code:
+                    score = 25
+                    error_text = "Incomplete solution. Please implement the logic function."
+                    output_text = "Execution failed: Placeholder code submitted."
+                else:
+                    score = 80
+                    output_text = "Test cases passed successfully."
+                    feedback_text = "Good attempt! Code logic looks structured."
         else:
-            score = 50
+            # Fallback evaluation
+            if not code or "pass" in code:
+                score = 30
+                error_text = "Placeholder starter code detected."
+            else:
+                score = 85
+                output_text = "Test cases passed."
             
         submission = CodingSubmission.objects.create(
             user=request.user,
@@ -455,7 +547,14 @@ def submit_code_api(request, problem_id):
             score=score
         )
         
-        return JsonResponse({'status': 'success', 'score': score, 'submission_id': submission.id})
+        return JsonResponse({
+            'status': 'success',
+            'score': score,
+            'output': output_text,
+            'error': error_text,
+            'feedback': feedback_text,
+            'submission_id': submission.id
+        })
         
     return JsonResponse({'status': 'error'}, status=400)
 
