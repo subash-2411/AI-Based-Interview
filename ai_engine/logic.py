@@ -542,22 +542,22 @@ def get_coding_hint(problem_title, problem_desc, user_code, language='ta-EN'):
                 lang_instruction = "Explain in Tanglish (Tamil + English blend, simple and encouraging words)." if language == 'ta-EN' else "Explain in concise, encouraging English."
                 
                 prompt = f"""
-                You are a fast, friendly AI coding tutor.
-                Problem: {problem_title}
-                Details: {problem_desc[:300]}
+                You are a friendly expert AI coding tutor.
+                Problem Title: {problem_title}
+                Problem Description: {problem_desc[:400]}
+                Language: {language}
                 Student Code:
                 {user_code[:400] if user_code else 'No code written yet'}
 
                 Task:
-                1. Give the exact solution code (short and clean).
-                2. Explain the 2-3 key steps simply ({lang_instruction}).
-                Keep the response concise and direct (under 180 words).
+                1. Provide the exact working solution code block in {language}.
+                2. Explain the 2-3 key steps simply in {lang_instruction}.
                 """
                 
                 response = model.generate_content(
                     prompt,
-                    generation_config={"max_output_tokens": 400, "temperature": 0.3},
-                    request_options={"timeout": 6.0}
+                    generation_config={"max_output_tokens": 550, "temperature": 0.2},
+                    request_options={"timeout": 7.0}
                 )
                 if response and response.text:
                     return response.text.strip()
@@ -566,15 +566,24 @@ def get_coding_hint(problem_title, problem_desc, user_code, language='ta-EN'):
 
     # Instant smart fallback based on language & problem title
     if language == 'ta-EN':
-        return f"""💡 **Quick Solution Guide for {problem_title}:**
+        return f"""💡 **AI Hint & Solution for {problem_title}:**
 
-1. **Approach:** Intha problem-ku core logic approach use pannanum.
-2. **Steps:**
-   - First, input data-va read panni variables-la store pannunga.
-   - Loop or conditions use panni logic check pannunga.
-   - Result-ai return or print pannunga.
+1. **Logic Steps:**
+   - Input data-va read panni variables-la store pannunga.
+   - Loop/Conditions use panni target/output check pannunga.
+   - Matching result-ai return/print pannunga.
 
-Keep going! Unga syntax correct-ah irukanu check panni Submit click pannunga."""
+2. **Sample Working Solution:**
+```python
+def solution(nums, target):
+    seen = {{}}
+    for i, num in enumerate(nums):
+        diff = target - num
+        if diff in seen:
+            return [seen[diff], i]
+        seen[num] = i
+    return []
+```"""
     else:
         return f"""💡 **Quick Solution Guide for {problem_title}:**
 
