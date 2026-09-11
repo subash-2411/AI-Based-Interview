@@ -61,26 +61,33 @@
 
     @media (max-width: 768px) {
         .toolbar-top {
-            flex-direction: column !important;
-            padding: 0.6rem !important;
-            gap: 0.5rem !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            padding: 0.5rem !important;
+            gap: 0.4rem !important;
             height: auto !important;
+            min-height: auto !important;
         }
         .toolbar-top > div:first-child {
             width: 100% !important;
             justify-content: space-between !important;
+            margin-bottom: 0.25rem !important;
         }
         .toolbar-top > div:last-child {
             width: 100% !important;
+            display: flex !important;
             overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
             white-space: nowrap !important;
-            padding-bottom: 0.25rem !important;
-            justify-content: flex-start !important;
+            padding: 0.25rem 0 0.4rem 0 !important;
+            gap: 0.5rem !important;
         }
         .btn-tool {
-            padding: 0.45rem 0.75rem !important;
-            font-size: 0.78rem !important;
+            padding: 0.45rem 0.8rem !important;
+            font-size: 0.75rem !important;
             flex-shrink: 0 !important;
+            display: inline-flex !important;
+            white-space: nowrap !important;
         }
         .builder-content-row {
             flex-direction: column !important;
@@ -89,24 +96,30 @@
         .builder-sidebar {
             width: 100% !important;
             min-width: 100% !important;
-            max-height: 280px !important;
+            max-height: 220px !important;
             border-right: none !important;
-            border-bottom: 2px solid rgba(168, 85, 247, 0.3) !important;
+            border-bottom: 2px solid rgba(168, 85, 247, 0.4) !important;
+            flex-shrink: 0 !important;
         }
         .builder-workspace {
-            padding: 1rem 0.25rem !important;
+            padding: 0.75rem 0.25rem 3rem !important;
             overflow-x: auto !important;
             display: flex !important;
             justify-content: center !important;
+            flex: 1 !important;
+            width: 100% !important;
         }
         .doc-canvas {
-            transform: scale(0.92);
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            padding: 1.2rem 1rem !important;
+            transform: scale(0.95);
             transform-origin: top center;
             margin: 0 auto !important;
-            width: 100% !important;
-            min-width: 100% !important;
-            box-sizing: border-box !important;
-            padding: 1rem !important;
+            border-radius: 12px !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
         }
     }
 
